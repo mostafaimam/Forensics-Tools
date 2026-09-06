@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "windows_evtx"
+version = "0.1.0"
+description = "Windows event log (.evtx) parser - binary + BinXml - to standardised CSV / JSON / XML"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "evtx", "eventlog", "binxml", "windows"]
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Security",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/windows/windows_evtx"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+
+[project.scripts]
+windows_evtx = "windows_evtx.cli:main"
+
+[tool.setuptools]
+packages = ["windows_evtx", "windows_evtx.evtx"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

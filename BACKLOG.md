@@ -28,6 +28,7 @@ Priority is roughly top-to-bottom within each group.
 - **acquisition_collect** — targeted triage acquisition (Windows / Linux / macOS), live + VSS, hashing, chain-of-custody manifest
 - **recovery_carve** — file recovery by magic-byte signature carving with structural validators
 - **recovery_metadata** — NTFS `$MFT` metadata recovery: list allocated + deleted entries, extract content (incl. deleted), `cat` by entry number
+- **windows_evtx** — event logs (`.evtx`): from-scratch binary + BinXml parser → standardised CSV / JSON / JSONL / XML, event-ID / provider / level / time filters
 - **windows_mft** — NTFS `$MFT` + `$UsnJrnl:$J`: timeline, ADS, `$SI`/`$FN` timestomp detection, bodyfile; `tkinter` `$MFT` browser
 - **windows_recycle** — Recycle Bin: `$I` / `$R` / `INFO2` / `INFO`
 - **windows_prefetch** — Prefetch `.pf` v17-31 incl. Windows 10/11 `MAM` compression
@@ -37,7 +38,7 @@ Priority is roughly top-to-bottom within each group.
 
 1. **windows_mft** — `$Boot`, `$SDS` security descriptors, `$ATTRIBUTE_LIST` (heavily fragmented files), `$LogFile`; `--offset` partition auto-detection; short-name / hard-link columns.
 2. **recovery_metadata** — FAT / exFAT, ext2-4 (+ journal), HFS+, APFS; `--offset` partition auto-detection; live-volume input (`\\.\C:`).
-3. **windows_evtx** — `.evtx` binary-XML parser, standardised CSV / XML / JSON, event-ID / provider / time filters, user field maps.
+3. **windows_evtx** — event-ID → friendly-description **maps** (TOML), locale message resolution, recovered records from chunk slack, CRC verification.
 4. **mounting_image** (+GUI) — read-only mount of raw / `E01` / `VHD(X)` / `VMDK` images and partitions.
 
 ## Acquisition — `acquisition/`
@@ -58,7 +59,7 @@ Priority is roughly top-to-bottom within each group.
 
 ## Windows artefact parsers — `windows/`
 
-- **windows_mft** — see **Next up** for the remaining `$MFT` / NTFS metadata work (`$Boot`, `$SDS`, `$ATTRIBUTE_LIST`, `$LogFile`).
+- **windows_mft** / **windows_evtx** — see **Next up** for the remaining work.
 - **windows_registry** (+GUI) — offline hive parser (`regf`): key/value tree, search, multi-hive load, deleted-key recovery, transaction-log replay, curated plugins (Run keys, Services, UserAssist, ShimCache, AmCache, SAM users, network history, USB, typed paths, RecentDocs, …). Batch plugin bundles for scripted reporting.
 - **windows_reglog** — replay registry transaction logs (`.LOG1` / `.LOG2`) into a hive so downstream tools see a clean hive.
 - **windows_amcache** — `Amcache.hve` (program presence / installation / driver / device data).
