@@ -8,6 +8,9 @@ their **MBR / GPT partitions**, and lets you:
 - **export** the whole disk or a single partition to a raw file (`convert`,
   `extract`)
 - **stream** an arbitrary byte range to stdout (`cat`)
+- **mount as a real read-only drive** (`mount`) — a **Windows drive letter**
+  (via a fixed VHD + `Mount-DiskImage`), a macOS volume (`hdiutil`), or a
+  Linux mount point (`losetup` + `mount -o ro`); only OS built-ins
 - **serve** the disk or a partition **read-only over NBD** (`serve`), and
   **connect** to that export with the **built-in NBD client** (`connect`) —
   on Linux it becomes a real `/dev/nbdN` block device you can `mount -o ro`
@@ -65,6 +68,39 @@ EFI and Apple GUIDs. `partitions --json` emits `start_offset` / `start_lba` /
 
 ---
 
+## Mount as a read-only drive
+
+```bash
+# Windows (run from an elevated / Administrator shell)
+mounting_image mount disk.E01 --letter X
+#   materialises a temp fixed VHD, Mount-DiskImage -Access ReadOnly,
+#   assigns X: (and auto-letters the other volumes); Explorer opens it read-only
+
+# Linux (root)
+mounting_image mount disk.E01 --partition 2 --mountpoint /mnt/evidence --fstype ntfs
+
+# macOS
+mounting_image mount disk.E01                 # hdiutil attach -readonly
+
+mounting_image drives                          # what's mounted
+mounting_image unmount-drive X:                # detach (letter, mount point, or id)
+```
+
+| Switch | |
+|---|---|
+| `--letter X` | Windows: drive letter to assign |
+| `--partition N` | which partition gets the letter / mount |
+| `--mountpoint DIR` | Linux/macOS mount directory |
+| `--fstype` | Linux filesystem type (`ntfs`, `ext4`, …) |
+| `--image-out PATH` | keep the materialised VHD/raw (else a temp file, removed on unmount) |
+
+Windows and macOS need a materialised file (a fixed VHD / raw), so `mount`
+writes one first — a full-size copy — unless the source already is one. On
+Linux the NBD path (`serve --attach` / `connect --attach`) avoids the copy.
+`Mount-DiskImage` requires an **elevated** PowerShell session.
+
+---
+
 ## Serving and connecting over NBD
 
 `serve` runs a minimal read-only NBD server (fixed-newstyle handshake;
@@ -115,8 +151,10 @@ mounting_image gui disk.E01
 ```
 
 Container summary, a partition table, and buttons to **export the selected
-partition (or whole disk) to raw**, **copy a partition's start offset**, and
-**toggle a local NBD export**.
+partition (or whole disk) to raw**, **copy a partition's start offset**,
+**toggle a local NBD export**, and **mount as a read-only drive** — on
+Windows with a drive-letter dropdown (free letters only); on Linux/macOS it
+prompts for a mount point. Unmount from the same button.
 
 ---
 

@@ -1,13 +1,16 @@
-"""Minimal tkinter image browser: open, inspect, export partitions, serve NBD."""
+"""tkinter image browser: open, inspect, export, serve NBD, mount as a drive."""
 
 from __future__ import annotations
 
+import tempfile
 import threading
 from pathlib import Path
 
-from mounting_image.formats import ImageError, SliceImage, open_image
+from mounting_image import osmount
+from mounting_image.formats import ImageError, SliceImage, open_image, sniff
 from mounting_image.partitions import detect
 from mounting_image.report import _si
+from mounting_image.vhdwrite import write_fixed_vhd
 
 
 def run(path: str | None = None) -> int:
@@ -18,7 +21,9 @@ def run(path: str | None = None) -> int:
         print(f"tkinter unavailable: {e}")
         return 2
 
-    state: dict = {"img": None, "parts": [], "scheme": "none", "server": None}
+    state: dict = {"img": None, "parts": [], "scheme": "none", "server": None,
+                   "drive": None}
+    backend = osmount.current_backend()
 
     root = tk.Tk()
     root.title("mounting_image")
@@ -123,6 +128,78 @@ def run(path: str | None = None) -> int:
         filedialog.askopenfilename() or path_var.get())).pack(side="left", padx=4)
     ttk.Button(top, text="Open", command=load).pack(side="left")
 
+    # -- mount as a read-only drive --------------------------------
+    def mount_drive():
+        if state["drive"]:
+            _unmount_drive()
+            return
+        img = state["img"]
+        if img is None:
+            return
+        src = path_var.get().split("  (")[0].strip()
+        fmt = "vhd" if backend == "windows" else "raw"
+        part = None
+        sel = tree.selection()
+        if sel:
+            part = int(tree.item(sel[0], "values")[0])
+        letter = letter_var.get().rstrip(":") or None
+        mnt = None
+        if backend != "windows":
+            mnt = filedialog.askdirectory(title="Mount point (empty directory)")
+            if not mnt:
+                return
+        mount_btn.config(state="disabled")
+        status.config(text="materialising image…")
+
+        def work():
+            temp = True
+            try:
+                if sniff(src) == fmt:
+                    matimg, temp = src, False
+                else:
+                    d = tempfile.mkdtemp(prefix="mounting_image_")
+                    matimg = str(Path(d) / (Path(src).stem + "." + fmt))
+                    whole = open_image(src)
+                    if fmt == "vhd":
+                        write_fixed_vhd(whole, matimg)
+                    else:
+                        with open(matimg, "wb") as fh:
+                            for c in whole.stream():
+                                fh.write(c)
+                    whole.close()
+                if backend == "windows":
+                    res = osmount.mount_windows(matimg, letter, part, temp)
+                elif backend == "macos":
+                    res = osmount.mount_macos(matimg, temp)
+                else:
+                    res = osmount.mount_linux(matimg, mnt, fstype=None,
+                                              partition=part or 1, temp=temp)
+                mid = osmount.register(res, src, mnt)
+                state["drive"] = {"id": mid, **res.__dict__, "mountpoint": mnt}
+                vols = ", ".join(v["name"] for v in res.volumes)
+                status.config(text=f"mounted read-only: {vols}  "
+                                   f"(click 'Unmount drive' to detach)")
+                mount_btn.config(text="Unmount drive", state="normal")
+            except (osmount.OsMountError, OSError, ImageError) as e:
+                messagebox.showerror("mount", str(e))
+                status.config(text="mount failed")
+                mount_btn.config(state="normal")
+        threading.Thread(target=work, daemon=True).start()
+
+    def _unmount_drive():
+        d = state["drive"]
+        if not d:
+            return
+        try:
+            osmount.unmount(d)
+            osmount.deregister(d["id"])
+        except Exception as e:  # noqa: BLE001
+            messagebox.showerror("unmount", str(e))
+            return
+        state["drive"] = None
+        mount_btn.config(text="Mount as read-only drive")
+        status.config(text="drive detached")
+
     bar = ttk.Frame(root, padding=(8, 0, 8, 8))
     bar.pack(fill="x")
     ttk.Button(bar, text="Export selected → raw", command=export).pack(
@@ -131,9 +208,34 @@ def run(path: str | None = None) -> int:
         side="left", padx=4)
     ttk.Button(bar, text="Toggle NBD server", command=serve).pack(side="left")
 
+    mbar = ttk.Frame(root, padding=(8, 0, 8, 8))
+    mbar.pack(fill="x")
+    mount_btn = ttk.Button(mbar, text="Mount as read-only drive",
+                           command=mount_drive)
+    mount_btn.pack(side="left")
+    letter_var = tk.StringVar()
+    if backend == "windows":
+        ttk.Label(mbar, text="  drive letter:").pack(side="left")
+        try:
+            free = osmount.free_drive_letters()
+        except Exception:  # noqa: BLE001
+            free = list("XYZ")
+        cb = ttk.Combobox(mbar, textvariable=letter_var, width=4,
+                          values=free, state="readonly")
+        if free:
+            cb.current(0)
+        cb.pack(side="left")
+        ttk.Label(mbar, text="  (converts to a temp VHD, mounts it "
+                             "read-only via Windows)").pack(side="left")
+    else:
+        ttk.Label(mbar, text=f"  ({backend}: you'll pick a mount point)"
+                  ).pack(side="left")
+
     if path:
         root.after(100, load)
     root.mainloop()
+    if state["drive"]:
+        _unmount_drive()
     if state["img"]:
         state["img"].close()
     return 0

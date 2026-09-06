@@ -96,8 +96,27 @@ def build_parser() -> argparse.ArgumentParser:
                          "nbd module (no nbd-client needed)")
     cn.add_argument("-q", "--quiet", action="store_true")
 
-    ls = sub.add_parser("list", help="show recorded NBD/mount sessions")
-    un = sub.add_parser("unmount", help="tear down a recorded session")
+    mo = sub.add_parser("mount", parents=[common],
+                        help="attach the image to the OS as a read-only drive")
+    mo.add_argument("--partition", type=int,
+                    help="which partition to give the drive letter / mount")
+    mo.add_argument("--letter", help="Windows: drive letter to assign (e.g. X)")
+    mo.add_argument("--mountpoint", help="Linux/macOS: directory to mount at")
+    mo.add_argument("--fstype", help="Linux: filesystem type")
+    mo.add_argument("--image-out", type=Path,
+                    help="keep the materialised VHD/raw here (else a temp file "
+                         "removed on unmount)")
+    mo.add_argument("-q", "--quiet", action="store_true")
+
+    ud = sub.add_parser("unmount-drive",
+                        help="detach a drive mounted with 'mount'")
+    ud.add_argument("target", help="drive letter, mount point, image id, or "
+                                   "the VHD/raw path")
+
+    sub.add_parser("drives", help="list OS drives mounted with 'mount'")
+
+    ls = sub.add_parser("list", help="show recorded NBD sessions")
+    un = sub.add_parser("unmount", help="tear down a recorded NBD session")
     un.add_argument("--port", type=int, required=True)
     un.add_argument("--run", action="store_true")
 
@@ -343,6 +362,126 @@ def _cmd_connect(a) -> int:
     return 0
 
 
+def _materialise(img, out: Path, fmt: str, quiet: bool):
+    from mounting_image.vhdwrite import write_fixed_vhd
+    prog = None if quiet else (
+        lambda done, total: sys.stderr.write(
+            f"\r  writing {fmt}: {done}/{total} bytes") or sys.stderr.flush())
+    if fmt == "vhd":
+        write_fixed_vhd(img, out, progress=prog)
+    else:
+        _write_raw_prog(img, out, prog)
+    if not quiet:
+        sys.stderr.write("\n")
+    return out
+
+
+def _write_raw_prog(img, out: Path, prog):
+    total = img.size
+    done = 0
+    with out.open("wb") as fh:
+        for chunk in img.stream():
+            fh.write(chunk)
+            done += len(chunk)
+            if prog:
+                prog(done, total)
+
+
+def _cmd_mount(a) -> int:
+    import tempfile
+
+    from mounting_image import osmount
+    from mounting_image.formats import sniff
+    backend = osmount.current_backend()
+    if not backend:
+        print("unsupported platform for OS mount", file=sys.stderr)
+        return 2
+    src = str(a.image)
+    img = _open(a)
+    fmt = "vhd" if backend == "windows" else "raw"
+
+    reuse = sniff(src) == fmt and not a.image_out
+    if backend == "windows" and reuse:
+        try:
+            reuse = getattr(open_image(src), "disk_type", 0) == 2
+        except Exception:  # noqa: BLE001
+            reuse = False
+
+    temp = False
+    if reuse:
+        materialised = Path(src)
+    else:
+        if a.image_out:
+            materialised = a.image_out
+        else:
+            d = tempfile.mkdtemp(prefix="mounting_image_")
+            materialised = Path(d) / (Path(src).stem + "." + fmt)
+            temp = True
+        if not a.quiet:
+            print(f"materialising a {fmt.upper()} of {img.size} bytes "
+                  f"({'temp' if temp else materialised})…", file=sys.stderr)
+        _materialise(img, materialised, fmt, a.quiet)
+    img.close()
+
+    try:
+        if backend == "windows":
+            res = osmount.mount_windows(str(materialised), a.letter,
+                                        a.partition, temp)
+        elif backend == "macos":
+            res = osmount.mount_macos(str(materialised), temp)
+        else:
+            res = osmount.mount_linux(str(materialised), a.mountpoint,
+                                      fstype=a.fstype,
+                                      partition=a.partition or 1, temp=temp)
+    except osmount.OsMountError as e:
+        if temp:
+            try:
+                Path(materialised).unlink()
+            except OSError:
+                pass
+        print(f"mount failed: {e}", file=sys.stderr)
+        return 2
+
+    mid = osmount.register(res, src, a.mountpoint)
+    print(f"mounted read-only ({res.backend}, id {mid}):")
+    for v in res.volumes:
+        print(f"  {v['name']}"
+              + (f"   {v['size']} bytes" if v.get("size") else ""))
+    print(f"detach with:  mounting_image unmount-drive "
+          f"{res.volumes[0]['name'] if res.volumes else mid}", file=sys.stderr)
+    return 0
+
+
+def _cmd_unmount_drive(a) -> int:
+    from mounting_image import osmount
+    entry = osmount.deregister(a.target)
+    if not entry:
+        print(f"no mounted drive matching {a.target!r}", file=sys.stderr)
+        return 1
+    try:
+        osmount.unmount(entry)
+    except osmount.OsMountError as e:
+        print(f"detach error: {e}", file=sys.stderr)
+        return 1
+    print(f"detached {entry.get('id')} "
+          f"({', '.join(v['name'] for v in entry.get('volumes', []))})",
+          file=sys.stderr)
+    return 0
+
+
+def _cmd_drives(a) -> int:
+    from mounting_image import osmount
+    rows = osmount.sessions()
+    if not rows:
+        print("no OS drives mounted", file=sys.stderr)
+        return 1
+    for r in rows:
+        vols = ", ".join(v["name"] for v in r.get("volumes", []))
+        print(f"  {r['id']}  {r['backend']:<8} {vols:<24} {r['source']}"
+              + ("  [temp image]" if r.get("temp_image") else ""))
+    return 0
+
+
 def _cmd_list(a) -> int:
     rows = attach.sessions()
     if not rows:
@@ -390,8 +529,10 @@ def main(argv: list[str] | None = None) -> int:
     if a.cmd == "gui":
         from mounting_image.gui import run
         return run(str(a.image) if getattr(a, "image", None) else None)
-    if a.cmd in ("list", "unmount"):
-        return {"list": _cmd_list, "unmount": _cmd_unmount}[a.cmd](a)
+    if a.cmd in ("list", "unmount", "drives", "unmount-drive"):
+        return {"list": _cmd_list, "unmount": _cmd_unmount,
+                "drives": _cmd_drives,
+                "unmount-drive": _cmd_unmount_drive}[a.cmd](a)
     if a.cmd == "connect":
         try:
             return _cmd_connect(a)
@@ -406,7 +547,7 @@ def main(argv: list[str] | None = None) -> int:
         return {
             "info": _cmd_info, "partitions": _cmd_partitions,
             "convert": _cmd_convert, "extract": _cmd_extract,
-            "cat": _cmd_cat, "serve": _cmd_serve,
+            "cat": _cmd_cat, "serve": _cmd_serve, "mount": _cmd_mount,
         }[a.cmd](a)
     except ImageError as e:
         print(f"error: {e}", file=sys.stderr)

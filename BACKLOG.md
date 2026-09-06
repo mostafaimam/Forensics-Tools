@@ -45,7 +45,7 @@ Priority is roughly top-to-bottom within each group.
 - **linux_cron** — scheduled-execution inventory: system / user crontabs, `cron.d`, `cron.{hourly,daily,weekly,monthly}`, anacrontab, `at` jobs, systemd timers → one normalised row per job, plain-language schedule, suspicious-entry flags
 - **linux_syslog** — classic text-log normaliser: `syslog` / `messages` / `auth.log` / `secure` (+ rotated / `.gz`), BSD + RFC 5424 formats → record timeline or structured security events (SSH / sudo / su / PAM / session / cron / account)
 - **linux_bashhist** — shell / REPL history across all users (bash / zsh / fish / sh + python / mysql / psql / sqlite / node / redis), per-shell timestamp parsing, merged timeline, tampering markers, attacker-command heuristics
-- **mounting_image** (+GUI) — read-only access to raw / split / EWF (`E01`) / VHD / VMDK images: container + MBR/GPT partition inspection, export whole-disk or per-partition raw, byte-range stream, **built-in read-only NBD server + client** (`nbd://` URLs as a source, `--pull` on any OS, Linux `/dev/nbdN` kernel attach with no `nbd-client` binary); `tkinter` browser
+- **mounting_image** (+GUI) — read-only access to raw / split / EWF (`E01`) / VHD / VMDK images: container + MBR/GPT partition inspection, export whole-disk or per-partition raw, byte-range stream, **built-in read-only NBD server + client** (`nbd://` URLs as a source, `--pull` any OS, Linux `/dev/nbdN` kernel attach, no `nbd-client`), **`mount` as a real read-only drive** (Windows drive letter via fixed-VHD + `Mount-DiskImage`; macOS `hdiutil`; Linux `losetup`+`mount`), `tkinter` browser with a drive-letter picker
 - **acquisition_image** (+GUI) — create + verify forensic images: raw / split / EWF (`E01`) **write**, streaming MD5+SHA-1+SHA-256, bad-sector zero-fill + logging, embedded EWF case metadata & digest, acquisition log + JSON manifest + HTML report; disk enumeration (Linux/macOS/Windows); `tkinter` wizard
 - **analysis_kff** — Known File Filter: import NSRL RDS (text + SQLite), Project VIC / CAID JSON, HashKeeper / generic CSV, plain hash lists into a local SQLite index; classify files or a hash list as known-good / known-bad / notable / unknown (`scan`, `lookup`, `--alerts-only`, deterministic exit code)
 - **analysis_index** / **analysis_search** — full-text index (SQLite inverted index, no FTS extension) over a collection: text / markup / OOXML / email / string-carving extraction, glued tokens for emails·IPs·paths; boolean / phrase / `NEAR/n` / prefix / `/regex/` / `ext:`·`path:`·`kind:` filter queries with KWIC snippets; incremental re-build
@@ -65,7 +65,7 @@ Priority is roughly top-to-bottom within each group.
 
 ## Imaging & mounting — `mounting/`
 
-- **mounting_image** (+GUI) — done (above). Remaining: VHDX, EWF v2 (`Ex01`), compressed/stream-optimized VMDK, AFF4, `.vdi`; a **FUSE** mount on Linux/macOS and a **WebDAV / drive-letter** path on Windows so a partition's filesystem appears as a browsable folder (no kernel NBD).
+- **mounting_image** (+GUI) — done (above). Remaining: VHDX, EWF v2 (`Ex01`), compressed/stream-optimized VMDK, AFF4, `.vdi`; a **FUSE / WebDAV** path so a partition's filesystem shows as a browsable folder with **no full-image copy** on Windows/macOS (the current `mount` materialises a VHD/raw first).
 - **mounting_vsc** (+GUI) — enumerate and mount all Volume Shadow Copies on a volume to a chosen mount point / drive letter.
 - **mounting_partitions** — MBR / GPT / APFS-container / LVM map (no mount, just the layout).
 
