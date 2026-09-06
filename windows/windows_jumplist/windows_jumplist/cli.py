@@ -65,9 +65,11 @@ def build_parser() -> argparse.ArgumentParser:
             "AutomaticDestinations\" --csv all.csv\n"
         ),
     )
-    p.add_argument("inputs", nargs="+", type=Path, metavar="FILE")
+    p.add_argument("inputs", nargs="*", type=Path, metavar="FILE")
     p.add_argument("--version", action="version",
                    version=f"windows_jumplist {__version__}")
+    p.add_argument("--gui", action="store_true",
+                   help="open the graphical viewer")
     p.add_argument("--csv", type=Path)
     p.add_argument("--json", type=Path)
     p.add_argument("--pinned-only", action="store_true")
@@ -86,6 +88,9 @@ def _expand(inputs):
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if getattr(args, "gui", False):
+        from windows_jumplist.gui import run_gui
+        return run_gui([str(x) for x in (args.inputs or [])])
     files = list(_expand(args.inputs))
     if not files:
         print("error: no jump-list files found", file=sys.stderr)

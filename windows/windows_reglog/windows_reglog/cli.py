@@ -32,9 +32,11 @@ def build_parser() -> argparse.ArgumentParser:
             "  windows_reglog --info SOFTWARE\n"
         ),
     )
-    p.add_argument("hive", type=Path, help="the primary hive")
+    p.add_argument("hive", type=Path, nargs="?", help="the primary hive")
     p.add_argument("--version", action="version",
                    version=f"windows_reglog {__version__}")
+    p.add_argument("--gui", action="store_true",
+                   help="open the graphical viewer")
     p.add_argument("--log", nargs="+", type=Path, metavar="LOG",
                    help="transaction log(s) (default: auto-find beside the hive)")
     p.add_argument("-o", "--out", type=Path, help="write the recovered hive here")
@@ -48,6 +50,11 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if getattr(args, "gui", False):
+        from windows_reglog.gui import run_gui
+        return run_gui(([str(args.hive)] if args.hive else []))
+    if args.hive is None:
+        build_parser().error("a hive path is required (or use --gui)")
     if not args.hive.exists():
         print(f"hive not found: {args.hive}", file=sys.stderr)
         return 2

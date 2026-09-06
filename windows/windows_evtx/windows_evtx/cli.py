@@ -30,10 +30,12 @@ def build_parser() -> argparse.ArgumentParser:
             "  windows_evtx *.evtx --from 2024-03-01 --to 2024-03-08 --csv week.csv\n"
         ),
     )
-    p.add_argument("inputs", nargs="+", metavar="EVTX",
+    p.add_argument("inputs", nargs="*", metavar="EVTX",
                    help=".evtx file(s) or directories to search")
     p.add_argument("--version", action="version",
                    version=f"windows_evtx {__version__}")
+    p.add_argument("--gui", action="store_true",
+                   help="open the graphical viewer")
 
     out = p.add_argument_group("output")
     out.add_argument("--csv", type=Path)
@@ -74,6 +76,9 @@ def _iso(s: str) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if getattr(args, "gui", False):
+        from windows_evtx.gui import run_gui
+        return run_gui([str(x) for x in (args.inputs or [])])
     files = list(_expand(args.inputs))
     if not files:
         print("error: no .evtx files found", file=sys.stderr)

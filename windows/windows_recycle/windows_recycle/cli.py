@@ -28,11 +28,13 @@ def build_parser() -> argparse.ArgumentParser:
             "  windows_recycle \"$IA1B2C3.txt\" \"D:\\dump\\INFO2\"\n"
         ),
     )
-    p.add_argument("paths", nargs="+", metavar="PATH",
+    p.add_argument("paths", nargs="*", metavar="PATH",
                    help="$I file, INFO2/INFO file, $R content file, or a "
                         "directory to search recursively")
     p.add_argument("--version", action="version",
                    version=f"windows_recycle {__version__}")
+    p.add_argument("--gui", action="store_true",
+                   help="open the graphical viewer")
     p.add_argument("--csv", metavar="FILE", type=Path, help="write a CSV report")
     p.add_argument("--json", metavar="FILE", type=Path, help="write a JSON report")
     p.add_argument("--jsonl", metavar="FILE", type=Path,
@@ -50,6 +52,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if getattr(args, "gui", False):
+        from windows_recycle.gui import run_gui
+        return run_gui([str(x) for x in (args.paths or [])])
 
     result = scan(args.paths, recursive=not args.no_recurse)
     records = result.records

@@ -4,6 +4,8 @@
 that turns event logs into a standardised CSV, JSON / JSONL, or XML — with
 event-ID, provider, channel, level and time-range filters.
 
+![`windows_evtx --gui`](docs/screenshot.png)
+
 ```
 windows_evtx Security.evtx --csv security.csv
 windows_evtx System.evtx --event-id 7045,7040 --json services.json

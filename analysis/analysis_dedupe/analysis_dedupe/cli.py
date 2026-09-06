@@ -72,6 +72,8 @@ def build_parser() -> argparse.ArgumentParser:
     sc.add_argument("--csv", type=Path)
     sc.add_argument("--json", type=Path)
     sc.add_argument("-q", "--quiet", action="store_true")
+    g = s.add_parser("gui", help="open the graphical viewer")
+    g.add_argument("paths", nargs="*", type=str)
     return p
 
 
@@ -145,6 +147,9 @@ def _render_groups(res) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     a = build_parser().parse_args(argv)
+    if a.cmd == "gui":
+        from analysis_dedupe.gui import run_gui
+        return run_gui(getattr(a, "paths", []))
     if a.cmd != "scan":
         build_parser().print_help()
         return 2

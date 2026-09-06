@@ -5,6 +5,8 @@ was **present** on the system — and, on Windows 7 / 8, that it **executed**.
 Each entry carries the target's `$STANDARD_INFORMATION` last-modified time and
 its position in the cache (0 = most recently added).
 
+![`windows_shimcache --gui`](docs/screenshot.png)
+
 ```
 windows_shimcache SYSTEM --csv shimcache.csv
 windows_shimcache appcompatcache.bin --json out.json

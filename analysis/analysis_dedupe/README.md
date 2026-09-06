@@ -5,6 +5,8 @@ content, reports duplicate sets and the reclaimable bytes, writes a
 one-representative-per-unique-content list, or diffs a target set against a
 baseline to show what is new.
 
+![`analysis_dedupe gui`](docs/screenshot.png)
+
 ```
 analysis_dedupe scan /cases/evidence --csv files.csv
 analysis_dedupe scan /export --distinct-out unique.txt

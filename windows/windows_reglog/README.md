@@ -3,6 +3,8 @@
 **Replay Windows registry transaction logs (`.LOG1` / `.LOG2`) into a dirty
 hive** so downstream tools see a clean, current hive.
 
+![`windows_reglog --gui`](docs/screenshot.png)
+
 ```
 windows_reglog SYSTEM -o SYSTEM.clean
 windows_reglog NTUSER.DAT --log NTUSER.DAT.LOG1 NTUSER.DAT.LOG2 -o out.dat

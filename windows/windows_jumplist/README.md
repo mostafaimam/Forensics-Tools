@@ -5,6 +5,8 @@ a `DestList` stream holding the **MRU order, per-target last-opened time,
 machine name and pin state**, plus one embedded **`.lnk`** per target with the
 full Shell Link detail (drive serial, `$MFT` reference, arguments).
 
+![`windows_jumplist --gui`](docs/screenshot.png)
+
 ```
 windows_jumplist *.automaticDestinations-ms --csv jl.csv
 windows_jumplist "%APPDATA%\Microsoft\Windows\Recent\AutomaticDestinations" --csv all.csv

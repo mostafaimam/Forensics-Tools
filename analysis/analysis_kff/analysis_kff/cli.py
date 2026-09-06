@@ -47,6 +47,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("sets", help="list imported hash sets")
     sub.add_parser("stats", help="index summary")
+    gp = sub.add_parser("gui", help="open the graphical scanner")
+    gp.add_argument("paths", nargs="*", type=str)
 
     rm = sub.add_parser("remove", help="delete a hash set")
     rm.add_argument("--name", required=True)
@@ -211,6 +213,9 @@ def main(argv: list[str] | None = None) -> int:
     if not a.cmd:
         build_parser().print_help()
         return 2
+    if a.cmd == "gui":
+        from analysis_kff.gui import run_gui
+        return run_gui(a.db and str(a.db) or None, getattr(a, "paths", []))
     return {
         "import": _cmd_import, "sets": _cmd_sets, "stats": _cmd_stats,
         "remove": _cmd_remove, "lookup": _cmd_lookup, "scan": _cmd_scan,

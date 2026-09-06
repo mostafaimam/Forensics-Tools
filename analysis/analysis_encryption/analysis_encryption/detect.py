@@ -57,14 +57,27 @@ def _tail(path: Path, n: int, size: int) -> bytes:
 def _pgp(head: bytes) -> Finding | None:
     if head[:27] == b"-----BEGIN PGP MESSAGE-----":
         return Finding("", 0, ENCRYPTED, "pgp", "ASCII-armored OpenPGP message")
-    if head[:1] and (head[0] & 0x80):
-        tag = (head[0] >> 2) & 0x0F if not (head[0] & 0x40) else head[0] & 0x3F
-        if tag in (1, 3, 18, 9):
-            names = {1: "public-key ESK", 3: "symmetric-key ESK",
-                     18: "sym. encrypted+integrity", 9: "sym. encrypted"}
-            return Finding("", 0, ENCRYPTED, "pgp",
-                           f"OpenPGP packet ({names[tag]})")
-    return None
+    if len(head) < 6:
+        return None
+    b0 = head[0]
+    if not (b0 & 0x80):
+        return None
+    newfmt = bool(b0 & 0x40)
+    tag = (b0 & 0x3F) if newfmt else ((b0 >> 2) & 0x0F)
+    if tag not in (1, 3):                     # PKESK / SKESK only
+        return None
+    # first body byte after the length octet(s) is the packet version (3 or 4)
+    if newfmt:
+        ln = head[1]
+        body0 = head[2] if ln < 192 else head[3]
+    else:
+        lentype = b0 & 0x03
+        body0 = head[{0: 2, 1: 3, 2: 5}.get(lentype, 2)]
+    if body0 not in (2, 3, 4):
+        return None
+    names = {1: "public-key session key", 3: "symmetric-key session key"}
+    return Finding("", 0, ENCRYPTED, "pgp",
+                   f"OpenPGP {names[tag]} packet (v{body0})")
 
 
 def _age(head: bytes) -> Finding | None:

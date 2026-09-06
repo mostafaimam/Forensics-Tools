@@ -3,6 +3,8 @@
 **Windows Recycle Bin parser** — recovers what was deleted, when, from where, by
 which account, and whether the content is still on disk.
 
+![`windows_recycle --gui`](docs/screenshot.png)
+
 Handles both Recycle Bin generations:
 
 - **Vista and later** — `$Recycle.Bin\<SID>\$I……` metadata files (version 1 and

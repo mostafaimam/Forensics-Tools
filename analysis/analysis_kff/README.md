@@ -5,6 +5,8 @@ files (or a list of hashes) as **known-good** (filter out — OS files,
 application installs), **known-bad** / **notable** (alert — malware, IOC
 lists, CSAM hash sets), or **unknown** (needs a human).
 
+![`analysis_kff gui`](docs/screenshot.png)
+
 | Import format | |
 |---|---|
 | NSRL RDS — text | `NSRLFile.txt` and the "minimal" CSV (`SHA-1,MD5,CRC32,FileName,…`) |

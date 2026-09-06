@@ -4,6 +4,8 @@
 **executables the system has seen (with their SHA-1)**, **installed programs**,
 and **drivers**, each with the key's last-written time.
 
+![`windows_amcache --gui`](docs/screenshot.png)
+
 ```
 windows_amcache Amcache.hve --csv amcache.csv
 windows_amcache Amcache.hve --category file --grep "\\\\temp\\\\|\\.tmp"

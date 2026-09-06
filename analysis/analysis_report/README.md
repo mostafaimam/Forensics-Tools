@@ -4,6 +4,8 @@
 the other tools (plus free-form **Markdown notes**) and produces a single
 **self-contained HTML** report and a JSON bundle.
 
+![`analysis_report gui`](docs/screenshot.png)
+
 ```
 analysis_report build case.html --title "Case 2026-014" \
     --input timeline.csv --input kff_hits.csv --input encrypted.csv \

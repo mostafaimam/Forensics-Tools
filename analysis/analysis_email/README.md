@@ -5,6 +5,8 @@ normalised row per message — headers, addresses, send / delivery times,
 attachments (name + size + **SHA-256**), the `Received` chain, and heuristic
 flags for spoofing and authentication failures.
 
+![`analysis_email gui`](docs/screenshot.png)
+
 ```
 analysis_email scan /cases/mail --csv messages.csv
 analysis_email scan inbox.mbox --attachments-dir ./att

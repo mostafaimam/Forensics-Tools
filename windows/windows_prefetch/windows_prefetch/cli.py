@@ -44,10 +44,12 @@ def build_parser() -> argparse.ArgumentParser:
             "  windows_prefetch E:\\evidence\\collection --files-csv refs.csv\n"
         ),
     )
-    p.add_argument("paths", nargs="+", metavar="PATH",
+    p.add_argument("paths", nargs="*", metavar="PATH",
                    help=".pf file(s) or a directory to search")
     p.add_argument("--version", action="version",
                    version=f"windows_prefetch {__version__}")
+    p.add_argument("--gui", action="store_true",
+                   help="open the graphical viewer")
     p.add_argument("--csv", metavar="FILE", type=Path,
                    help="one summary row per prefetch file")
     p.add_argument("--files-csv", metavar="FILE", type=Path,
@@ -64,6 +66,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if getattr(args, "gui", False):
+        from windows_prefetch.gui import run_gui
+        return run_gui([str(x) for x in (args.paths or [])])
     if args.no_native:
         os.environ["WINDOWS_PREFETCH_NO_NATIVE"] = "1"
 

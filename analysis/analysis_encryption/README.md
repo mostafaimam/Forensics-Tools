@@ -2,6 +2,8 @@
 
 **Detect encrypted / password-protected files and containers.**
 
+![`analysis_encryption gui`](docs/screenshot.png)
+
 > **Report only.** Nothing here decrypts or cracks anything — it tells you
 > *what* is encrypted and *how*, so you can decide where to spend effort.
 

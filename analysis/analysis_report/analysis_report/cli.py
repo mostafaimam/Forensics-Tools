@@ -43,6 +43,8 @@ def build_parser() -> argparse.ArgumentParser:
                    help="max rows rendered per source table (default 500)")
     b.add_argument("--json", type=Path, help="also write a JSON bundle here")
     b.add_argument("-q", "--quiet", action="store_true")
+    g = s.add_parser("gui", help="browse the sources graphically")
+    g.add_argument("inputs", nargs="*", type=str)
     return p
 
 
@@ -62,6 +64,9 @@ def _expand(inputs) -> list[Path]:
 
 def main(argv: list[str] | None = None) -> int:
     a = build_parser().parse_args(argv)
+    if a.cmd == "gui":
+        from analysis_report.gui import run_gui
+        return run_gui(getattr(a, "inputs", []))
     if a.cmd != "build":
         build_parser().print_help()
         return 2

@@ -36,9 +36,11 @@ def build_parser() -> argparse.ArgumentParser:
             "  windows_amcache Amcache.hve --with-sha1 --json files.json\n"
         ),
     )
-    p.add_argument("hive", type=Path)
+    p.add_argument("hive", type=Path, nargs="?")
     p.add_argument("--version", action="version",
                    version=f"windows_amcache {__version__}")
+    p.add_argument("--gui", action="store_true",
+                   help="open the graphical viewer")
     p.add_argument("--csv", type=Path)
     p.add_argument("--json", type=Path)
     p.add_argument("--category", type=lambda s: {x.strip() for x in s.split(",")},
@@ -53,6 +55,11 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if args.gui:
+        from windows_amcache.gui import run_gui
+        return run_gui([str(args.hive)] if args.hive else [])
+    if not args.hive:
+        build_parser().error("a hive path is required (or use --gui)")
     if not args.hive.exists():
         print(f"hive not found: {args.hive}", file=sys.stderr)
         return 2

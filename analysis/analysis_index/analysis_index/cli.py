@@ -57,6 +57,9 @@ def build_parser(search_only: bool = False) -> argparse.ArgumentParser:
         ls.add_argument("index", type=Path)
         ls.add_argument("--csv", type=Path)
 
+        gp = sub.add_parser("gui", help="open the graphical search window")
+        gp.add_argument("index", type=Path, nargs="?")
+
     s = sub.add_parser("search", help="run a query")
     s.add_argument("index", type=Path)
     s.add_argument("query")
@@ -158,6 +161,9 @@ def _dispatch(a, parser) -> int:
     if not a.cmd:
         parser.print_help()
         return 2
+    if a.cmd == "gui":
+        from analysis_index.gui import run_gui
+        return run_gui(str(a.index) if getattr(a, "index", None) else None)
     return {"build": _cmd_build, "stats": _cmd_stats, "list": _cmd_list,
             "search": _cmd_search}[a.cmd](a)
 

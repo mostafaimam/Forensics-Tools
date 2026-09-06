@@ -55,6 +55,8 @@ def build_parser() -> argparse.ArgumentParser:
                    help="read the live AppCompatCache from this running system")
     p.add_argument("--version", action="version",
                    version=f"windows_shimcache {__version__}")
+    p.add_argument("--gui", action="store_true",
+                   help="open the graphical viewer")
     p.add_argument("--csv", type=Path)
     p.add_argument("--json", type=Path)
     p.add_argument("--grep", metavar="REGEX", help="keep only matching paths")
@@ -66,6 +68,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if getattr(args, "gui", False):
+        from windows_shimcache.gui import run_gui
+        return run_gui([str(x) for x in (args.inputs or [])])
     import re
 
     rx = None

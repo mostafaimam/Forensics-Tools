@@ -4,6 +4,8 @@
 how many times, when it last ran (and the previous seven times), which volumes
 and files it touched.
 
+![`windows_prefetch --gui`](docs/screenshot.png)
+
 Handles every Prefetch version:
 
 | Version | Windows | Notes |

@@ -5,6 +5,8 @@ extract text, build an on-disk inverted index, then run boolean / phrase /
 proximity / regex queries and get matching files with keyword-in-context
 snippets.
 
+![`analysis_index gui`](docs/screenshot.png)
+
 ```
 analysis_index build ./idx /mnt/evidence/Users
 analysis_index search ./idx 'invoice AND (paypal OR bitcoin)'
