@@ -32,6 +32,12 @@ Full roadmap and every planned tool: **[BACKLOG.md](BACKLOG.md)**.
 |---|---|---|
 | [**acquisition_collect**](acquisition/acquisition_collect/) | ✅ v0.1 | Targeted artefact acquisition from a live system or mounted image — locked-file handling, Volume Shadow Copy, streaming hashes, chain-of-custody manifest (Windows / Linux / macOS) |
 
+### `mounting/`
+
+| Tool | Status | Purpose |
+|---|---|---|
+| [**mounting_image**](mounting/mounting_image/) | ✅ v0.1 | Read-only access to raw / split / **E01** / **VHD** / **VMDK** images — container + MBR/GPT inspection, export whole-disk or per-partition raw, byte-range stream, **read-only NBD server**; CLI + `tkinter` GUI |
+
 ### `recovery/`
 
 | Tool | Status | Purpose |
@@ -77,8 +83,8 @@ Full roadmap and every planned tool: **[BACKLOG.md](BACKLOG.md)**.
 
 ### next up
 
-`recovery_metadata` FAT / ext4 / APFS support · `mounting_image` (image
-mounting, CLI + GUI) ·
+`acquisition_image` (forensic imaging, CLI + GUI) · `analysis_kff` / `analysis_index` (FTK-parity) ·
+`recovery_metadata` FAT / ext4 / APFS support ·
 `linux_journal` (systemd binary journal) · `macos_quarantine` / `macos_knowledgec` (build on `macos_plist` + SQLite) ·
 `memory/` (RAM-image analysis).
 

@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "mounting_image"
+version = "0.1.0"
+description = "Read-only access to forensic disk images (raw / split / E01 / VHD / VMDK): inspect container + partitions, export raw, stream a range, serve over NBD; CLI + tkinter GUI"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "disk image", "ewf", "e01", "vhd", "vmdk", "nbd", "mount", "mbr", "gpt"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/mounting/mounting_image"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+mounting_image = "mounting_image.cli:main"
+[tool.setuptools]
+packages = ["mounting_image", "mounting_image.formats"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
