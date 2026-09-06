@@ -90,6 +90,256 @@ Full roadmap and every planned tool: **[BACKLOG.md](BACKLOG.md)**.
 
 ---
 
+## Investigation workflow
+
+How the tools fit together. **✅ available now · ⏳ planned ([BACKLOG](BACKLOG.md))**
+
+Every case runs through the same seven phases — only phase ④ is
+OS-specific.
+
+```mermaid
+flowchart LR
+    P1["① Preserve<br/>&amp; acquire"] --> P2["② Open<br/>the image"]
+    P2 --> P3["③ File-system<br/>timeline"]
+    P3 --> P4["④ OS<br/>artefacts"]
+    P4 --> P5["⑤ Memory"]
+    P5 --> P6["⑥ Correlate"]
+    P6 --> P7["⑦ Report"]
+```
+
+| Phase | Goal |
+|---|---|
+| ① Preserve & acquire | Never touch originals. Capture a triage set or a full disk/RAM image; hash everything; keep a manifest. |
+| ② Open the image | Turn the `E01` / `VHD` / `VMDK` container into readable bytes and locate the partitions. |
+| ③ File-system timeline | Build the MACB backbone from file-system metadata; recover deleted + unallocated content. |
+| ④ OS artefacts | Parse the registry / logs / execution / user-activity artefacts for that OS. |
+| ⑤ Memory | If a RAM image exists: processes, network, injected code, in-memory secrets. |
+| ⑥ Correlate | Merge every tool's CSV/JSON into one UTC super-timeline; pivot on the window of interest. |
+| ⑦ Report | Package findings, tagged rows and the timeline into a shareable bundle. |
+
+---
+
+### Windows
+
+```mermaid
+flowchart TD
+    A["acquisition_collect ✅ — triage: hives, EVTX, $MFT, prefetch, jump lists"] --> B["mounting_image ✅ — identify partitions, extract / NBD-serve the volume"]
+    B --> C["windows_mft ✅ — $MFT + $UsnJrnl:$J → MACB timeline, ADS, timestomp (backbone)"]
+    C --> RC["recovery_metadata ✅ / recovery_carve ✅ — deleted + unallocated files"]
+    C --> D["windows_reglog ✅ → windows_registry ✅ — replay .LOG1/.LOG2, then ~50 plugins per hive"]
+    D --> E["windows_prefetch ✅ · windows_shimcache ✅ · windows_amcache ✅ — execution evidence"]
+    E --> F["windows_lnk ✅ · windows_jumplist ✅ · windows_recycle ✅ — opened files, source host, deletions"]
+    F --> G["windows_evtx ✅ — logon, service install, 4688, PowerShell 4104"]
+    G --> H["memory/* ⏳ — pslist · netscan · malfind · in-memory hives · hashdump"]
+    H --> I["analysis_timeline ✅ — merge every output into one sorted UTC timeline"]
+    I --> J["analysis_report ⏳"]
+```
+
+1. **Acquire.** On a live host, `acquisition_collect` with the Windows target
+   set grabs the registry hives (+ transaction logs), `Security` / `System` /
+   application `.evtx`, `$MFT`, `$UsnJrnl`, Prefetch, `Amcache.hve`, jump
+   lists, `.lnk` files and the Recycle Bin — using Volume Shadow Copy for
+   locked files — and writes a hash manifest. For a full image use
+   `acquisition_image` (⏳) or any imager that produces raw / E01.
+
+   ```bash
+   acquisition_collect --os windows --backend vss -d case01/
+   ```
+
+2. **Open the image.** Identify the layout, then pull the Windows partition
+   (or serve it read-only over NBD and mount it on your analysis box).
+
+   ```bash
+   mounting_image info    disk.E01
+   mounting_image extract disk.E01 --partition 2 --out c_volume.raw
+   ```
+
+3. **File-system timeline — the backbone.** `windows_mft` turns `$MFT`
+   (+ `$UsnJrnl:$J`) into a complete MACB timeline with ADS enumeration and
+   `$SI` / `$FN` timestomp detection. Everything else hangs off these times.
+   Then `recovery_metadata` lists / extracts deleted MFT entries, and
+   `recovery_carve` recovers files from unallocated space with no MFT record.
+
+   ```bash
+   windows_mft mft '$MFT' --csv mft.csv
+   windows_mft usn '$J'   --csv usn.csv
+   ```
+
+4. **Registry.** Dirty hives first: `windows_reglog` replays `.LOG1` / `.LOG2`
+   so you analyse the *current* state. Then `windows_registry` auto-selects
+   the right plugin set per hive.
+
+   ```bash
+   windows_reglog SYSTEM -o SYSTEM.clean
+   windows_registry plugin SYSTEM.clean --csv sys       # services, USB, network, BAM
+   windows_registry plugin NTUSER.DAT   --csv user      # UserAssist, RecentDocs, RunMRU
+   windows_registry plugin Amcache.hve  --csv amcache
+   ```
+
+5. **Execution evidence — corroborate.** No single source is complete; agree
+   three ways. `windows_prefetch` (`.pf`: run count, last-run times, files
+   loaded), `windows_shimcache` (AppCompatCache from `SYSTEM`),
+   `windows_amcache` (`Amcache.hve`, with SHA-1), plus UserAssist / BAM from
+   step 4.
+
+6. **User activity & anti-forensics.** `windows_lnk` on `Recent\*.lnk`
+   (opened files, their original full paths, target MAC times, and the
+   *creating machine's* NetBIOS name + MAC — lateral-movement gold);
+   `windows_jumplist` on `automaticDestinations-ms` (per-app MRU with
+   timestamps); `windows_recycle` (deleted file's original path, size,
+   deletion time, and the recoverable `$R` content).
+
+7. **Event logs.** `windows_evtx` normalises `.evtx` to CSV / JSON with
+   filters — logon / logoff (4624 / 4625 / 4634), service install (7045),
+   process creation (4688), PowerShell script block (4104), RDP.
+
+   ```bash
+   windows_evtx Security.evtx --event-id 4624,4625,4688 --csv logons.csv
+   ```
+
+8. **Memory** (⏳) — if RAM was captured: `memory_pslist`, `memory_netscan`,
+   `memory_malfind`, `memory_registry` (hives live in RAM), `memory_hashdump`.
+
+9. **Correlate & report.** Feed every CSV / JSON to `analysis_timeline` for
+   one sorted UTC view (console, HTML, or `tkinter`); narrow to the window,
+   tag rows, and (⏳ `analysis_report`) package the result.
+
+   ```bash
+   analysis_timeline mft.csv sys_*.csv user_*.csv logons.csv \
+       --from 2026-08-01 --to 2026-08-07 --html case01_timeline.html
+   ```
+
+---
+
+### Linux
+
+```mermaid
+flowchart TD
+    A["acquisition_collect ✅ — /etc, /var/log, /home, cron, systemd, shell history, /proc"] --> B["mounting_image ✅ — extract / NBD-serve, mount -o ro,noload"]
+    B --> C["recovery_metadata (ext) ⏳ · recovery_carve ✅ — deleted + unallocated files"]
+    C --> D["linux_utmp ✅ — wtmp / btmp / lastlog → login sessions, failed logins"]
+    D --> E["linux_syslog ✅ — syslog / auth.log (+ .gz) → SSH, sudo, su, PAM, session events"]
+    E --> F["linux_journal ⏳ — systemd binary journal"]
+    F --> G["linux_cron ✅ — crontabs, cron.d, run-parts, anacron, at, timers (--notable-only)"]
+    G --> H["linux_bashhist ✅ — all users / all shells → attacker commands, tampering markers"]
+    H --> I["memory/* + memory_linux ⏳"]
+    I --> J["analysis_timeline ✅ — merged UTC timeline"]
+```
+
+1. **Acquire.** `acquisition_collect --os linux` pulls `/etc`, `/var/log`
+   (incl. rotated), `/home/*` dotfiles, crontabs and `cron.d`, systemd units,
+   every shell's history, and a `/proc` process snapshot, with hashes +
+   manifest.
+2. **Open the image.** `mounting_image extract` / `serve`; on Linux mount the
+   ext volume `-o ro,noload` (never replay the journal).
+3. **File-system timeline.** `recovery_carve` on unallocated space today; a
+   native ext2-4 metadata timeline is ⏳ (`recovery_metadata` currently covers
+   NTFS).
+4. **Logins.** `linux_utmp` → paired login/logout **sessions** with
+   durations, plus brute-force attempts from `btmp`.
+
+   ```bash
+   linux_utmp /mnt/evidence/var/log/wtmp --sessions --csv sessions.csv
+   linux_utmp /mnt/evidence/var/log/btmp --csv failed.csv
+   ```
+
+5. **System logs.** `linux_syslog --events` turns `auth.log` / `secure` /
+   `syslog` (and `.gz` rotations) into structured SSH / sudo / su / PAM /
+   session / cron / account events. The systemd binary journal
+   (`linux_journal`) is ⏳.
+
+   ```bash
+   linux_syslog /mnt/evidence/var/log --root --events \
+       --category ssh,sudo,su --csv auth_events.csv
+   ```
+
+6. **Persistence.** `linux_cron` inventories *every* scheduling mechanism and
+   flags download-and-run, `@reboot`, world-writable paths.
+
+   ```bash
+   linux_cron /mnt/evidence --notable-only --csv cron.csv
+   ```
+
+7. **User activity.** `linux_bashhist` merges every user's shell + REPL
+   history, parses `HISTTIMEFORMAT` / zsh / fish timestamps, and flags
+   attacker commands and history tampering (`history -c`, emptied files,
+   out-of-order timestamps).
+
+   ```bash
+   linux_bashhist /mnt/evidence --notable-only --with-notes --csv history.csv
+   ```
+
+8. **Memory** (⏳) — `memory_linux` for the task list, `lsmod`, `netstat`,
+   injected VMAs, `bash` history from RAM.
+9. **Correlate.**
+
+   ```bash
+   analysis_timeline sessions.csv auth_events.csv cron.csv history.csv \
+       --html linux_timeline.html
+   ```
+
+---
+
+### macOS
+
+> macOS coverage is the newest in the suite — `macos_plist` is the workhorse
+> today; the log and database parsers below are ⏳.
+
+```mermaid
+flowchart TD
+    A["acquisition_collect ✅ — /Library, ~/Library, /var/log, /private/etc, plists"] --> B["mounting_image ✅ — HFS+ slice today; APFS container mapping ⏳"]
+    B --> C["recovery_carve ✅ — unallocated; APFS / HFS+ metadata timeline ⏳"]
+    C --> D["macos_plist ✅ — LaunchAgents/Daemons, loginwindow, recent items, NSKeyedArchiver state"]
+    D --> E["macos_launchd ⏳ · macos_tcc ⏳ · macos_quarantine ⏳ — persistence, permissions, downloads"]
+    E --> F["macos_unifiedlog ⏳ · macos_fsevents ⏳ · macos_knowledgec ⏳ — activity"]
+    F --> G["memory/* + memory_macos ⏳"]
+    G --> H["analysis_timeline ✅ — merged UTC timeline"]
+```
+
+1. **Acquire.** `acquisition_collect --os macos` collects
+   `/Library/LaunchDaemons`, `~/Library/LaunchAgents`,
+   `/System/Library/LaunchDaemons`, `com.apple.*` preference plists,
+   `/var/log`, `/private/etc`, `InstallHistory.plist`, and browser data.
+2. **Open the image.** `mounting_image` exposes HFS+ partitions as slices
+   today; APFS container / volume mapping is ⏳ (interim: mount on a Mac
+   read-only, or carve).
+3. **File-system timeline.** `recovery_carve` on unallocated space; native
+   APFS / HFS+ metadata timelining is ⏳.
+4. **Property lists — everything.** `macos_plist` reads binary + XML plists
+   and unwraps `NSKeyedArchiver` object graphs. Point it at persistence and
+   activity plists:
+
+   ```bash
+   macos_plist '/mnt/evidence/Library/LaunchDaemons/*.plist' --csv launchdaemons.csv
+   macos_plist /mnt/evidence/Users/*/Library/Preferences/com.apple.loginwindow.plist --json loginwindow.json
+   macos_plist /mnt/evidence/Users/*/Library/Preferences/com.apple.recentitems.plist
+   ```
+
+5. **Persistence & permissions.** Review the LaunchAgents / Daemons plists
+   from step 4 for `ProgramArguments`, `RunAtLoad`, `StartInterval`; login
+   items. Dedicated wrappers — `macos_launchd`, `macos_tcc` (privacy DB),
+   `macos_quarantine` (`LSQuarantineEvent` downloads) — are ⏳.
+6. **Logs & activity** (⏳) — `macos_unifiedlog` (`.tracev3`),
+   `macos_fsevents` (file-system change log), `macos_knowledgec` /
+   `macos_spotlight`. Interim: `macos_plist` on `InstallHistory.plist` and
+   `/var/db/receipts`.
+7. **Memory** (⏳) — `memory_macos`.
+8. **Correlate.**
+
+   ```bash
+   analysis_timeline launchdaemons.csv loginwindow.json --html macos_timeline.html
+   ```
+
+---
+
+### Output that chains
+
+Every tool writes UTC ISO-8601 **CSV** (UTF-8-BOM, formula-injection-safe) and
+**JSON** on a stable schema, so any tool's output drops straight into
+`analysis_timeline` — or into a spreadsheet, `jq`, or a SIEM.
+
+---
+
 ## Design principles
 
 - **Zero runtime dependencies** — drops onto an unknown host with just Python.
