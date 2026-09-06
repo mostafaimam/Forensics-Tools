@@ -5,6 +5,8 @@ data stream listing, and `$SI` vs `$FN` timestamp-anomaly (timestomping)
 detection — from an extracted `$MFT`, an NTFS volume image, or a disk image
 with `--offset`.
 
+![`windows_mft gui` — the $MFT browser](docs/screenshot.png)
+
 ```
 windows_mft mft  \$MFT --csv mft.csv
 windows_mft mft  volume.raw --offset 1048576 --timestomped-only --csv suspicious.csv

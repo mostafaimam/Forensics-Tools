@@ -6,6 +6,8 @@ image, hashing every byte as it goes, tolerating bad sectors, and producing an
 acquisition log, a JSON manifest and an HTML report. A separate verification
 pass re-reads the written image and compares hashes.
 
+![The `acquisition_image gui` wizard](docs/screenshot.png)
+
 | Output format | |
 |---|---|
 | `raw` | a single `dd`-style file |

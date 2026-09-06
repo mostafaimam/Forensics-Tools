@@ -4,6 +4,8 @@
 regex-search, run built-in extraction plugins, recover deleted keys, and browse
 a hive in a `tkinter` window.
 
+![`windows_registry gui` — the hive browser](docs/screenshot.png)
+
 ```
 windows_registry dump NTUSER.DAT --csv ntuser.csv
 windows_registry key SYSTEM "ControlSet001\Services\Tcpip"

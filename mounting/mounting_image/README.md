@@ -4,6 +4,8 @@
 EWF (`E01`) / VHD / VMDK containers as one seekable byte stream, enumerates
 their **MBR / GPT partitions**, and lets you:
 
+![`mounting_image gui` — container + partitions, export, NBD, mount](docs/screenshot.png)
+
 - **inspect** the container and partition table (`info`, `partitions`)
 - **export** the whole disk or a single partition to a raw file (`convert`,
   `extract`)

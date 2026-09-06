@@ -1,9 +1,11 @@
 # analysis_timeline
 
 **Super-timeline builder and viewer.** Ingest the CSV / JSON output of the
-other `trace-*` tools (and generic CSV / JSON logs), normalise every timestamp
+other tools (and generic CSV / JSON logs), normalise every timestamp
 to UTC, merge everything into one sorted stream, filter it, and review it — on
 the command line, as a self-contained HTML page, or in a desktop window.
+
+![`analysis_timeline gui` — the timeline viewer](docs/screenshot.png)
 
 ```
 analysis_timeline case/ --csv timeline.csv --html timeline.html

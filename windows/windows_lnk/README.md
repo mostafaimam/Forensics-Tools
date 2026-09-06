@@ -6,6 +6,8 @@ it lived on, **the NetBIOS name and MAC address of the machine that created the
 shortcut**, and **`$MFT` entry / sequence numbers** from the embedded shell
 items.
 
+![`windows_lnk gui` — the shortcut viewer](docs/screenshot.png)
+
 ```
 windows_lnk *.lnk --csv lnk.csv
 windows_lnk "%APPDATA%\Microsoft\Windows\Recent" --csv recent.csv
