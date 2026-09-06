@@ -5,10 +5,8 @@ Python (3.11+, standard library only) and built to run on Windows, Linux and
 macOS.
 
 
-Built **one tool at a time**, each self-contained, each with its own tests and
-documentation. Tools are organised into categories — one directory per
-category — and named `category_tool` (e.g. `windows_prefetch`,
-`recovery_carve`).
+Each tool is self-contained, each with its own tests and
+documentation. Tools are organised into categories.
 
 | Category | What it covers |
 |---|---|
