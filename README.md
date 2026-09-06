@@ -12,6 +12,9 @@ macOS.
 | [**trace-collect**](trace-collect/) | ✅ v0.1 | Targeted artefact **acquisition** from a live system or mounted image — locked-file handling, Volume Shadow Copy, streaming hashes, chain-of-custody manifest |
 | [**trace-recycle**](trace-recycle/) | ✅ v0.1 | Recover deletion metadata from Vista+ `$I` records and the legacy `INFO2` / `INFO` index; match `$R` / `Dc` content; CSV / JSON |
 | [**trace-prefetch**](trace-prefetch/) | ✅ v0.1 | Decode Windows Prefetch (`.pf`) versions 17-31, including the Windows 10/11 `MAM` / XPRESS-Huffman compressed format (pure-Python decompressor) |
+| [**trace-timeline**](trace-timeline/) | ✅ v0.1 | Merge every tool's output into one sorted UTC super-timeline; console, self-contained **HTML viewer**, and a `tkinter` **desktop window** |
+| **trace-carve** | 🔜 next | Data recovery by magic-byte / signature carving with structural validators |
+| **trace-recover** | 🔜 next | Recover deleted-but-not-overwritten files from file-system metadata |
 | **trace-mft** | 🔜 planned | Parse the NTFS `$MFT`, `$UsnJrnl:$J`, `$Boot` and `$Secure:$SDS` into a timeline (CSV / JSON) |
 | **trace-evtx** | 🔜 planned | Parse Windows event logs (`.evtx`) with field extraction and filtering |
 

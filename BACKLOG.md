@@ -11,11 +11,16 @@ Priority order is roughly top-to-bottom within each group.
 - **trace-collect** — targeted triage acquisition (Windows / Linux / macOS), live + VSS, hashing, chain-of-custody manifest
 - **trace-recycle** — Recycle Bin: `$I` / `$R` / `INFO2` / `INFO`
 - **trace-prefetch** — Prefetch `.pf` v17-31 incl. Windows 10/11 `MAM` compression
+- **trace-timeline** — super-timeline builder + viewer (console, self-contained HTML, `tkinter` desktop window); ingests every other tool's CSV/JSON plus generic logs
+
+## Next up
+
+- **trace-carve** — data recovery by **magic bytes / signature carving**: header+footer and structural validators for the common types (JPEG, PNG, GIF, PDF, ZIP/OOXML, GZIP, SQLite, PST, EVTX, MFT records, LNK, MP4, PK-archives, ELF/PE, …), scan a raw image / device / unallocated blob, validate and length-bound each hit, write recovered files + a manifest (offset, size, type, hashes, validation status). Cross-platform.
+- **trace-recover** — **metadata-based recovery**: walk a live file-system or image and recover *deleted-but-not-overwritten* files from the file-system metadata (NTFS `$MFT` unallocated entries, FAT directory entries, ext4 journal, HFS+/APFS). Complements `trace-carve` (metadata gives names + timestamps; carving finds the bytes).
 
 ## Timeline & review tooling
 
-- **trace-timeline** — super-timeline builder: ingest the CSV/JSON output of every other tool (and generic CSVs), normalise timestamps to UTC, merge, sort, de-duplicate, filter by time range / host / keyword / artefact type, tag rows, export CSV / JSONL. The open, scriptable answer to a timeline-review GUI.
-- **trace-view** — optional local static-HTML timeline viewer generated from a `trace-timeline` export (sortable, filterable, taggable, no server).
+- **trace-view** — richer standalone HTML/JS timeline explorer (saved views, column chooser, multi-tag, notes) beyond the built-in `--html` page.
 
 ## Windows artefact parsers
 
@@ -63,8 +68,8 @@ Grouped by the AccessData / Exterro *FTK* feature it corresponds to.
 
 ### FTK Imager
 
-- **trace-image** — create forensic images: raw / `dd`, split raw, and `EWF` / `E01` (write support), with MD5 + SHA-1/256 during acquisition and a verification pass
-- **trace-mount** — read-only mount / expose of raw, `E01`, `VHD(X)`, `VMDK` images and partitions (loopback on Linux; user-space file server elsewhere)
+- **trace-image** — create forensic images: raw / `dd`, split raw, and `EWF` / `E01` (write support), with MD5 + SHA-1/256 during acquisition and a verification pass. **CLI + GUI** (acquisition wizard, progress, hash log).
+- **trace-mount** — read-only mount / expose of raw, `E01`, `VHD(X)`, `VMDK` images and partitions (loopback on Linux; user-space file server / WebDAV elsewhere). **CLI + GUI** (pick image → pick partition → mount point / drive letter, mounted-volume list, unmount).
 - **trace-fs** — file-system walker for `NTFS` / `FAT` / `exFAT` / `ext2-4` / `HFS+` / `APFS`: list, extract, recover deleted, timeline `MACB`
 - **trace-partitions** — MBR / GPT / APFS-container / LVM map
 - **trace-ram** — live memory acquisition (Windows via a driver-less API path where possible; Linux `/proc/kcore` + `LiME` format; macOS best-effort)
