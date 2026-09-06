@@ -58,5 +58,4 @@ an `sha256` / `sha1` / `md5` column or key.
 Walk + size-prefilter + content grouping, reclaimable-bytes accounting, the
 distinct-file list, and the `--against` baseline diff are covered by the test
 suite. Not yet done: fuzzy / similarity dedupe (ssdeep-style), and a shared
-hash cache with `analysis_kff` / `analysis_report`. See the
-[backlog](../../BACKLOG.md).
+hash cache with `analysis_kff` / `analysis_report`. See the project roadmap.

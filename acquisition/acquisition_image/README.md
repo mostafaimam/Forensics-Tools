@@ -139,5 +139,4 @@ handling, and disk enumeration are covered by the test suite (a synthetic
 "disk" is imaged in every format and checked for a byte-exact round trip;
 the `E01` is also re-read by the independent `mounting_image` parser). Not
 yet done: EWF v2 (`Ex01`), `AFF4`, in-acquisition compression tuning by
-entropy, resumable acquisition, and remote (SSH/iSCSI) sources. See the
-[backlog](../../BACKLOG.md).
+entropy, resumable acquisition, and remote (SSH/iSCSI) sources. See the project roadmap.

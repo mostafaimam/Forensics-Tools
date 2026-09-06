@@ -85,4 +85,4 @@ Linux `task_struct` scanning is a separate future tool.
 Pool-tag scanning, the `_EPROCESS` heuristic (name / CreateTime / ExitTime /
 PID), FILETIME validation, de-duplication and the filters are covered by the
 test suite against synthetic `_EPROCESS`-shaped blobs (the dev box has no
-real dumps). See the [backlog](../../BACKLOG.md).
+real dumps). See the project roadmap.

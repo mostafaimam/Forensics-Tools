@@ -124,4 +124,4 @@ exercised in CI). Not yet done: `/proc/kcore` on non-x86-64 `PAGE_OFFSET`
 layouts beyond the detection window, direct LiME **compression**
 (`--compress`), AVML-compatible output, a Windows kernel-driver option, and
 carving `hiberfil.sys` / `sleepimage` into a raw image (that's a job for the
-planned `memory_image`). See the [backlog](../../BACKLOG.md).
+planned `memory_image`). See the project roadmap.

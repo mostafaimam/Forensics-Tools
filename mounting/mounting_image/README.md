@@ -190,4 +190,4 @@ and client** protocol paths are tested over loopback; the Linux
 Not yet done: VHDX, EWF v2 (`Ex01`), compressed/stream-optimized VMDK, AFF4,
 `.vdi`, APFS / LVM container mapping (planned as `mounting_partitions`), and a
 FUSE / WebDAV mount so a partition's filesystem appears as a browsable folder
-on Windows / macOS. See the [backlog](../../BACKLOG.md).
+on Windows / macOS. See the project roadmap.

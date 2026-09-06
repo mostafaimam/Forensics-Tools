@@ -108,4 +108,4 @@ format — the dev box has no real captures). Not yet done: Windows bitmap
 dumps beyond basic present-page mapping, `hiberfil.sys` decompression, AVML
 container framing, VMware `.vmem` + `.vmsn` pairing, and virtual-address
 translation (that needs the page tables — a job for the analysis tools). See
-the [backlog](../../BACKLOG.md).
+the project roadmap.

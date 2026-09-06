@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "analysis_email"
+version = "0.1.0"
+description = "Inventory email (MBOX / EML / Outlook MSG) - one row per message with headers, addresses, dates, attachments (SHA-256) and spoofing / auth-failure flags"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "email", "mbox", "eml", "msg", "outlook", "bec", "phishing"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/analysis/analysis_email"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+analysis_email = "analysis_email.cli:main"
+[tool.setuptools]
+packages = ["analysis_email"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]

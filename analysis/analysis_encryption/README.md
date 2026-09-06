@@ -67,5 +67,4 @@ compressed / media containers are excluded so they don't false-positive.
 All the signature checks above and the entropy fallback are covered by the
 test suite. Not yet done: legacy `.doc`/`.xls` FIB flag parsing, macOS
 keychain / APFS-encrypted volume detection, Adobe / Apple DRM, and confirming
-7-Zip / RAR *content* (vs header) encryption. See the
-[backlog](../../BACKLOG.md).
+7-Zip / RAR *content* (vs header) encryption. See the project roadmap.

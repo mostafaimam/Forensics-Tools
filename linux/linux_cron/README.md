@@ -120,5 +120,4 @@ All sources above are parsed and covered by the test suite (synthetic
 fixtures — the dev box has no Linux cron data, as with `linux_utmp`). Not yet
 done: resolving systemd `OnCalendar` to concrete next-run times, `fcron` /
 `systemd-cron` generator output, and per-file ownership from an image's inode
-metadata (needs a filesystem layer — see `recovery_fs` in the
-[backlog](../../BACKLOG.md)).
+metadata (needs a filesystem layer — see `recovery_fs` on the roadmap).

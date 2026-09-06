@@ -69,7 +69,7 @@ BOM and formula-injection safe. `--json` / `--jsonl` additionally carry the
 full rendered **XML** and the complete data dictionary.
 
 `MapDescription` is reserved for the planned event-ID → friendly-description
-maps (see [../../BACKLOG.md](../../BACKLOG.md)); it is empty in v0.1.
+maps (see the roadmap); it is empty in v0.1.
 
 ---
 

@@ -122,5 +122,4 @@ bash / zsh / fish / plain formats and the heuristics above are covered by the
 test suite (synthetic fixtures — no Linux shell history on the dev box, as
 with the other `linux_*` tools). Not yet done: `.viminfo` command history,
 `atuin` / `mcfly` SQLite history databases, and correlating commands with
-`linux_utmp` sessions / `linux_syslog` sudo events. See the
-[backlog](../../BACKLOG.md).
+`linux_utmp` sessions / `linux_syslog` sudo events. See the project roadmap.

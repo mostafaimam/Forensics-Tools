@@ -128,4 +128,4 @@ and covered by the test suite (synthetic fixtures — the dev box has no Linux
 log data, as with the other `linux_*` tools). Not yet done: `klog` ring-buffer
 files, `lastlog`-style binary siblings (see `linux_utmp`), per-boot grouping,
 and joining SSH events to `linux_utmp` sessions (planned as a cross-tool step).
-See the [backlog](../../BACKLOG.md).
+See the project roadmap.

@@ -123,4 +123,4 @@ index, incremental build, and the full query grammar (boolean, phrase,
 `NEAR`, prefix, regex, filters) are covered by the test suite. Not yet done:
 real PDF text extraction, RTF, legacy `.doc` / `.xls`, language-aware
 stemming, stored highlights (snippets currently re-read the file), and
-sharding a very large index. See the [backlog](../../BACKLOG.md).
+sharding a very large index. See the project roadmap.

@@ -20,7 +20,7 @@ documentation. Tools are organised into categories.
 | [`analysis/`](analysis/) | timeline building, indexing, correlation, reporting |
 | [`utilities/`](utilities/) | strings, hashing, hex / file viewers |
 
-Full roadmap and every planned tool: **[BACKLOG.md](BACKLOG.md)**.
+Full roadmap and every planned tool: the private roadmap.
 
 ---
 
@@ -106,7 +106,7 @@ Full roadmap and every planned tool: **[BACKLOG.md](BACKLOG.md)**.
 
 ## Investigation workflow
 
-How the tools fit together. **✅ available now · ⏳ planned ([BACKLOG](BACKLOG.md))**
+How the tools fit together. **✅ available now · ⏳ planned**
 
 Every case runs through the same seven phases — only phase ④ is
 OS-specific.

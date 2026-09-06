@@ -6,7 +6,7 @@ and `MACB` timestamps, then extract file content, including
 **deleted-but-not-overwritten** files.
 
 v0.1 supports **NTFS** (`$MFT`). FAT / exFAT / ext2-4 / HFS+ / APFS are planned
-— see [../../BACKLOG.md](../../BACKLOG.md).
+— see the roadmap.
 
 ```
 recovery_metadata list    volume.raw --csv mft.csv

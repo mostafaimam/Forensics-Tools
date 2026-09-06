@@ -6,4 +6,4 @@
 
 Planned: `macos_unifiedlog`, `macos_fsevents`, `macos_knowledgec`,
 `macos_quarantine`, `macos_spotlight`, `macos_launchd`, `macos_installhistory`,
-`macos_tcc`, `macos_dslocal` — see [../BACKLOG.md](../BACKLOG.md).
+`macos_tcc`, `macos_dslocal` — see the roadmap.

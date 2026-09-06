@@ -152,7 +152,7 @@ implemented and validated against a real hive. Transaction-log (`.LOG1` /
 `.LOG2`) replay for dirty hives lives in `windows_reglog`. Not yet done:
 security-descriptor (`sk`) decoding and class-name data. Deep artefact
 tooling for ShimCache, Amcache, SRUM and jump lists lives under its own
-tools. See the [backlog](../../BACKLOG.md).
+tools. See the project roadmap.
 
 ---
 

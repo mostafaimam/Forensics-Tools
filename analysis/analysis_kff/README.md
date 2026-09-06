@@ -121,5 +121,4 @@ three-category index, file and hash-list scanning, and the lookup / sets /
 stats commands are covered by the test suite. Not yet done: NSRL "unique" vs
 "full" set handling, PhotoDNA / robust perceptual hashes (see
 `analysis_gallery`), incremental RDS delta imports, and a shared cache so
-`analysis_dedupe` / `analysis_report` can reuse the classification. See the
-[backlog](../../BACKLOG.md).
+`analysis_dedupe` / `analysis_report` can reuse the classification. See the project roadmap.
