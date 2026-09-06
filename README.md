@@ -66,6 +66,7 @@ Full roadmap and every planned tool: **[BACKLOG.md](BACKLOG.md)**.
 | Tool | Status | Purpose |
 |---|---|---|
 | [**analysis_timeline**](analysis/analysis_timeline/) | ✅ v0.1 | Merge every tool's output into one sorted UTC super-timeline. Console, self-contained **HTML viewer**, and a `tkinter` **desktop window** (`analysis_timeline gui`) |
+| [**analysis_kff**](analysis/analysis_kff/) | ✅ v0.1 | Known File Filter — import NSRL / Project VIC / HashKeeper / plain hash sets into a local SQLite index; classify files or hashes as **known-good / known-bad / notable / unknown** |
 
 ### `linux/`
 
@@ -84,7 +85,7 @@ Full roadmap and every planned tool: **[BACKLOG.md](BACKLOG.md)**.
 
 ### next up
 
-`analysis_kff` (NSRL hash sets) · `analysis_index` / `analysis_search` (full-text) · `analysis_email` (PST/MBOX) — FTK-parity ·
+`analysis_index` / `analysis_search` (full-text) · `analysis_email` (PST/MBOX) · `analysis_gallery` — FTK-parity ·
 `recovery_metadata` FAT / ext4 / APFS support ·
 `linux_journal` (systemd binary journal) · `macos_quarantine` / `macos_knowledgec` (build on `macos_plist` + SQLite) ·
 `memory/` (RAM-image analysis).
@@ -161,10 +162,14 @@ flowchart TD
    `$SI` / `$FN` timestomp detection. Everything else hangs off these times.
    Then `recovery_metadata` lists / extracts deleted MFT entries, and
    `recovery_carve` recovers files from unallocated space with no MFT record.
+   With the volume mounted read-only (from `mounting_image serve` +
+   `nbd-client`), run `analysis_kff scan --ignore-known` over it first to
+   drop the OS / application noise and surface unknown + known-bad files.
 
    ```bash
    windows_mft mft '$MFT' --csv mft.csv
    windows_mft usn '$J'   --csv usn.csv
+   analysis_kff scan /mnt/evidence --ignore-known --csv unknown_files.csv
    ```
 
 4. **Registry.** Dirty hives first: `windows_reglog` replays `.LOG1` / `.LOG2`

@@ -47,6 +47,7 @@ Priority is roughly top-to-bottom within each group.
 - **linux_bashhist** — shell / REPL history across all users (bash / zsh / fish / sh + python / mysql / psql / sqlite / node / redis), per-shell timestamp parsing, merged timeline, tampering markers, attacker-command heuristics
 - **mounting_image** (+GUI) — read-only access to raw / split / EWF (`E01`) / VHD / VMDK images: container + MBR/GPT partition inspection, export whole-disk or per-partition raw, byte-range stream, read-only NBD server (+ Linux `nbd-client`/`mount` orchestration); `tkinter` browser
 - **acquisition_image** (+GUI) — create + verify forensic images: raw / split / EWF (`E01`) **write**, streaming MD5+SHA-1+SHA-256, bad-sector zero-fill + logging, embedded EWF case metadata & digest, acquisition log + JSON manifest + HTML report; disk enumeration (Linux/macOS/Windows); `tkinter` wizard
+- **analysis_kff** — Known File Filter: import NSRL RDS (text + SQLite), Project VIC / CAID JSON, HashKeeper / generic CSV, plain hash lists into a local SQLite index; classify files or a hash list as known-good / known-bad / notable / unknown (`scan`, `lookup`, `--alerts-only`, deterministic exit code)
 
 ## Next up
 
@@ -54,7 +55,7 @@ Priority is roughly top-to-bottom within each group.
 2. **recovery_metadata** — FAT / exFAT, ext2-4 (+ journal), HFS+, APFS; `--offset` partition auto-detection; live-volume input (`\\.\C:`).
 3. **windows_evtx** — event-ID → friendly-description **maps** (TOML), locale message resolution, recovered records from chunk slack, CRC verification.
 4. **windows_reglog** — old-format (`DIRT`) Windows 7 logs; auto-invoke from `windows_registry`.
-5. **analysis_kff** — Known File Filter (NSRL-compatible hash sets), per the user's FTK-parity ask.
+5. **analysis_index** / **analysis_search** — full-text index + boolean/phrase/regex query over a collection or image, per the user's FTK-parity ask.
 
 ## Acquisition — `acquisition/`
 
@@ -142,7 +143,7 @@ plain data files rather than a downloaded symbol server.
 
 - **analysis_view** (GUI-first) — standalone viewer for CSV and Excel (`.xlsx`): per-column filters (distinct-value pick lists), full-text search, multi-column sort, column show/hide/reorder/pin, conditional row-colouring rules, a details pane, a notes/skip column, coloured tags + tag groups, group-by-column, export the current view. Generalises `analysis_timeline`'s viewer to *any* tabular file and brings it to full timeline-review feature parity — while running on Linux/macOS and building a single shareable HTML file. `analysis_timeline --html` becomes a thin wrapper over it.
 - **analysis_index** / **analysis_search** — build a full-text index over a collection / image (tokeniser + on-disk inverted index), then boolean / phrase / regex / proximity queries.
-- **analysis_kff** — Known File Filter: hash a target set and tag against known-good / known-bad hash sets (NSRL-compatible import), alert on notable hashes.
+- **analysis_kff** — done (above). Remaining: incremental RDS delta imports, NSRL unique/full handling, shared classification cache for `analysis_dedupe` / `analysis_report`.
 - **analysis_email** — `PST` / `OST` / `MBOX` / `EML` / `MSG` → message + attachment inventory, threading, header analysis.
 - **analysis_gallery** — extract + thumbnail pictures / video, EXIF / GPS, perceptual-hash grouping.
 - **analysis_dedupe** — hash-based dedupe + "distinct files" set across a collection.
