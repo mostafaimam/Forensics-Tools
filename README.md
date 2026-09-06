@@ -67,6 +67,7 @@ Full roadmap and every planned tool: **[BACKLOG.md](BACKLOG.md)**.
 | Tool | Status | Purpose |
 |---|---|---|
 | [**analysis_timeline**](analysis/analysis_timeline/) | ✅ v0.1 | Merge every tool's output into one sorted UTC super-timeline. Console, self-contained **HTML viewer**, and a `tkinter` **desktop window** (`analysis_timeline gui`) |
+| [**analysis_dedupe**](analysis/analysis_dedupe/) | ✅ v0.1 | Hash-based deduplication — content grouping, reclaimable bytes, distinct-file list, `--against` baseline diff |
 | [**analysis_kff**](analysis/analysis_kff/) | ✅ v0.1 | Known File Filter — import NSRL / Project VIC / HashKeeper / plain hash sets into a local SQLite index; classify files or hashes as **known-good / known-bad / notable / unknown** |
 | [**analysis_index**](analysis/analysis_index/) | ✅ v0.1 | Full-text index + search over a collection — text / markup / OOXML / email / string-carving extraction; **boolean / phrase / `NEAR` / prefix / regex** queries with snippets; SQLite, no FTS extension |
 
@@ -95,8 +96,8 @@ Full roadmap and every planned tool: **[BACKLOG.md](BACKLOG.md)**.
 
 ### next up
 
-`analysis_dedupe` / `analysis_encryption` (FTK-parity) ·
-`analysis_email` (PST/MBOX) · `analysis_gallery` · `analysis_dedupe` — FTK-parity ·
+`analysis_encryption` · `analysis_email` (PST/MBOX) · `analysis_gallery` · `analysis_report` — FTK-parity ·
+`memory_netscan` / `memory_malfind` (RAM analysis) ·
 `recovery_metadata` FAT / ext4 / APFS support ·
 `linux_journal` (systemd binary journal) · `macos_quarantine` / `macos_knowledgec` (build on `macos_plist` + SQLite).
 

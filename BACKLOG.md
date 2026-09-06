@@ -57,7 +57,7 @@ Priority is roughly top-to-bottom within each group.
 2. **recovery_metadata** — FAT / exFAT, ext2-4 (+ journal), HFS+, APFS; `--offset` partition auto-detection; live-volume input (`\\.\C:`).
 3. **windows_evtx** — event-ID → friendly-description **maps** (TOML), locale message resolution, recovered records from chunk slack, CRC verification.
 4. **windows_reglog** — old-format (`DIRT`) Windows 7 logs; auto-invoke from `windows_registry`.
-5. **analysis_dedupe** / **analysis_encryption** — FTK-parity: hash-based dedupe + encrypted-file detection (report only).
+5. **analysis_encryption** — detect encrypted / password-protected files and containers (report only), per the user's FTK-parity ask.
 
 ## Acquisition — `acquisition/`
 
@@ -148,7 +148,7 @@ plain data files rather than a downloaded symbol server.
 - **analysis_kff** — done (above). Remaining: incremental RDS delta imports, NSRL unique/full handling, shared classification cache for `analysis_dedupe` / `analysis_report`.
 - **analysis_email** — `PST` / `OST` / `MBOX` / `EML` / `MSG` → message + attachment inventory, threading, header analysis.
 - **analysis_gallery** — extract + thumbnail pictures / video, EXIF / GPS, perceptual-hash grouping.
-- **analysis_dedupe** — hash-based dedupe + "distinct files" set across a collection.
+- **analysis_dedupe** — done. Size-prefiltered content grouping, reclaimable bytes, distinct-file list, `--against` baseline diff (new vs seen). Remaining: fuzzy/similarity dedupe, shared hash cache.
 - **analysis_encryption** — detect encrypted / password-protected files and containers (BitLocker, Office, PDF, archives, VeraCrypt heuristics); **report only, no cracking**.
 - **analysis_report** — case report generator: bundle findings, tagged rows and an `analysis_timeline` export into one HTML / JSON package.
 
