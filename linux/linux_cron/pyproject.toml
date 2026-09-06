@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "linux_cron"
+version = "0.1.0"
+description = "Scheduled-execution inventory for Linux: crontabs, cron.d, run-parts, anacron, at jobs and systemd timers, with suspicious-entry flagging"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "linux", "cron", "crontab", "systemd", "timer", "persistence", "at"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/linux/linux_cron"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+linux_cron = "linux_cron.cli:main"
+[tool.setuptools]
+packages = ["linux_cron"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]

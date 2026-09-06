@@ -65,6 +65,7 @@ Full roadmap and every planned tool: **[BACKLOG.md](BACKLOG.md)**.
 | Tool | Status | Purpose |
 |---|---|---|
 | [**linux_utmp**](linux/linux_utmp/) | ✅ v0.1 | `wtmp` / `btmp` / `utmp` / `lastlog` login records → record timeline + paired login/logout **sessions** |
+| [**linux_cron**](linux/linux_cron/) | ✅ v0.1 | Scheduled-execution inventory — crontabs, `cron.d`, run-parts, anacron, `at` jobs, systemd timers → normalised rows with plain-language schedules + suspicious-entry flags |
 
 ### `macos/`
 
@@ -76,7 +77,8 @@ Full roadmap and every planned tool: **[BACKLOG.md](BACKLOG.md)**.
 
 `recovery_metadata` FAT / ext4 / APFS support · `mounting_image` (image
 mounting, CLI + GUI) ·
-`linux_journal` · `macos_quarantine` / `macos_knowledgec` (build on `macos_plist` + SQLite).
+`linux_journal` · `macos_quarantine` / `macos_knowledgec` (build on `macos_plist` + SQLite) ·
+`memory/` (RAM-image analysis).
 
 ---
 

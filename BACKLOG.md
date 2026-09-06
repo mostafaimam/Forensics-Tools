@@ -42,6 +42,7 @@ Priority is roughly top-to-bottom within each group.
 - **windows_amcache** — `Amcache.hve` parser: executables (SHA-1), installed programs, drivers; modern + legacy layouts
 - **windows_shimcache** — AppCompatCache / ShimCache parser (program presence + Win7/8 execution), `SYSTEM` hive or live registry
 - **macos_plist** — binary + XML property lists → CSV / JSON; `NSKeyedArchiver` unwrapping; Apple timestamp conversion
+- **linux_cron** — scheduled-execution inventory: system / user crontabs, `cron.d`, `cron.{hourly,daily,weekly,monthly}`, anacrontab, `at` jobs, systemd timers → one normalised row per job, plain-language schedule, suspicious-entry flags
 
 ## Next up
 
@@ -92,7 +93,7 @@ Priority is roughly top-to-bottom within each group.
 - **linux_syslog** — classic `syslog` / `messages` / `auth.log` normaliser (incl. rotated / `.gz`)
 - **linux_audit** — `auditd` `audit.log` records → normalised events
 - **linux_bashhist** — shell history across users, `HISTTIMEFORMAT` timestamps, `.python_history` / `.mysql_history` / `.viminfo`
-- **linux_cron** — crontabs, `cron.d`, `cron.*`, `at` jobs, systemd timers → scheduled-execution inventory
+- **linux_cron** — done (above). Remaining: resolve systemd `OnCalendar` to concrete next-run times; `fcron` / generator output; per-file owner from image inode metadata.
 - **linux_units** — systemd unit-file inventory + persistence review (`ExecStart`, `WantedBy`, drop-ins)
 - **linux_packages** — `dpkg` / `apt` / `rpm` / `dnf` install-upgrade-remove history
 - **linux_sshkeys** — `authorized_keys`, `known_hosts`, host keys, `sshd_config` review
