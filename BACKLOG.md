@@ -57,7 +57,7 @@ Priority is roughly top-to-bottom within each group.
 2. **recovery_metadata** — FAT / exFAT, ext2-4 (+ journal), HFS+, APFS; `--offset` partition auto-detection; live-volume input (`\\.\C:`).
 3. **windows_evtx** — event-ID → friendly-description **maps** (TOML), locale message resolution, recovered records from chunk slack, CRC verification.
 4. **windows_reglog** — old-format (`DIRT`) Windows 7 logs; auto-invoke from `windows_registry`.
-5. **memory_pslist** / **memory_strings** — first RAM-analysis tools on top of `memory_image` (pool-tag / signature process scan; address-aware strings).
+5. **memory_pslist** — process enumeration from a RAM dump (pool-tag / signature scan on top of `memory_image`).
 
 ## Acquisition — `acquisition/`
 
@@ -136,7 +136,7 @@ plain data files rather than a downloaded symbol server.
 - **memory_filescan** / **memory_dumpfiles** — `_FILE_OBJECT` scan and reconstruct file contents from the cache manager (data + image sections).
 - **memory_svcscan** — services from memory (`services.exe` records), state, binary path, DLL.
 - **memory_timers** / **memory_callbacks** / **memory_ssdt** — kernel persistence & hooking surface: timers, notification callbacks, SSDT / IDT / IRP-hook inspection.
-- **memory_strings** — address-aware strings: map every hit back to process + virtual address (physical-offset → owner translation).
+- **memory_strings** — done. ASCII + UTF-16LE runs tagged with the physical address; built-in IOC pattern library (url/email/ip/registry/powershell/cmdline/keys/wallets/cards…); `--classified` / `--category` / `--grep` / `--physical-from/-to`. Remaining: inflate compressed regions before scanning, per-process attribution (needs the structural tools).
 - **memory_linux** — Linux dump support for the above where it applies (task list, `lsmod`, `netstat`, `bash` history, mount table, `tty` buffers, injected VMAs) driven by a bundled per-kernel structure-layout file, plus a helper to generate that file from a live host or `vmlinux`/`System.map`.
 - **memory_macos** — macOS dump support (proc list, `kextstat`, network, trustcache) — best-effort, version-gated.
 - **memory_yara** — scan process / kernel memory with YARA-style rules (bundled minimal matcher, no `yara-python`), report owner + address.

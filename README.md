@@ -90,10 +90,11 @@ Full roadmap and every planned tool: **[BACKLOG.md](BACKLOG.md)**.
 | Tool | Status | Purpose |
 |---|---|---|
 | [**memory_image**](memory/memory_image/) | ✅ v0.1 | Identify / map / convert RAM dumps — raw / **LiME** / ELF core / **Windows crash dump**; physical range map, OS hints, `raw`↔`lime`↔`padded`, carve a region. The shared loader for the `memory_*` tools |
+| [**memory_strings**](memory/memory_strings/) | ✅ v0.1 | Address-aware string extraction from a RAM dump — ASCII + UTF-16LE runs tagged with the physical address, built-in IOC pattern library (url / registry / powershell / keys / wallets / cards …) |
 
 ### next up
 
-`memory_pslist` / `memory_strings` (RAM analysis on `memory_image`) ·
+`memory_pslist` (process scan on `memory_image`) ·
 `analysis_email` (PST/MBOX) · `analysis_gallery` · `analysis_dedupe` — FTK-parity ·
 `recovery_metadata` FAT / ext4 / APFS support ·
 `linux_journal` (systemd binary journal) · `macos_quarantine` / `macos_knowledgec` (build on `macos_plist` + SQLite).
