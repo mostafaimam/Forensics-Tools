@@ -18,6 +18,7 @@ Priority is roughly top-to-bottom within each group.
 | `windows/` | Windows artefact parsers |
 | `linux/` | Linux artefact parsers |
 | `macos/` | macOS artefact parsers |
+| `memory/` | Memory forensics |
 | `analysis/` | Timeline & analysis |
 | `utilities/` | Utilities & viewers |
 
@@ -28,7 +29,7 @@ Priority is roughly top-to-bottom within each group.
 - **acquisition_collect** — targeted triage acquisition (Windows / Linux / macOS), live + VSS, hashing, chain-of-custody manifest
 - **recovery_carve** — file recovery by magic-byte signature carving with structural validators
 - **recovery_metadata** — NTFS `$MFT` metadata recovery: list allocated + deleted entries, extract content (incl. deleted), `cat` by entry number
-- **windows_registry** — offline `regf` hive parser: dump / key / search / deleted-key recovery, 8 built-in plugins, `tkinter` browser
+- **windows_registry** — offline `regf` hive parser: dump / key / search / deleted-key recovery, ~50 built-in RegRipper-style plugins (auto-selected by hive kind) + `--plugin-dir` external-plugin loader, `tkinter` browser
 - **windows_reglog** — transaction-log (`.LOG1` / `.LOG2`) replay: `HvLE` entries, Marvin32 verification, dirty-hive recovery
 - **windows_evtx** — event logs (`.evtx`): from-scratch binary + BinXml parser → standardised CSV / JSON / JSONL / XML, event-ID / provider / level / time filters
 - **windows_mft** — NTFS `$MFT` + `$UsnJrnl:$J`: timeline, ADS, `$SI`/`$FN` timestomp detection, bodyfile; `tkinter` `$MFT` browser
@@ -53,7 +54,7 @@ Priority is roughly top-to-bottom within each group.
 ## Acquisition — `acquisition/`
 
 - **acquisition_image** (+GUI) — create forensic images: raw / `dd`, split raw, `EWF` / `E01` (write), MD5 + SHA-1/256 during acquisition and a verification pass; acquisition wizard, progress, hash log.
-- **acquisition_ram** — live memory acquisition (Linux `/proc/kcore` + LiME format; Windows / macOS best-effort).
+- **acquisition_ram** — live memory acquisition: Linux `/proc/kcore` → raw / LiME / padded, macOS best-effort; Windows writes a raw dump where a kernel primitive is available and otherwise collects the page file + `hiberfil.sys` + crash dumps. SHA-256 during capture, acquisition manifest.
 
 ## Imaging & mounting — `mounting/`
 
@@ -68,7 +69,7 @@ Priority is roughly top-to-bottom within each group.
 
 ## Windows artefact parsers — `windows/`
 
-- **windows_mft** / **windows_evtx** / **windows_registry** — see **Next up** for the remaining work (more plugins, `sk` security descriptors, multi-hive load, RegBack diffing).
+- **windows_mft** / **windows_evtx** / **windows_registry** — see **Next up** for the remaining work (`sk` security descriptors, class-name data, multi-hive load, RegBack diffing).
 - **windows_reglog** — see **Next up** (old-format `DIRT` logs; auto-invoke from `windows_registry`).
 - **windows_recentfilecache** — `RecentFileCache.bcf` parser.
 - **windows_lnk** — see **Next up** (fuller shell-item type coverage, `PropertyStoreDataBlock`).
@@ -108,6 +109,29 @@ Priority is roughly top-to-bottom within each group.
 - **macos_installhistory** — `InstallHistory.plist` + `/var/db/receipts`
 - **macos_tcc** — `TCC.db` privacy permissions
 - **macos_dslocal** — `/var/db/dslocal` local account records
+
+## Memory forensics — `memory/`
+
+Analysis of RAM images captured by `acquisition_ram` (or any raw / LiME / crash
+dump). Pure-Python, zero-dependency, read-only; profile/symbol data ships as
+plain data files rather than a downloaded symbol server.
+
+- **memory_image** — identify a dump: format (raw / LiME / crash dump / ELF core / `hiberfil`), OS + build, KASLR base / DTB, page size, run map; convert between formats; carve a raw region out. The shared loader every other `memory_*` tool builds on.
+- **memory_pslist** — process enumeration: active list walk **and** pool/scan for hidden or exited processes, PID/PPID tree, create/exit times, command line, SID/user, session, exit status; cross-view diff to flag unlinked processes (DKOM).
+- **memory_dlllist** — loaded modules / mapped images per process (PEB + VAD cross-check), load path, load reason, unlinked-module detection; dump a module or the main image.
+- **memory_handles** — open handles per process (files, keys, events, sections, tokens, threads) and kernel object table.
+- **memory_netscan** — network connections and listening sockets (TCP/UDP, v4/v6), owning PID, state, timestamps; pool-scan for closed connections.
+- **memory_malfind** — injected / unbacked executable memory: private RWX VADs, PE headers with no backing file, hollowed images, shellcode heuristics; dump the regions.
+- **memory_cmdline** / **memory_consoles** — process command lines and reconstructed console/`conhost` screen + history buffers (attacker keystrokes and output).
+- **memory_registry** — locate hives in memory (`hivelist`), export them to disk, and run `windows_registry` plugins directly against the in-memory hive; recover keys/values only present in RAM.
+- **memory_hashdump** / **memory_lsasecrets** — SAM/SYSTEM in memory → local NT hashes; LSA secrets and cached-domain-credential material. **Reporting/extraction for IR; no cracking.**
+- **memory_filescan** / **memory_dumpfiles** — `_FILE_OBJECT` scan and reconstruct file contents from the cache manager (data + image sections).
+- **memory_svcscan** — services from memory (`services.exe` records), state, binary path, DLL.
+- **memory_timers** / **memory_callbacks** / **memory_ssdt** — kernel persistence & hooking surface: timers, notification callbacks, SSDT / IDT / IRP-hook inspection.
+- **memory_strings** — address-aware strings: map every hit back to process + virtual address (physical-offset → owner translation).
+- **memory_linux** — Linux dump support for the above where it applies (task list, `lsmod`, `netstat`, `bash` history, mount table, `tty` buffers, injected VMAs) driven by a bundled per-kernel structure-layout file, plus a helper to generate that file from a live host or `vmlinux`/`System.map`.
+- **memory_macos** — macOS dump support (proc list, `kextstat`, network, trustcache) — best-effort, version-gated.
+- **memory_yara** — scan process / kernel memory with YARA-style rules (bundled minimal matcher, no `yara-python`), report owner + address.
 
 ## Timeline & analysis — `analysis/`
 

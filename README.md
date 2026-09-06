@@ -16,6 +16,7 @@ documentation. Tools are organised into categories.
 | [`windows/`](windows/) | Windows artefact parsers |
 | [`linux/`](linux/) | Linux artefact parsers |
 | [`macos/`](macos/) | macOS artefact parsers |
+| [`memory/`](memory/) | RAM-image analysis — processes, network, injection, in-memory hives |
 | [`analysis/`](analysis/) | timeline building, indexing, correlation, reporting |
 | [`utilities/`](utilities/) | strings, hashing, hex / file viewers |
 
@@ -46,7 +47,7 @@ Full roadmap and every planned tool: **[BACKLOG.md](BACKLOG.md)**.
 | [**windows_lnk**](windows/windows_lnk/) | ✅ v0.1 | Shell Link (`.lnk`) — target path + MAC times, **creating machine name + MAC**, `$MFT` refs from shell items; CSV / JSON, `tkinter` viewer |
 | [**windows_amcache**](windows/windows_amcache/) | ✅ v0.1 | `Amcache.hve` — executables (with **SHA-1**), installed programs and drivers |
 | [**windows_shimcache**](windows/windows_shimcache/) | ✅ v0.1 | AppCompatCache / ShimCache — program presence + (Win7/8) execution evidence, from a `SYSTEM` hive or the live registry |
-| [**windows_registry**](windows/windows_registry/) | ✅ v0.1 | Offline hive (`regf`) parser — dump / search / deleted-key recovery, 8 built-in plugins (run-keys, services, userassist, usbstor, …), `tkinter` browser |
+| [**windows_registry**](windows/windows_registry/) | ✅ v0.1 | Offline hive (`regf`) parser — dump / search / deleted-key recovery, ~50 built-in RegRipper-style plugins auto-selected by hive kind + external `--plugin-dir` loader, `tkinter` browser |
 | [**windows_reglog**](windows/windows_reglog/) | ✅ v0.1 | Replay registry transaction logs (`.LOG1` / `.LOG2`) into a dirty hive — `HvLE` entries + Marvin32 verification — so parsers see a clean, current hive |
 | [**windows_evtx**](windows/windows_evtx/) | ✅ v0.1 | Event logs (`.evtx`) — from-scratch binary + BinXml parser → standardised CSV / JSON / JSONL / XML with event-ID, provider, level and time filters |
 | [**windows_mft**](windows/windows_mft/) | ✅ v0.1 | NTFS `$MFT` + `$UsnJrnl:$J` — full timeline, ADS listing, `$SI`/`$FN` timestomp detection; CSV / JSON / bodyfile; `tkinter` `$MFT` browser (`windows_mft gui`) |

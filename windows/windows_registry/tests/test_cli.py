@@ -61,7 +61,25 @@ def test_plugin_run_keys(tmp_path):
 
 def test_list_plugins(capsys):
     assert main(["--list-plugins"]) == 0
-    assert "userassist" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert "userassist" in out
+    assert "sam-users" in out and "[sam" in out
+
+
+def test_plugin_dir_loads_external(tmp_path, capsys):
+    p = _hive(tmp_path)
+    pdir = tmp_path / "ext"
+    pdir.mkdir()
+    (pdir / "myplug.py").write_text(
+        "@plugin('demo-x', 'demo external plugin', ('any',))\n"
+        "def demo_x(hive):\n"
+        "    return [{'ok': 'yes'}]\n"
+    )
+    rc = main(["plugin", str(p), "--plugin-dir", str(pdir),
+               "--plugin", "demo-x", "-q"])
+    assert rc == 0
+    from windows_registry.plugins import PLUGINS
+    assert "demo-x" in PLUGINS
 
 
 def test_missing_hive(tmp_path):

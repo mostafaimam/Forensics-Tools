@@ -15,7 +15,8 @@ from windows_registry.output import (
     write_json,
     write_plugin_csv,
 )
-from windows_registry.plugins import PLUGINS
+from windows_registry.plugins import PLUGINS, load_external, plugins_for
+from windows_registry.plugins._base import detect_hive_kind
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -65,7 +66,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     pl = sub.add_parser("plugin", parents=[common], help="run built-in plugins")
     pl.add_argument("--plugin", type=lambda x: x.split(","), default=None,
-                    metavar="ID,ID", help="which plugins (default: all)")
+                    metavar="ID,ID",
+                    help="which plugins (default: those matching the hive kind)")
+    pl.add_argument("--plugin-dir", action="append", default=[], metavar="DIR",
+                    help="load extra *.py plugin files from DIR (repeatable)")
+    pl.add_argument("--all", action="store_true",
+                    help="run every plugin, not just those for this hive kind")
     pl.add_argument("--csv", type=Path, help="write one CSV per plugin (prefix)")
     pl.add_argument("--json", type=Path)
     pl.add_argument("-q", "--quiet", action="store_true")
@@ -153,15 +159,33 @@ def _cmd_search(a, log) -> int:
 
 
 def _cmd_plugin(a, log) -> int:
+    if a.plugin_dir:
+        try:
+            added = load_external(a.plugin_dir)
+        except RuntimeError as e:
+            print(f"error: {e}", file=sys.stderr)
+            return 2
+        if added and not a.quiet:
+            print(f"loaded external plugin(s): {', '.join(added)}",
+                  file=sys.stderr)
     hive = _open(a.hive)
-    chosen = a.plugin or list(PLUGINS)
+    kind = detect_hive_kind(hive)
+    if a.plugin:
+        chosen = a.plugin
+    elif a.all:
+        chosen = list(PLUGINS)
+    else:
+        chosen = plugins_for(kind)
+        if not a.quiet:
+            print(f"hive kind: {kind}; running {len(chosen)} matching plugin(s) "
+                  f"(use --all for every plugin)", file=sys.stderr)
     unknown = [c for c in chosen if c not in PLUGINS]
     if unknown:
         print(f"unknown plugin(s): {unknown}", file=sys.stderr)
         return 2
     allrows = {}
     for name in chosen:
-        fn, _desc = PLUGINS[name]
+        fn = PLUGINS[name]["fn"]
         try:
             rows = fn(hive)
         except Exception as e:  # noqa: BLE001
@@ -183,8 +207,9 @@ def _cmd_plugin(a, log) -> int:
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     if args.list_plugins:
-        for name, (_fn, desc) in PLUGINS.items():
-            print(f"  {name:<16} {desc}")
+        for name, meta in PLUGINS.items():
+            hives = ",".join(meta["hives"])
+            print(f"  {name:<22} [{hives:<9}] {meta['description']}")
         return 0
     if not args.cmd:
         build_parser().print_help()

@@ -66,21 +66,39 @@ Flags: `--key-name`, `--value-name`, `--value-data` (default: all three).
 ```bash
 windows_registry --list-plugins
 windows_registry plugin SYSTEM --plugin services,usbstor --csv sys
-windows_registry plugin NTUSER.DAT              # run every applicable plugin
+windows_registry plugin NTUSER.DAT               # plugins that match the hive kind
+windows_registry plugin SOFTWARE --all           # every plugin, regardless of kind
+windows_registry plugin NTUSER.DAT --plugin-dir ./myplugins   # + external plugins
 ```
 
-| Plugin | Extracts |
-|---|---|
-| `run-keys` | `Run` / `RunOnce` / `RunServices` / policy `Run` autostart entries |
-| `services` | Windows services — image path, start type, account (`SYSTEM` hive) |
-| `uninstall` | Installed programs (`Uninstall` keys) — name, version, publisher |
-| `userassist` | GUI program execution — ROT13-decoded name, run count, last executed |
-| `typed-urls` | Internet Explorer typed URLs |
-| `computer-info` | Computer name and time-zone settings (`SYSTEM` hive) |
-| `mounted-devices` | `MountedDevices` volume ↔ device mappings |
-| `usbstor` | USB mass-storage device history — device, serial, friendly name |
+Given a hive with no `--plugin`, the tool detects the hive kind (NTUSER,
+UsrClass, SOFTWARE, SYSTEM, SAM, SECURITY, Amcache) and runs only the plugins
+that apply. ~50 plugins ship built in:
 
+| Hive | Plugins |
+|---|---|
+| **NTUSER** | `run-keys` `userassist` `recentdocs` `runmru` `typed-paths` `typed-urls` `wordwheelquery` `comdlg32` `muicache` `mountpoints2` `rdp-connections` `network-drives` `office-mru` `feature-usage` `sysinternals` `uninstall-user` |
+| **UsrClass** | `shellbags` `muicache` |
+| **SOFTWARE** | `os-info` `winlogon` `appinit-dlls` `ifeo` `app-paths` `profilelist` `networklist` `defender-exclusions` `powershell-logging` `taskcache` `shell-folders` |
+| **SYSTEM** | `computer-info` `services` `bam` `usbstor` `usb-devices` `network-interfaces` `session-manager` `lsa` `run-on-boot` `terminal-server` `portproxy` `firewall-rules` `print-monitors` `mounted-devices` |
+| **SAM** | `sam-users` `sam-groups` |
+| **SECURITY** | `policy-secrets` `policy-accounts` `policy-domain` |
+| **Amcache** | `amcache-files` `amcache-programs` `amcache-drivers` |
+
+`--list-plugins` prints every id with its hive kind and a one-line description.
 With `--csv PREFIX` each plugin writes `PREFIX_<plugin>.csv`.
+
+**External plugins.** `--plugin-dir DIR` (repeatable) executes every non-`_`
+`*.py` file in `DIR`. Each file runs with `plugin`, `RegistryHive` and the
+`_base` helpers (`ft_to_iso`, `value_text`, `values_dict`, `subkey`,
+`first_key`, …) already in its globals:
+
+```python
+@plugin("my-artefact", "what it extracts", ("software",))
+def my_artefact(hive):
+    k = hive.get("Some\\Key\\Path")
+    return [{"name": v.name, "data": value_text(k, v.name)} for v in k.values()] if k else []
+```
 
 ### `gui` — hive browser
 
@@ -130,11 +148,11 @@ free-cell scan → orphan nk / vk records  (--deleted)
 
 The core `regf` format (base block, hive bins, `nk` / `vk` / `lf` / `lh` /
 `li` / `ri` / `db`, resident and big data, all common `REG_*` types) is
-implemented and validated against a real hive. Not yet done: transaction-log
-(`.LOG1` / `.LOG2`) replay for dirty hives (planned as `windows_reglog`),
-security-descriptor (`sk`) decoding, class-name data, and more plugins
-(ShimCache, AmCache, ShellBags, SRUM live under their own tools). See the
-[backlog](../../BACKLOG.md).
+implemented and validated against a real hive. Transaction-log (`.LOG1` /
+`.LOG2`) replay for dirty hives lives in `windows_reglog`. Not yet done:
+security-descriptor (`sk`) decoding and class-name data. Deep artefact
+tooling for ShimCache, Amcache, SRUM and jump lists lives under its own
+tools. See the [backlog](../../BACKLOG.md).
 
 ---
 
