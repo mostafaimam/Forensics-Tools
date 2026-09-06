@@ -10,9 +10,9 @@ macOS.
 | Tool | Status | Purpose |
 |---|---|---|
 | [**trace-collect**](trace-collect/) | ✅ v0.1 | Targeted artefact **acquisition** from a live system or mounted image — locked-file handling, Volume Shadow Copy, streaming hashes, chain-of-custody manifest |
+| [**trace-recycle**](trace-recycle/) | ✅ v0.1 | Recover deletion metadata from Vista+ `$I` records and the legacy `INFO2` / `INFO` index; match `$R` / `Dc` content; CSV / JSON |
 | **trace-mft** | 🔜 planned | Parse the NTFS `$MFT`, `$UsnJrnl:$J`, `$Boot` and `$Secure:$SDS` into a timeline (CSV / JSON) |
 | **trace-prefetch** | 🔜 planned | Decode Windows Prefetch files, including the Windows 10/11 compressed format |
-| **trace-recycle** | 🔜 planned | Recover deletion metadata from `$I` records and the legacy `INFO2` index |
 | **trace-evtx** | 🔜 planned | Parse Windows event logs (`.evtx`) with field extraction and filtering |
 
 ## Design principles
