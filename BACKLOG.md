@@ -44,6 +44,7 @@ Priority is roughly top-to-bottom within each group.
 - **macos_plist** — binary + XML property lists → CSV / JSON; `NSKeyedArchiver` unwrapping; Apple timestamp conversion
 - **linux_cron** — scheduled-execution inventory: system / user crontabs, `cron.d`, `cron.{hourly,daily,weekly,monthly}`, anacrontab, `at` jobs, systemd timers → one normalised row per job, plain-language schedule, suspicious-entry flags
 - **linux_syslog** — classic text-log normaliser: `syslog` / `messages` / `auth.log` / `secure` (+ rotated / `.gz`), BSD + RFC 5424 formats → record timeline or structured security events (SSH / sudo / su / PAM / session / cron / account)
+- **linux_bashhist** — shell / REPL history across all users (bash / zsh / fish / sh + python / mysql / psql / sqlite / node / redis), per-shell timestamp parsing, merged timeline, tampering markers, attacker-command heuristics
 
 ## Next up
 
@@ -93,7 +94,7 @@ Priority is roughly top-to-bottom within each group.
 - **linux_journal** — systemd journal (`.journal`) binary format reader with field filters
 - **linux_syslog** — done (above). Remaining: `klog` ring-buffer files, per-boot grouping, join SSH events to `linux_utmp` sessions.
 - **linux_audit** — `auditd` `audit.log` records → normalised events
-- **linux_bashhist** — shell history across users, `HISTTIMEFORMAT` timestamps, `.python_history` / `.mysql_history` / `.viminfo`
+- **linux_bashhist** — done (above). Remaining: `.viminfo` command history, `atuin` / `mcfly` SQLite history DBs, correlate with `linux_utmp` sessions.
 - **linux_cron** — done (above). Remaining: resolve systemd `OnCalendar` to concrete next-run times; `fcron` / generator output; per-file owner from image inode metadata.
 - **linux_units** — systemd unit-file inventory + persistence review (`ExecStart`, `WantedBy`, drop-ins)
 - **linux_packages** — `dpkg` / `apt` / `rpm` / `dnf` install-upgrade-remove history
