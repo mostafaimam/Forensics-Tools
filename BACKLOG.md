@@ -36,6 +36,7 @@ Priority is roughly top-to-bottom within each group.
 - **windows_prefetch** — Prefetch `.pf` v17-31 incl. Windows 10/11 `MAM` compression
 - **analysis_timeline** — super-timeline builder + viewer (console, self-contained HTML, `tkinter` window)
 - **linux_utmp** — `wtmp` / `btmp` / `utmp` / `lastlog` login records → timeline + paired login/logout sessions
+- **macos_plist** — binary + XML property lists → CSV / JSON; `NSKeyedArchiver` unwrapping; Apple timestamp conversion
 
 ## Next up
 
@@ -95,7 +96,7 @@ Priority is roughly top-to-bottom within each group.
 
 ## macOS artefact parsers — `macos/`
 
-- **macos_plist** — binary + XML property-list reader → JSON (shared building block)
+- **macos_plist** — `NSKeyedArchiver` class coverage beyond the common set; `--key` glob; validation corpus.
 - **macos_unifiedlog** — `.tracev3` unified-log parser with `uuidtext` / `dsc` string resolution (large effort)
 - **macos_fsevents** — `/.fseventsd` gzip records → file-system change timeline
 - **macos_knowledgec** — `knowledgeC.db` / CoreDuet (SQLite) app usage, device state

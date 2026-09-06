@@ -61,11 +61,17 @@ Full roadmap and every planned tool: **[BACKLOG.md](BACKLOG.md)**.
 |---|---|---|
 | [**linux_utmp**](linux/linux_utmp/) | ✅ v0.1 | `wtmp` / `btmp` / `utmp` / `lastlog` login records → record timeline + paired login/logout **sessions** |
 
+### `macos/`
+
+| Tool | Status | Purpose |
+|---|---|---|
+| [**macos_plist**](macos/macos_plist/) | ✅ v0.1 | Binary + XML property lists → CSV / JSON; **unwraps `NSKeyedArchiver`**; Apple timestamp conversion |
+
 ### next up
 
 `recovery_metadata` FAT / ext4 / APFS support · `mounting_image` (image
 mounting, CLI + GUI) · `windows_amcache` / `windows_shimcache` ·
-`linux_journal` · `macos_plist`.
+`linux_journal` · `macos_quarantine` / `macos_knowledgec` (build on `macos_plist` + SQLite).
 
 ---
 
