@@ -42,6 +42,7 @@ Full roadmap and every planned tool: **[BACKLOG.md](BACKLOG.md)**.
 
 | Tool | Status | Purpose |
 |---|---|---|
+| [**windows_shimcache**](windows/windows_shimcache/) | ✅ v0.1 | AppCompatCache / ShimCache — program presence + (Win7/8) execution evidence, from a `SYSTEM` hive or the live registry |
 | [**windows_registry**](windows/windows_registry/) | ✅ v0.1 | Offline hive (`regf`) parser — dump / search / deleted-key recovery, 8 built-in plugins (run-keys, services, userassist, usbstor, …), `tkinter` browser |
 | [**windows_reglog**](windows/windows_reglog/) | ✅ v0.1 | Replay registry transaction logs (`.LOG1` / `.LOG2`) into a dirty hive — `HvLE` entries + Marvin32 verification — so parsers see a clean, current hive |
 | [**windows_evtx**](windows/windows_evtx/) | ✅ v0.1 | Event logs (`.evtx`) — from-scratch binary + BinXml parser → standardised CSV / JSON / JSONL / XML with event-ID, provider, level and time filters |
@@ -70,7 +71,7 @@ Full roadmap and every planned tool: **[BACKLOG.md](BACKLOG.md)**.
 ### next up
 
 `recovery_metadata` FAT / ext4 / APFS support · `mounting_image` (image
-mounting, CLI + GUI) · `windows_amcache` / `windows_shimcache` ·
+mounting, CLI + GUI) · `windows_amcache` ·
 `linux_journal` · `macos_quarantine` / `macos_knowledgec` (build on `macos_plist` + SQLite).
 
 ---
