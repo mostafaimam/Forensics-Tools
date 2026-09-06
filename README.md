@@ -4,9 +4,6 @@ An open-source, cross-platform suite of DFIR command-line tools — written in
 Python (3.11+, standard library only) and built to run on Windows, Linux and
 macOS.
 
-The suite is built **one tool at a time**, each self-contained, each with its
-own tests and documentation, each fixing real limitations of the tooling that
-examiners use today. Every tool shares the `trace-` prefix.
 
 ## Tools
 
