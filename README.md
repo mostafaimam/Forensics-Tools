@@ -31,6 +31,7 @@ Full roadmap and every planned tool: **[BACKLOG.md](BACKLOG.md)**.
 | Tool | Status | Purpose |
 |---|---|---|
 | [**acquisition_collect**](acquisition/acquisition_collect/) | ✅ v0.1 | Targeted artefact acquisition from a live system or mounted image — locked-file handling, Volume Shadow Copy, streaming hashes, chain-of-custody manifest (Windows / Linux / macOS) |
+| [**acquisition_image**](acquisition/acquisition_image/) | ✅ v0.1 | Create + verify forensic images — **raw / split / EWF `E01`** write, streaming MD5+SHA-1+SHA-256, bad-sector zero-fill + logging, acquisition log / manifest / HTML report; CLI + `tkinter` wizard |
 
 ### `mounting/`
 
@@ -83,7 +84,7 @@ Full roadmap and every planned tool: **[BACKLOG.md](BACKLOG.md)**.
 
 ### next up
 
-`acquisition_image` (forensic imaging, CLI + GUI) · `analysis_kff` / `analysis_index` (FTK-parity) ·
+`analysis_kff` (NSRL hash sets) · `analysis_index` / `analysis_search` (full-text) · `analysis_email` (PST/MBOX) — FTK-parity ·
 `recovery_metadata` FAT / ext4 / APFS support ·
 `linux_journal` (systemd binary journal) · `macos_quarantine` / `macos_knowledgec` (build on `macos_plist` + SQLite) ·
 `memory/` (RAM-image analysis).
@@ -139,11 +140,12 @@ flowchart TD
    set grabs the registry hives (+ transaction logs), `Security` / `System` /
    application `.evtx`, `$MFT`, `$UsnJrnl`, Prefetch, `Amcache.hve`, jump
    lists, `.lnk` files and the Recycle Bin — using Volume Shadow Copy for
-   locked files — and writes a hash manifest. For a full image use
-   `acquisition_image` (⏳) or any imager that produces raw / E01.
+   locked files — and writes a hash manifest. For a full disk image,
+   `acquisition_image` writes a verified raw / split / `E01`.
 
    ```bash
    acquisition_collect --os windows --backend vss -d case01/
+   acquisition_image acquire \\.\PhysicalDrive0 case01.E01 --format ewf --verify
    ```
 
 2. **Open the image.** Identify the layout, then pull the Windows partition

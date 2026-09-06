@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "acquisition_image"
+version = "0.1.0"
+description = "Create and verify forensic disk images (raw / split raw / EWF E01) with streaming hashing, bad-sector tolerance, acquisition log + manifest; CLI + tkinter wizard"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "imaging", "acquisition", "ewf", "e01", "dd", "hash", "verify"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/acquisition/acquisition_image"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+acquisition_image = "acquisition_image.cli:main"
+[tool.setuptools]
+packages = ["acquisition_image"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
