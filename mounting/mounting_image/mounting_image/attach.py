@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import json
 import os
-import platform
 import shutil
 import subprocess
 from dataclasses import asdict, dataclass, field
@@ -71,34 +70,14 @@ def is_root() -> bool:
     return hasattr(os, "geteuid") and os.geteuid() == 0
 
 
-def plan_attach(image: str, port: int, name: str, host: str,
-                nbd_device: str, mountpoint: str | None,
-                fstype: str | None) -> list[list[str]]:
-    """Linux: nbd-client + optional mount.  Other OSes: guidance only."""
-    if platform.system() != "Linux":
-        return []
-    cmds = [
-        ["modprobe", "nbd"],
-        ["nbd-client", "-N", name, host, str(port), nbd_device, "-persist"],
-    ]
-    if mountpoint:
-        target = nbd_device if os.path.exists(nbd_device) else nbd_device
-        cmds.append(["mkdir", "-p", mountpoint])
-        mnt = ["mount", "-o", "ro,noload" if fstype in ("ext3", "ext4") else "ro"]
-        if fstype:
-            mnt += ["-t", fstype]
-        mnt += [target, mountpoint]
-        cmds.append(mnt)
-    return cmds
-
-
 def plan_detach(nbd_device: str, mountpoint: str | None) -> list[list[str]]:
-    if platform.system() != "Linux":
-        return []
+    """The equivalent shell commands (informational; --run does it in-process)."""
     cmds = []
     if mountpoint:
         cmds.append(["umount", mountpoint])
-    cmds.append(["nbd-client", "-d", nbd_device])
+    if nbd_device:
+        cmds.append(["#", "disconnect", nbd_device, "(mounting_image unmount",
+                     "--run)"])
     return cmds
 
 

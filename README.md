@@ -37,7 +37,7 @@ Full roadmap and every planned tool: **[BACKLOG.md](BACKLOG.md)**.
 
 | Tool | Status | Purpose |
 |---|---|---|
-| [**mounting_image**](mounting/mounting_image/) | ✅ v0.1 | Read-only access to raw / split / **E01** / **VHD** / **VMDK** images — container + MBR/GPT inspection, export whole-disk or per-partition raw, byte-range stream, **read-only NBD server**; CLI + `tkinter` GUI |
+| [**mounting_image**](mounting/mounting_image/) | ✅ v0.1 | Read-only access to raw / split / **E01** / **VHD** / **VMDK** images — container + MBR/GPT inspection, export whole-disk or per-partition raw, byte-range stream, **built-in NBD server + client** (`nbd://` source, `--pull` anywhere, Linux `/dev/nbdN` attach, no `nbd-client`); CLI + `tkinter` GUI |
 
 ### `recovery/`
 
@@ -86,6 +86,7 @@ Full roadmap and every planned tool: **[BACKLOG.md](BACKLOG.md)**.
 
 ### next up
 
+`acquisition_ram` (live memory acquisition) ·
 `analysis_email` (PST/MBOX) · `analysis_gallery` · `analysis_dedupe` — FTK-parity ·
 `recovery_metadata` FAT / ext4 / APFS support ·
 `linux_journal` (systemd binary journal) · `macos_quarantine` / `macos_knowledgec` (build on `macos_plist` + SQLite) ·
@@ -151,7 +152,9 @@ flowchart TD
    ```
 
 2. **Open the image.** Identify the layout, then pull the Windows partition
-   (or serve it read-only over NBD and mount it on your analysis box).
+   (or, on a Linux analysis box, mount it read-only via the built-in NBD
+   client — `mounting_image serve disk.E01 --partition 2 --attach --run
+   --mountpoint /mnt/evidence`).
 
    ```bash
    mounting_image info    disk.E01
@@ -163,9 +166,9 @@ flowchart TD
    `$SI` / `$FN` timestomp detection. Everything else hangs off these times.
    Then `recovery_metadata` lists / extracts deleted MFT entries, and
    `recovery_carve` recovers files from unallocated space with no MFT record.
-   With the volume mounted read-only (from `mounting_image serve` +
-   `nbd-client`), run `analysis_kff scan --ignore-known` over it first to
-   drop the OS / application noise and surface unknown + known-bad files.
+   With the volume mounted read-only, run `analysis_kff scan --ignore-known`
+   over it first to drop the OS / application noise and surface unknown +
+   known-bad files.
 
    ```bash
    windows_mft mft '$MFT' --csv mft.csv

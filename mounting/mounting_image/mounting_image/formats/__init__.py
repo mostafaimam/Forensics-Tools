@@ -57,6 +57,11 @@ _OPENERS = {"ewf": EWFImage, "vhd": VHDImage, "vhdx": VHDXImage,
 
 
 def open_image(path: str | Path, fmt: str | None = None) -> Image:
+    s = str(path)
+    if fmt == "nbd" or s.startswith("nbd://"):
+        from mounting_image.nbdclient import NBDClient, parse_nbd_url
+        host, port, name = parse_nbd_url(s)
+        return NBDClient(host, port, name)
     fmt = fmt or sniff(path)
     opener = _OPENERS.get(fmt)
     if opener is None:

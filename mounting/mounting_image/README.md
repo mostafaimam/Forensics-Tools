@@ -8,9 +8,11 @@ their **MBR / GPT partitions**, and lets you:
 - **export** the whole disk or a single partition to a raw file (`convert`,
   `extract`)
 - **stream** an arbitrary byte range to stdout (`cat`)
-- **serve** the disk or a partition **read-only over NBD** (`serve`), so a
-  Linux box can `nbd-client` + `mount -o ro` it with no writes ever reaching
-  the evidence
+- **serve** the disk or a partition **read-only over NBD** (`serve`), and
+  **connect** to that export with the **built-in NBD client** (`connect`) —
+  on Linux it becomes a real `/dev/nbdN` block device you can `mount -o ro`
+  with **no `nbd-client` binary needed**; on any OS you can `--pull` the
+  export to a raw file or inspect its partitions over the wire
 
 CLI and a **tkinter GUI** (`mounting_image gui`). Zero third-party
 dependencies — a `.E01` acquired on Windows is opened and carved on Linux or
@@ -63,24 +65,45 @@ EFI and Apple GUIDs. `partitions --json` emits `start_offset` / `start_lba` /
 
 ---
 
-## Serving over NBD
+## Serving and connecting over NBD
 
 `serve` runs a minimal read-only NBD server (fixed-newstyle handshake;
 `READ` / `FLUSH` / `DISCONNECT`; `WRITE` and `TRIM` return `EPERM`).
+`connect` is the matching **built-in client** — no `nbd-client` binary.
+
+### All-in-one (Linux, as root)
 
 ```bash
-# terminal 1 - export partition 2
-mounting_image serve disk.E01 --partition 2 --port 10809 --name evidence
-
-# terminal 2 - Linux, as root
-modprobe nbd
-nbd-client -N evidence 127.0.0.1 10809 /dev/nbd0 -persist
-mount -o ro,noload /dev/nbd0 /mnt/evidence
+mounting_image serve disk.E01 --partition 2 --attach --run \
+    --nbd-device /dev/nbd0 --mountpoint /mnt/evidence
+# starts the server, attaches it to /dev/nbd0 via the kernel 'nbd' module,
+# mounts it read-only, and holds the connection until Ctrl-C.
+# (run 'modprobe nbd' once first so /dev/nbd* exists)
 ```
 
-`serve --attach` prints those commands for you; `serve --attach --run` (root,
-Linux) executes them and records the session so `mounting_image list` and
-`mounting_image unmount --port 10809 --run` can tear it down.
+### Two steps / two machines
+
+```bash
+# machine A - export partition 2
+mounting_image serve disk.E01 --partition 2 --port 10809 --name evidence
+
+# machine B (Linux, root) - attach + mount with the built-in client
+mounting_image connect nbd://A:10809/evidence --attach \
+    --device /dev/nbd0 --mountpoint /mnt/evidence
+```
+
+### Any OS - no kernel NBD
+
+```bash
+mounting_image connect nbd://host:10809/evidence --partitions      # inspect
+mounting_image connect nbd://host:10809/evidence --pull disk.raw   # download
+mounting_image partitions nbd://host:10809/evidence                # URL as a source
+```
+
+`nbd://host:port/export` works anywhere an image path does (`info`,
+`partitions`, `convert`, `extract`, `cat`). `mounting_image list` shows
+attached sessions; `mounting_image unmount --port 10809 --run` unmounts and
+disconnects the device in-process.
 
 ---
 
@@ -123,7 +146,10 @@ regions. Nothing is ever opened for writing.
 raw / split / EWF-v1 / VHD / VMDK-sparse / VMDK-flat and MBR / GPT are parsed
 and covered by the test suite, which builds a synthetic image in each format
 and checks a full byte round-trip (the dev box has no real acquired images —
-validation against `libewf` / `qemu-img` output is a to-do). Not yet done:
-VHDX, EWF v2 (`Ex01`), compressed/stream-optimized VMDK, AFF4, `.vdi`, and
-APFS / LVM container mapping (planned as `mounting_partitions`). See the
-[backlog](../../BACKLOG.md).
+validation against `libewf` / `qemu-img` output is a to-do). The NBD **server
+and client** protocol paths are tested over loopback; the Linux
+`/dev/nbdN` kernel-attach path is not unit-tested (no Linux on the dev box).
+Not yet done: VHDX, EWF v2 (`Ex01`), compressed/stream-optimized VMDK, AFF4,
+`.vdi`, APFS / LVM container mapping (planned as `mounting_partitions`), and a
+FUSE / WebDAV mount so a partition's filesystem appears as a browsable folder
+on Windows / macOS. See the [backlog](../../BACKLOG.md).

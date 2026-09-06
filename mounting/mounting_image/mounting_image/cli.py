@@ -35,7 +35,8 @@ def build_parser() -> argparse.ArgumentParser:
     sub = p.add_subparsers(dest="cmd")
 
     common = argparse.ArgumentParser(add_help=False)
-    common.add_argument("image", type=Path)
+    common.add_argument("image", help="image file, split-set member, or "
+                                      "an nbd://host:port/export URL")
     common.add_argument("--format", choices=["raw", "ewf", "vhd", "vhdx", "vmdk"],
                         help="force the container format")
 
@@ -76,6 +77,25 @@ def build_parser() -> argparse.ArgumentParser:
     sv.add_argument("--run", action="store_true",
                     help="actually execute the attach commands (needs root)")
 
+    cn = sub.add_parser("connect", help="built-in NBD client: attach or pull "
+                        "a remote export")
+    cn.add_argument("url", help="nbd://host:port/export (or host:port)")
+    cn.add_argument("--name", default="", help="export name (if not in the URL)")
+    cn.add_argument("--pull", type=Path, metavar="OUT",
+                    help="download the export to a raw file (any OS)")
+    cn.add_argument("--offset", type=lambda x: int(x, 0), default=0)
+    cn.add_argument("--length", type=lambda x: int(x, 0), default=None)
+    cn.add_argument("--partitions", action="store_true",
+                    help="just show the remote partition table")
+    cn.add_argument("--device", default="/dev/nbd0",
+                    help="Linux: attach to this /dev/nbdN")
+    cn.add_argument("--mountpoint", help="Linux: also mount here (read-only)")
+    cn.add_argument("--fstype", help="Linux: filesystem type for the mount")
+    cn.add_argument("--attach", action="store_true",
+                    help="Linux: bind the export to --device via the kernel "
+                         "nbd module (no nbd-client needed)")
+    cn.add_argument("-q", "--quiet", action="store_true")
+
     ls = sub.add_parser("list", help="show recorded NBD/mount sessions")
     un = sub.add_parser("unmount", help="tear down a recorded session")
     un.add_argument("--port", type=int, required=True)
@@ -87,8 +107,11 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _open(a):
+    from mounting_image.nbdclient import is_nbd_url
     fmt = getattr(a, "format", None)
-    return open_image(a.image, fmt)
+    if is_nbd_url(str(a.image)):
+        fmt = "nbd"
+    return open_image(str(a.image), fmt)
 
 
 def _target(img, partition, scheme=None, parts=None):
@@ -115,7 +138,7 @@ def _cmd_info(a) -> int:
         print(text_report(img, scheme, parts, meta), end="")
         if a.html:
             a.html.write_text(html_report(img, scheme, parts, meta,
-                                          a.image.name), encoding="utf-8")
+                                          Path(a.image).name), encoding="utf-8")
             print(f"\nHTML report: {a.html}", file=sys.stderr)
         if a.json:
             import json
@@ -179,45 +202,144 @@ def _cmd_cat(a) -> int:
 
 
 def _cmd_serve(a) -> int:
+    import platform
+
     from mounting_image.nbd import NBDServer
     img = _open(a)
     tgt = _target(img, a.partition)
     srv = NBDServer(tgt, a.host, a.port, a.name)
-    print(f"NBD export '{a.name}' ({tgt.size} bytes) on {a.host}:{a.port}",
-          file=sys.stderr)
-    if a.attach or a.run:
-        cmds = attach.plan_attach(str(a.image), a.port, a.name, a.host,
-                                  a.nbd_device, a.mountpoint, a.fstype)
-        if not cmds:
-            print("attach: only supported on Linux with nbd-client",
-                  file=sys.stderr)
-        else:
-            print("\n".join("  " + " ".join(c) for c in cmds), file=sys.stderr)
-            if a.run:
-                if not attach.is_root():
-                    print("attach --run needs root", file=sys.stderr)
-                    return 2
-                srv.serve_in_thread()
-                ok, log = attach.run(cmds)
-                print(log, file=sys.stderr)
-                if ok:
-                    attach.register(attach.Session(
-                        str(a.image), a.partition, a.name, a.host, a.port,
-                        a.nbd_device, a.mountpoint or ""))
-                    print("attached; run 'mounting_image unmount --port "
-                          f"{a.port} --run' to detach", file=sys.stderr)
-                try:
-                    srv.serve_forever()
-                except KeyboardInterrupt:
-                    pass
-                return 0
-    try:
-        srv.serve_forever()
-    except KeyboardInterrupt:
-        print("\nstopped", file=sys.stderr)
-    finally:
+    print(f"NBD export '{a.name}' ({tgt.size} bytes) read-only on "
+          f"{a.host}:{a.port}", file=sys.stderr)
+
+    if not (a.attach or a.run):
+        print(f"attach it with:  mounting_image connect "
+              f"nbd://{a.host}:{a.port}/{a.name} --attach "
+              f"--mountpoint /mnt/evidence   (Linux)\n"
+              f"          or:    mounting_image connect "
+              f"nbd://{a.host}:{a.port}/{a.name} --pull disk.raw   (any OS)",
+              file=sys.stderr)
+        try:
+            srv.serve_forever()
+        except KeyboardInterrupt:
+            print("\nstopped", file=sys.stderr)
+        finally:
+            srv.server_close()
+            img.close()
+        return 0
+
+    # all-in-one: server + built-in client + kernel attach (+ mount)
+    if platform.system() != "Linux":
+        print("--attach is Linux-only; run 'serve' plainly and use "
+              "'connect --pull' on this OS", file=sys.stderr)
+        return 2
+    if not a.run:
+        print(f"  would attach to {a.nbd_device}"
+              + (f" and mount at {a.mountpoint}" if a.mountpoint else "")
+              + " (add --run)", file=sys.stderr)
         srv.server_close()
-        img.close()
+        return 0
+    from mounting_image.nbdclient import NBDClient, attach_linux
+    srv.serve_in_thread()
+    client = NBDClient(a.host, a.port, a.name)
+    att = attach_linux(client, a.nbd_device, read_only=True)
+    print(f"attached to {att.device}", file=sys.stderr)
+    attach.register(attach.Session(str(a.image), a.partition, a.name, a.host,
+                                   a.port, att.device, a.mountpoint or ""))
+    if a.mountpoint:
+        cmds = [["mkdir", "-p", a.mountpoint],
+                ["mount", "-o", "ro", *(["-t", a.fstype] if a.fstype else []),
+                 att.device, a.mountpoint]]
+        ok, log = attach.run(cmds)
+        print(log, file=sys.stderr)
+        if ok:
+            print(f"mounted at {a.mountpoint} (read-only)", file=sys.stderr)
+    print(f"Ctrl-C or 'mounting_image unmount --port {a.port} --run' to detach",
+          file=sys.stderr)
+    try:
+        att._thread.join()
+    except KeyboardInterrupt:
+        print("\ndetaching…", file=sys.stderr)
+    if a.mountpoint:
+        attach.run([["umount", a.mountpoint]])
+    att.detach()
+    attach.deregister(a.port)
+    srv.server_close()
+    img.close()
+    return 0
+
+
+def _cmd_connect(a) -> int:
+    import platform
+
+    from mounting_image.nbdclient import NBDClient, attach_linux, parse_nbd_url
+    host, port, name = parse_nbd_url(a.url)
+    name = name or a.name
+    client = NBDClient(host, port, name)
+    ro = "read-only" if client.read_only else "writable"
+    print(f"connected to {host}:{port} export '{name or '(default)'}' - "
+          f"{client.size} bytes, {ro}", file=sys.stderr)
+
+    if a.partitions:
+        scheme, parts = detect(client)
+        print(text_report(client, scheme, parts))
+        client.close()
+        return 0 if parts else 1
+
+    if a.pull:
+        prog = None if a.quiet else (
+            lambda done, total: sys.stderr.write(
+                f"\r  pulled {done}/{total} bytes") or sys.stderr.flush())
+        n = client.pull(str(a.pull), offset=a.offset, length=a.length,
+                        progress=prog)
+        if not a.quiet:
+            sys.stderr.write("\n")
+        client.close()
+        print(f"wrote {n} bytes -> {a.pull}", file=sys.stderr)
+        return 0
+
+    if a.attach or a.mountpoint:
+        if platform.system() != "Linux":
+            print("--attach needs a Linux kernel with the 'nbd' module; "
+                  "on this OS use --pull, or open the URL directly "
+                  "(mounting_image partitions nbd://...)", file=sys.stderr)
+            client.close()
+            return 2
+        att = attach_linux(client, a.device, read_only=True)
+        print(f"attached export to {att.device} (read-only)", file=sys.stderr)
+        attach.register(attach.Session(a.url, None, name, host, port,
+                                       att.device, a.mountpoint or ""))
+        if a.mountpoint:
+            cmds = [["mkdir", "-p", a.mountpoint]]
+            m = ["mount", "-o", "ro"]
+            if a.fstype:
+                m += ["-t", a.fstype]
+            m += [att.device, a.mountpoint]
+            cmds.append(m)
+            ok, log = attach.run(cmds)
+            print(log, file=sys.stderr)
+            if not ok:
+                att.detach()
+                attach.deregister(port)
+                return 1
+            print(f"mounted {att.device} at {a.mountpoint} (read-only)",
+                  file=sys.stderr)
+        print(f"keeping the connection open - Ctrl-C or "
+              f"'mounting_image unmount --port {port} --run' to detach",
+              file=sys.stderr)
+        try:
+            att._thread.join()
+        except KeyboardInterrupt:
+            print("\ndetaching…", file=sys.stderr)
+        if a.mountpoint:
+            attach.run([["umount", a.mountpoint]])
+        att.detach()
+        attach.deregister(port)
+        return 0
+
+    # default: just report, like `info`
+    scheme, parts = detect(client)
+    print(text_report(client, scheme, parts))
+    client.close()
     return 0
 
 
@@ -238,14 +360,26 @@ def _cmd_unmount(a) -> int:
     if not row:
         print(f"no session on port {a.port}", file=sys.stderr)
         return 1
-    cmds = attach.plan_detach(row.get("nbd_device", ""), row.get("mountpoint"))
-    print("\n".join("  " + " ".join(c) for c in cmds) or "(nothing to do)",
-          file=sys.stderr)
-    if a.run and cmds:
-        ok, log = attach.run(cmds)
+    device = row.get("nbd_device", "")
+    mnt = row.get("mountpoint")
+    if not a.run:
+        cmds = attach.plan_detach(device, mnt)
+        print("\n".join("  " + " ".join(c) for c in cmds) or "(nothing to do)",
+              file=sys.stderr)
+        return 0
+    ok = True
+    if mnt:
+        ok, log = attach.run([["umount", mnt]])
         print(log, file=sys.stderr)
-        return 0 if ok else 1
-    return 0
+    if device.startswith("/dev/nbd"):
+        from mounting_image.nbdclient import detach_device
+        try:
+            detach_device(device)
+            print(f"disconnected {device}", file=sys.stderr)
+        except Exception as e:  # noqa: BLE001
+            print(f"detach {device}: {e}", file=sys.stderr)
+            ok = False
+    return 0 if ok else 1
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -255,10 +389,17 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     if a.cmd == "gui":
         from mounting_image.gui import run
-        return run(str(a.image) if a.image else None)
+        return run(str(a.image) if getattr(a, "image", None) else None)
     if a.cmd in ("list", "unmount"):
         return {"list": _cmd_list, "unmount": _cmd_unmount}[a.cmd](a)
-    if not a.image.exists():
+    if a.cmd == "connect":
+        try:
+            return _cmd_connect(a)
+        except ImageError as e:
+            print(f"error: {e}", file=sys.stderr)
+            return 2
+    from mounting_image.nbdclient import is_nbd_url
+    if not is_nbd_url(str(a.image)) and not Path(a.image).exists():
         print(f"image not found: {a.image}", file=sys.stderr)
         return 2
     try:
