@@ -1,0 +1,42 @@
+# Forensics Tools
+
+An open-source, cross-platform suite of DFIR command-line tools — written in
+Python (3.11+, standard library only) and built to run on Windows, Linux and
+macOS.
+
+The suite is built **one tool at a time**, each self-contained, each with its
+own tests and documentation, each fixing real limitations of the tooling that
+examiners use today. Every tool shares the `trace-` prefix.
+
+## Tools
+
+| Tool | Status | Purpose |
+|---|---|---|
+| [**trace-collect**](trace-collect/) | ✅ v0.1 | Targeted artefact **acquisition** from a live system or mounted image — locked-file handling, Volume Shadow Copy, streaming hashes, chain-of-custody manifest |
+| **trace-mft** | 🔜 planned | Parse the NTFS `$MFT`, `$UsnJrnl:$J`, `$Boot` and `$Secure:$SDS` into a timeline (CSV / JSON) |
+| **trace-prefetch** | 🔜 planned | Decode Windows Prefetch files, including the Windows 10/11 compressed format |
+| **trace-recycle** | 🔜 planned | Recover deletion metadata from `$I` records and the legacy `INFO2` index |
+| **trace-evtx** | 🔜 planned | Parse Windows event logs (`.evtx`) with field extraction and filtering |
+
+## Design principles
+
+- **Zero runtime dependencies** — drops onto an unknown host with just Python.
+- **UTC everywhere** — ISO-8601 with a `Z` suffix, no local-time ambiguity.
+- **Cross-platform** — Windows-first artefacts, but Linux/macOS are first-class.
+- **Long paths & Unicode** — `\\?\` extended paths on Windows, UTF-8(-BOM) CSV.
+- **Forensically sound output** — deterministic, hashed, with a machine- and
+  human-readable manifest for chain of custody.
+
+## Getting started
+
+```bash
+cd trace-collect
+python -m trace_collect --list-targets
+python -m trace_collect -d ./out --dry-run
+```
+
+See each tool's own `README.md` for full usage and internals.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
