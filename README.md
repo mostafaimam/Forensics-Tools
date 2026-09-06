@@ -5,36 +5,89 @@ Python (3.11+, standard library only) and built to run on Windows, Linux and
 macOS.
 
 
-## Tools
+Built **one tool at a time**, each self-contained, each with its own tests and
+documentation. Tools are organised into categories — one directory per
+category — and named `category_tool` (e.g. `windows_prefetch`,
+`recovery_carve`).
+
+| Category | What it covers |
+|---|---|
+| [`acquisition/`](acquisition/) | collecting evidence — triage, disk imaging, memory |
+| [`mounting/`](mounting/) | mounting / exposing images, partitions and shadow copies |
+| [`recovery/`](recovery/) | getting files back — signature carving and file-system metadata |
+| [`windows/`](windows/) | Windows artefact parsers |
+| [`linux/`](linux/) | Linux artefact parsers |
+| [`macos/`](macos/) | macOS artefact parsers |
+| [`analysis/`](analysis/) | timeline building, indexing, correlation, reporting |
+| [`utilities/`](utilities/) | strings, hashing, hex / file viewers |
+
+Full roadmap and every planned tool: **[BACKLOG.md](BACKLOG.md)**.
+
+---
+
+## Tools available now
+
+### `acquisition/`
 
 | Tool | Status | Purpose |
 |---|---|---|
-| [**trace-collect**](trace-collect/) | ✅ v0.1 | Targeted artefact **acquisition** from a live system or mounted image — locked-file handling, Volume Shadow Copy, streaming hashes, chain-of-custody manifest |
-| [**trace-recycle**](trace-recycle/) | ✅ v0.1 | Recover deletion metadata from Vista+ `$I` records and the legacy `INFO2` / `INFO` index; match `$R` / `Dc` content; CSV / JSON |
-| [**trace-prefetch**](trace-prefetch/) | ✅ v0.1 | Decode Windows Prefetch (`.pf`) versions 17-31, including the Windows 10/11 `MAM` / XPRESS-Huffman compressed format (pure-Python decompressor) |
-| [**trace-timeline**](trace-timeline/) | ✅ v0.1 | Merge every tool's output into one sorted UTC super-timeline; console, self-contained **HTML viewer**, and a `tkinter` **desktop window** |
-| [**trace-recover**](trace-recover/) | ✅ v0.1 | File recovery by magic-byte signature carving with structural validators (metadata-based recovery — names/paths/times — is phase 2) |
-| **trace-mft** | 🔜 next | NTFS `$MFT` / `$J` / `$Boot` / `$SDS` timeline + a graphical `$MFT` browser |
-| **trace-evtx** | 🔜 next | Windows event log (`.evtx`) parser — CSV / XML / JSON, field maps |
+| [**acquisition_collect**](acquisition/acquisition_collect/) | ✅ v0.1 | Targeted artefact acquisition from a live system or mounted image — locked-file handling, Volume Shadow Copy, streaming hashes, chain-of-custody manifest (Windows / Linux / macOS) |
 
-See [BACKLOG.md](BACKLOG.md) for the full roadmap (timeline tooling,
-Linux/macOS artefact parsers, imaging / FTK-equivalent capabilities).
+### `recovery/`
+
+| Tool | Status | Purpose |
+|---|---|---|
+| [**recovery_carve**](recovery/recovery_carve/) | ✅ v0.1 | Signature carving — recover files by magic bytes + structural validators, no file system needed |
+| [**recovery_metadata**](recovery/recovery_metadata/) | ✅ v0.1 | Metadata recovery — walk the NTFS `$MFT`, list allocated + deleted entries with paths and `MACB` times, extract content (incl. deleted files), `cat` one entry by number |
+
+### `windows/`
+
+| Tool | Status | Purpose |
+|---|---|---|
+| [**windows_recycle**](windows/windows_recycle/) | ✅ v0.1 | Recycle Bin — Vista+ `$I` / `$R` and legacy `INFO2` / `INFO`; content matching; CSV / JSON |
+| [**windows_prefetch**](windows/windows_prefetch/) | ✅ v0.1 | Prefetch `.pf` v17-31, including the Windows 10/11 `MAM` / XPRESS-Huffman compressed format (pure-Python decompressor) |
+
+### `analysis/`
+
+| Tool | Status | Purpose |
+|---|---|---|
+| [**analysis_timeline**](analysis/analysis_timeline/) | ✅ v0.1 | Merge every tool's output into one sorted UTC super-timeline. Console, self-contained **HTML viewer**, and a `tkinter` **desktop window** (`analysis_timeline gui`) |
+
+### next up
+
+`windows_mft` (NTFS `$MFT` timeline + graphical browser) · `windows_evtx`
+(event logs) · `recovery_metadata` FAT / ext4 / APFS support ·
+`mounting_image` (image mounting, CLI + GUI) · `linux_utmp` · `macos_plist`.
+
+---
 
 ## Design principles
 
 - **Zero runtime dependencies** — drops onto an unknown host with just Python.
 - **UTC everywhere** — ISO-8601 with a `Z` suffix, no local-time ambiguity.
-- **Cross-platform** — Windows-first artefacts, but Linux/macOS are first-class.
+- **Cross-platform** — analysis runs anywhere; collection targets are per-OS.
 - **Long paths & Unicode** — `\\?\` extended paths on Windows, UTF-8(-BOM) CSV.
+- **Never crash on bad input** — malformed artefacts produce an error row, not
+  a traceback.
 - **Forensically sound output** — deterministic, hashed, with a machine- and
   human-readable manifest for chain of custody.
+- **GUI where it helps** — GUI-bearing tools ship a stdlib `tkinter` window
+  *and* a self-contained HTML view; the CLI always works headless.
+
+---
 
 ## Getting started
 
 ```bash
-cd trace-collect
-python -m trace_collect --list-targets
-python -m trace_collect -d ./out --dry-run
+git clone https://github.com/mostafaimam/Forensics-Tools
+cd Forensics-Tools
+
+# each tool installs independently
+pip install -e ./windows/windows_prefetch
+windows_prefetch --help
+
+# or run in place without installing
+python -m windows_prefetch --help
 ```
 
 See each tool's own `README.md` for full usage and internals.

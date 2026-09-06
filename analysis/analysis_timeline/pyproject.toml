@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "analysis_timeline"
+version = "0.1.0"
+description = "Merge trace-* forensic tool output into one sorted UTC super-timeline"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "timeline", "super-timeline", "incident-response"]
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Security",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/analysis/analysis_timeline"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+
+[project.scripts]
+analysis_timeline = "analysis_timeline.cli:main"
+
+[tool.setuptools]
+packages = ["analysis_timeline"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
