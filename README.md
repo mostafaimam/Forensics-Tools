@@ -85,9 +85,15 @@ Full roadmap and every planned tool: **[BACKLOG.md](BACKLOG.md)**.
 |---|---|---|
 | [**macos_plist**](macos/macos_plist/) | ✅ v0.1 | Binary + XML property lists → CSV / JSON; **unwraps `NSKeyedArchiver`**; Apple timestamp conversion |
 
+### `memory/`
+
+| Tool | Status | Purpose |
+|---|---|---|
+| [**memory_image**](memory/memory_image/) | ✅ v0.1 | Identify / map / convert RAM dumps — raw / **LiME** / ELF core / **Windows crash dump**; physical range map, OS hints, `raw`↔`lime`↔`padded`, carve a region. The shared loader for the `memory_*` tools |
+
 ### next up
 
-`memory/` (RAM-image analysis — `memory_image`, `memory_pslist`, `memory_netscan`, …) ·
+`memory_pslist` / `memory_strings` (RAM analysis on `memory_image`) ·
 `analysis_email` (PST/MBOX) · `analysis_gallery` · `analysis_dedupe` — FTK-parity ·
 `recovery_metadata` FAT / ext4 / APFS support ·
 `linux_journal` (systemd binary journal) · `macos_quarantine` / `macos_knowledgec` (build on `macos_plist` + SQLite).

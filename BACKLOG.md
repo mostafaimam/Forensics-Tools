@@ -57,7 +57,7 @@ Priority is roughly top-to-bottom within each group.
 2. **recovery_metadata** — FAT / exFAT, ext2-4 (+ journal), HFS+, APFS; `--offset` partition auto-detection; live-volume input (`\\.\C:`).
 3. **windows_evtx** — event-ID → friendly-description **maps** (TOML), locale message resolution, recovered records from chunk slack, CRC verification.
 4. **windows_reglog** — old-format (`DIRT`) Windows 7 logs; auto-invoke from `windows_registry`.
-5. **memory_image** — the shared RAM-dump loader (identify format, LiME ↔ raw ↔ padded ↔ ELF core convert, carve a region) that the other `memory_*` tools build on.
+5. **memory_pslist** / **memory_strings** — first RAM-analysis tools on top of `memory_image` (pool-tag / signature process scan; address-aware strings).
 
 ## Acquisition — `acquisition/`
 
@@ -124,7 +124,7 @@ Analysis of RAM images captured by `acquisition_ram` (or any raw / LiME / crash
 dump). Pure-Python, zero-dependency, read-only; profile/symbol data ships as
 plain data files rather than a downloaded symbol server.
 
-- **memory_image** — identify a dump: format (raw / LiME / crash dump / ELF core / `hiberfil`), OS + build, KASLR base / DTB, page size, run map; convert between formats; carve a raw region out. The shared loader every other `memory_*` tool builds on.
+- **memory_image** — done. Format ID (raw / LiME / ELF core / Windows crash dump + bitmap dump), physical run map, `read_physical` with zero-fill, OS hints (DTB / PsActiveProcessHead from a crash-dump header, `Linux version` banner scan), convert raw ↔ lime ↔ padded, carve / read a physical region. Shared `loader.py`. Remaining: `hiberfil.sys` decompression, AVML framing, `.vmem`+`.vmsn`, virtual-address translation via page tables.
 - **memory_pslist** — process enumeration: active list walk **and** pool/scan for hidden or exited processes, PID/PPID tree, create/exit times, command line, SID/user, session, exit status; cross-view diff to flag unlinked processes (DKOM).
 - **memory_dlllist** — loaded modules / mapped images per process (PEB + VAD cross-check), load path, load reason, unlinked-module detection; dump a module or the main image.
 - **memory_handles** — open handles per process (files, keys, events, sections, tokens, threads) and kernel object table.
