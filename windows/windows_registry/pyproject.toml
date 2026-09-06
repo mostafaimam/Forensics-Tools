@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "windows_registry"
+version = "0.1.0"
+description = "Offline Windows registry hive (regf) parser: dump, search, plugins, deleted-key recovery"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "registry", "regf", "hive", "windows"]
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Security",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/windows/windows_registry"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+
+[project.scripts]
+windows_registry = "windows_registry.cli:main"
+
+[tool.setuptools]
+packages = ["windows_registry", "windows_registry.hive"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
