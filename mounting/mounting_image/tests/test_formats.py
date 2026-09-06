@@ -65,6 +65,19 @@ def test_e01(tmp_path):
     assert sniff(p) == "ewf"
 
 
+def test_e01_header2_metadata_utf16(tmp_path):
+    raw = make_mbr_disk()
+    meta = {"case_number": "2026-014", "examiner": "A. Analyst",
+            "description": "SanDisk Ultra 64GB", "evidence_number": "USB-3"}
+    p = tmp_path / "meta.E01"
+    p.write_bytes(make_e01(raw, meta=meta))
+    with open_image(p) as img:
+        assert img.metadata["case_number"] == "2026-014"
+        assert img.metadata["examiner"] == "A. Analyst"
+        assert img.metadata["description"] == "SanDisk Ultra 64GB"
+        assert img.metadata["evidence_number"] == "USB-3"
+
+
 def test_mbr_partitions(tmp_path):
     raw = make_mbr_disk()
     p = tmp_path / "d.raw"

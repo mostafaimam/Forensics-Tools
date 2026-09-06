@@ -102,11 +102,19 @@ class EWFImage(Image):
     def _read_header(self, fh, off: int, length: int) -> None:
         fh.seek(off)
         try:
-            txt = zlib.decompress(fh.read(length)).decode("utf-8", "replace")
+            raw = zlib.decompress(fh.read(length))
         except zlib.error:
             return
-        lines = txt.splitlines()
-        # header2: UTF-16; header: tab-separated "category\nkeys\nvalues"
+        # "header2" is UTF-16 (LE or BE, BOM-prefixed); the older "header"
+        # section is Latin-1 / ASCII.
+        if raw[:2] == b"\xff\xfe":
+            txt = raw[2:].decode("utf-16-le", "replace")
+        elif raw[:2] == b"\xfe\xff":
+            txt = raw[2:].decode("utf-16-be", "replace")
+        else:
+            txt = raw.decode("latin-1", "replace")
+        lines = txt.replace("\r\n", "\n").splitlines()
+        # header: tab-separated "count\ncategory\nkeys\nvalues"
         for i in range(len(lines) - 1):
             keys = lines[i].split("\t")
             vals = lines[i + 1].split("\t")

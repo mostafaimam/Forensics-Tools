@@ -160,7 +160,7 @@ def make_vmdk_sparse(raw: bytes, grain_sectors=128, gtes_per_gt=512) -> bytes:
 
 
 # ---------------------------------------------------------------- EWF / E01
-def make_e01(raw: bytes, sectors_per_chunk=64) -> bytes:
+def make_e01(raw: bytes, sectors_per_chunk=64, meta: dict | None = None) -> bytes:
     bps = 512
     chunk_size = sectors_per_chunk * bps
     chunks = [raw[i:i + chunk_size].ljust(chunk_size, b"\x00")
@@ -177,6 +177,17 @@ def make_e01(raw: bytes, sectors_per_chunk=64) -> bytes:
 
     out = bytearray()
     out += b"EVF\x09\x0d\x0a\xff\x00" + b"\x01" + struct.pack("<H", 1) + b"\x00\x00"
+
+    # header2 (UTF-16LE, BOM) - case metadata
+    if meta:
+        keys = ["a", "c", "n", "e", "t"]
+        vals = [meta.get("description", ""), meta.get("case_number", ""),
+                meta.get("evidence_number", ""), meta.get("examiner", ""),
+                meta.get("notes", "")]
+        text = "3\nmain\n" + "\t".join(keys) + "\n" + "\t".join(vals) + "\n\n"
+        h2 = zlib.compress(b"\xff\xfe" + text.encode("utf-16-le"), 9)
+        here = len(out)
+        out += section(b"header2", h2, here + 76 + len(h2), here)
 
     # volume
     vol = bytearray(1052)
