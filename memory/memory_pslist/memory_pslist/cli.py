@@ -41,9 +41,11 @@ def build_parser() -> argparse.ArgumentParser:
             "  memory_pslist mem.raw --min-confidence medium --json ps.json\n"
         ),
     )
-    p.add_argument("image", type=Path)
+    p.add_argument("image", type=Path, nargs="?")
     p.add_argument("--version", action="version",
                    version=f"memory_pslist {__version__}")
+    p.add_argument("--gui", action="store_true",
+                   help="open the graphical viewer")
     p.add_argument("--running-only", action="store_true")
     p.add_argument("--terminated-only", action="store_true")
     p.add_argument("--name", help="substring filter on the image name")
@@ -69,6 +71,11 @@ def _render(rows) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     a = build_parser().parse_args(argv)
+    if getattr(a, "gui", False):
+        from memory_pslist.gui import run_gui
+        return run_gui(([str(a.image)] if a.image else []))
+    if a.image is None:
+        build_parser().error("a RAM dump path is required (or use --gui)")
     if not a.image.exists():
         print(f"not found: {a.image}", file=sys.stderr)
         return 2

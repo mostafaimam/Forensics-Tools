@@ -34,6 +34,8 @@ def build_parser() -> argparse.ArgumentParser:
                    help="filesystem root to scan (/ or a mounted image)")
     p.add_argument("--version", action="version",
                    version=f"linux_bashhist {__version__}")
+    p.add_argument("--gui", action="store_true",
+                   help="open the graphical viewer")
     p.add_argument("--file", type=Path, action="append", default=[],
                    metavar="PATH", help="parse a single history file (repeatable)")
     p.add_argument("--user", help="user label for --file / filter for a scan")
@@ -62,6 +64,9 @@ def _key(s: str) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if getattr(args, "gui", False):
+        from linux_bashhist.gui import run_gui
+        return run_gui(([str(args.root)] if args.root else []))
     grep = re.compile(args.grep, re.IGNORECASE) if args.grep else None
     dt_from = _key(args.dt_from) if args.dt_from else None
     dt_to = _key(args.dt_to) if args.dt_to else None

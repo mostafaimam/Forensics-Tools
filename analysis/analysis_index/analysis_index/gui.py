@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 
-def run_gui(index_dir: str | None = None) -> int:
+def run_gui(index_dir: str | None = None, query: str | None = None) -> int:
     try:
         import tkinter as tk
         from tkinter import filedialog, messagebox, ttk
@@ -93,5 +93,10 @@ def run_gui(index_dir: str | None = None) -> int:
     tree.bind("<<TreeviewSelect>>", show_snip)
     if index_dir:
         root.after(80, open_index)
+    if query:
+        def _preload():
+            q_var.set(query)
+            do_search()
+        root.after(200, _preload)
     root.mainloop()
     return 0

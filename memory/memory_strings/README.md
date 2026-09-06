@@ -5,6 +5,8 @@ string runs out of a physical-memory dump (raw / LiME / ELF core / Windows
 crash dump), tags each with the **physical address** it was found at, and
 classifies it against a built-in pattern library.
 
+![`memory_strings gui`](docs/screenshot.png)
+
 ```
 memory_strings scan mem.lime --classified --csv iocs.csv
 memory_strings scan mem.lime --category url,email,btc,powershell

@@ -4,6 +4,8 @@
 files on a system, parses the per-shell timestamp formats, merges them into
 one ordered timeline, and flags commands that look like attacker activity.
 
+![`linux_bashhist --gui`](docs/screenshot.png)
+
 Handles:
 
 | Shell / REPL | Files | Timestamps |

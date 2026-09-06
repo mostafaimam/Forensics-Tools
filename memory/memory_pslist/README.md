@@ -8,6 +8,8 @@ symbol profile**, so it works on any Windows version and surfaces **hidden**
 (unlinked / DKOM) and **already-exited** processes that a live-list walk
 misses.
 
+![`memory_pslist --gui`](docs/screenshot.png)
+
 ```
 memory_pslist MEMORY.DMP
 memory_pslist mem.lime --terminated-only --csv exited.csv

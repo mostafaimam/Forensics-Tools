@@ -4,6 +4,8 @@
 into a record timeline and — for `wtmp` — into paired **login / logout
 sessions** with durations.
 
+![`linux_utmp --gui`](docs/screenshot.png)
+
 ```
 linux_utmp /var/log/wtmp --sessions --csv sessions.csv
 linux_utmp /var/log/btmp --csv failed_logins.csv

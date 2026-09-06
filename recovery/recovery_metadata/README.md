@@ -5,6 +5,8 @@ or volume and list every entry — allocated *and* deleted — with its full pat
 and `MACB` timestamps, then extract file content, including
 **deleted-but-not-overwritten** files.
 
+![`recovery_metadata gui`](docs/screenshot.png)
+
 v0.1 supports **NTFS** (`$MFT`). FAT / exFAT / ext2-4 / HFS+ / APFS are planned
 — see the roadmap.
 

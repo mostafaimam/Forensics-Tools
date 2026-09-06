@@ -26,10 +26,12 @@ def build_parser() -> argparse.ArgumentParser:
             "  macos_plist state.plist --no-unwrap --json raw.json\n"
         ),
     )
-    p.add_argument("inputs", nargs="+", type=Path, metavar="PLIST",
+    p.add_argument("inputs", nargs="*", type=Path, metavar="PLIST",
                    help=".plist file(s) or directories to search")
     p.add_argument("--version", action="version",
                    version=f"macos_plist {__version__}")
+    p.add_argument("--gui", action="store_true",
+                   help="open the graphical viewer")
     p.add_argument("--csv", type=Path)
     p.add_argument("--json", type=Path)
     p.add_argument("--key", metavar="PATH",
@@ -56,6 +58,9 @@ def _expand(inputs, recurse: bool):
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if getattr(args, "gui", False):
+        from macos_plist.gui import run_gui
+        return run_gui([str(x) for x in (args.inputs or [])])
     files = list(_expand(args.inputs, args.recurse))
     if not files:
         print("error: no plist files found", file=sys.stderr)

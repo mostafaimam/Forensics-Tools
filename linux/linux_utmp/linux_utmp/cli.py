@@ -65,9 +65,11 @@ def build_parser() -> argparse.ArgumentParser:
             "  linux_utmp /var/log/lastlog --csv lastlog.csv\n"
         ),
     )
-    p.add_argument("inputs", nargs="+", type=Path, metavar="FILE")
+    p.add_argument("inputs", nargs="*", type=Path, metavar="FILE")
     p.add_argument("--version", action="version",
                    version=f"linux_utmp {__version__}")
+    p.add_argument("--gui", action="store_true",
+                   help="open the graphical viewer")
     p.add_argument("--as", dest="forced", choices=["wtmp", "btmp", "utmp", "lastlog"],
                    help="force the record type instead of guessing")
     p.add_argument("--big-endian", action="store_true",
@@ -92,6 +94,9 @@ def _iso_key(s: str) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if getattr(args, "gui", False):
+        from linux_utmp.gui import run_gui
+        return run_gui([str(x) for x in (args.inputs or [])])
     dt_from = _iso_key(args.dt_from) if args.dt_from else None
     dt_to = _iso_key(args.dt_to) if args.dt_to else None
 

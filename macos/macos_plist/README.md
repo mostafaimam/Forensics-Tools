@@ -4,6 +4,8 @@
 **unwraps `NSKeyedArchiver` graphs** into plain data, converts Apple
 timestamps, and flattens everything to CSV or JSON.
 
+![`macos_plist --gui`](docs/screenshot.png)
+
 ```
 macos_plist com.apple.dock.plist --json dock.json
 macos_plist ~/Library/Preferences --csv prefs.csv

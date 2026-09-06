@@ -48,6 +48,7 @@ def build_parser() -> argparse.ArgumentParser:
                         help="byte offset of the NTFS volume within the image")
     common.add_argument("-v", "--verbose", action="store_true")
 
+    gp = sub.add_parser("gui", parents=[common], help="open the graphical entry list")
     lst = sub.add_parser("list", parents=[common], help="list MFT entries")
     lst.add_argument("--csv", type=Path, metavar="FILE")
     lst.add_argument("--deleted-only", action="store_true")
@@ -101,6 +102,9 @@ def main(argv: list[str] | None = None) -> int:
     log.info("NTFS volume: %d-byte clusters, %d MFT records, serial %016X",
              vol.boot.cluster_size, vol.record_count(), vol.boot.serial_number)
 
+    if args.cmd == "gui":
+        from recovery_metadata.gui import run_gui
+        return run_gui([str(args.image)] if args.image else [])
     if args.cmd == "cat":
         target = None
         for e in vol.iter_entries():

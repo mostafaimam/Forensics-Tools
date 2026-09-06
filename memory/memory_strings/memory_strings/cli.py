@@ -37,6 +37,8 @@ def build_parser() -> argparse.ArgumentParser:
     sub = p.add_subparsers(dest="cmd")
 
     sub.add_parser("categories", help="list the pattern library")
+    gp = sub.add_parser("gui", help="open the graphical viewer")
+    gp.add_argument("image", nargs="?")
 
     s = sub.add_parser("scan", help="extract strings")
     s.add_argument("image", type=Path)
@@ -104,6 +106,9 @@ def main(argv: list[str] | None = None) -> int:
     if not a.cmd:
         build_parser().print_help()
         return 2
+    if a.cmd == "gui":
+        from memory_strings.gui import run_gui
+        return run_gui([a.image] if getattr(a, "image", None) else [])
     return {"scan": _cmd_scan, "categories": _cmd_categories}[a.cmd](a)
 
 

@@ -6,6 +6,8 @@ plain-language description of *when* each job runs and a heuristic flag for
 suspicious entries (download-and-execute, reverse shells, `@reboot`
 persistence, world-writable paths, history wiping, …).
 
+![`linux_cron --gui`](docs/screenshot.png)
+
 Sources covered:
 
 | Source | Location |

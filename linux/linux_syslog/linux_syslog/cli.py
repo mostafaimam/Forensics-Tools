@@ -36,10 +36,12 @@ def build_parser() -> argparse.ArgumentParser:
             "--result failure\n"
         ),
     )
-    p.add_argument("inputs", nargs="+", type=Path, metavar="PATH",
+    p.add_argument("inputs", nargs="*", type=Path, metavar="PATH",
                    help="log files, or a filesystem root with --root")
     p.add_argument("--version", action="version",
                    version=f"linux_syslog {__version__}")
+    p.add_argument("--gui", action="store_true",
+                   help="open the graphical viewer")
     p.add_argument("--root", action="store_true",
                    help="treat the argument as a filesystem root; scan "
                         "var/log for known log families")
@@ -97,6 +99,9 @@ def _files(args) -> list[Path]:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if getattr(args, "gui", False):
+        from linux_syslog.gui import run_gui
+        return run_gui([str(x) for x in (args.inputs or [])])
     try:
         tz = parse_tz(args.tz)
     except ValueError as e:

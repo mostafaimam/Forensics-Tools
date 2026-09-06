@@ -5,6 +5,8 @@
 archives — understands both the BSD (RFC 3164) and RFC 5424 line formats, and
 produces either:
 
+![`linux_syslog --gui`](docs/screenshot.png)
+
 - a **record timeline** — one row per log line, timestamp normalised to UTC,
   with `facility` / `severity` / `tag` / `pid` / `message` split out; or
 - a **structured security-event stream** (`--events`) — SSH logins, `sudo`,

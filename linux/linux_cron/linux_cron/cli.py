@@ -37,6 +37,8 @@ def build_parser() -> argparse.ArgumentParser:
                    help="filesystem root to scan (e.g. / or a mounted image)")
     p.add_argument("--version", action="version",
                    version=f"linux_cron {__version__}")
+    p.add_argument("--gui", action="store_true",
+                   help="open the graphical viewer")
     p.add_argument("--file", type=Path, action="append", default=[],
                    metavar="PATH",
                    help="parse a single crontab / .timer / at-job file "
@@ -61,6 +63,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if getattr(args, "gui", False):
+        from linux_cron.gui import run_gui
+        return run_gui(([str(args.root)] if args.root else []))
 
     if args.explain:
         try:
