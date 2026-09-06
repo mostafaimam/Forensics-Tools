@@ -36,6 +36,7 @@ Priority is roughly top-to-bottom within each group.
 - **windows_prefetch** — Prefetch `.pf` v17-31 incl. Windows 10/11 `MAM` compression
 - **analysis_timeline** — super-timeline builder + viewer (console, self-contained HTML, `tkinter` window)
 - **linux_utmp** — `wtmp` / `btmp` / `utmp` / `lastlog` login records → timeline + paired login/logout sessions
+- **windows_jumplist** — `automaticDestinations-ms` jump lists: OLE2 reader + `DestList` MRU + embedded `.lnk` per target; AppID resolution
 - **windows_lnk** — Shell Link (`.lnk`): target metadata + MAC times, TrackerDataBlock (machine ID + MAC), `BEEF0004` shell items ($MFT refs); `tkinter` viewer
 - **windows_amcache** — `Amcache.hve` parser: executables (SHA-1), installed programs, drivers; modern + legacy layouts
 - **windows_shimcache** — AppCompatCache / ShimCache parser (program presence + Win7/8 execution), `SYSTEM` hive or live registry
@@ -71,7 +72,7 @@ Priority is roughly top-to-bottom within each group.
 - **windows_reglog** — see **Next up** (old-format `DIRT` logs; auto-invoke from `windows_registry`).
 - **windows_recentfilecache** — `RecentFileCache.bcf` parser.
 - **windows_lnk** — see **Next up** (fuller shell-item type coverage, `PropertyStoreDataBlock`).
-- **windows_jumplist** (+GUI) — `AutomaticDestinations` (OLE compound file, embedded LNK streams + `DestList`) and `CustomDestinations`.
+- **windows_jumplist** — `customDestinations-ms` (non-OLE), DestList v1 (Win7) validation, `tkinter` viewer.
 - **windows_shellbags** (+GUI) — `BagMRU` / `Bags` from `UsrClass.dat` / `NTUSER.DAT`: folder-access tree with first/last interacted times.
 - **windows_srum** — `SRUDB.dat` (ESE) network / process / energy / push-notification tables, optionally joined with the SOFTWARE hive for interface names.
 - **windows_sum** — Microsoft User Access Logs (`C:\Windows\System32\LogFiles\SUM\*.mdb`) client-access history.
