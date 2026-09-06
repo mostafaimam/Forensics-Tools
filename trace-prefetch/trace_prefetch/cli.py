@@ -1,0 +1,106 @@
+from __future__ import annotations
+
+import argparse
+import os
+import sys
+from pathlib import Path
+
+from trace_prefetch import __version__
+from trace_prefetch.models import PrefetchFile
+from trace_prefetch.output import (
+    render_table,
+    write_files_csv,
+    write_json,
+    write_jsonl,
+    write_summary_csv,
+)
+from trace_prefetch.parser import parse_file
+
+
+def _iter_pf_paths(paths, recursive):
+    for raw in paths:
+        p = Path(raw)
+        if p.is_file():
+            yield str(p)
+        elif p.is_dir():
+            it = p.rglob("*") if recursive else p.iterdir()
+            for child in sorted(it):
+                if child.is_file() and child.suffix.lower() == ".pf":
+                    yield str(child)
+        else:
+            yield str(p)  # non-existent - parse_file emits an error row
+
+
+def build_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(
+        prog="trace-prefetch",
+        description="Parse Windows Prefetch (.pf) files - versions 17-31, "
+                    "including the Windows 10/11 MAM/XPRESS-Huffman format.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            "examples:\n"
+            "  trace-prefetch C:\\Windows\\Prefetch --csv pf.csv\n"
+            "  trace-prefetch NOTEPAD.EXE-D8414F97.pf --json pf.json\n"
+            "  trace-prefetch E:\\evidence\\collection --files-csv refs.csv\n"
+        ),
+    )
+    p.add_argument("paths", nargs="+", metavar="PATH",
+                   help=".pf file(s) or a directory to search")
+    p.add_argument("--version", action="version",
+                   version=f"trace-prefetch {__version__}")
+    p.add_argument("--csv", metavar="FILE", type=Path,
+                   help="one summary row per prefetch file")
+    p.add_argument("--files-csv", metavar="FILE", type=Path,
+                   help="one row per (prefetch, referenced file)")
+    p.add_argument("--json", metavar="FILE", type=Path)
+    p.add_argument("--jsonl", metavar="FILE", type=Path)
+    p.add_argument("--no-recurse", action="store_true")
+    p.add_argument("--no-native", action="store_true",
+                   help="always use the pure-Python decompressor")
+    p.add_argument("--errors-only", action="store_true")
+    p.add_argument("-q", "--quiet", action="store_true")
+    return p
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    if args.no_native:
+        os.environ["TRACE_PREFETCH_NO_NATIVE"] = "1"
+
+    items: list[PrefetchFile] = []
+    for path in _iter_pf_paths(args.paths, not args.no_recurse):
+        items.append(parse_file(path))
+
+    items.sort(key=lambda pf: (
+        pf.last_run.timestamp() if pf.last_run else 0.0, pf.executable
+    ), reverse=True)
+
+    if args.errors_only:
+        items = [pf for pf in items if pf.parse_error]
+
+    errors = sum(1 for pf in items if pf.parse_error)
+    ok = [pf for pf in items if not pf.parse_error]
+
+    wrote = []
+    if args.csv:
+        write_summary_csv(items, args.csv); wrote.append(str(args.csv))
+    if args.files_csv:
+        write_files_csv(ok, args.files_csv); wrote.append(str(args.files_csv))
+    if args.json:
+        write_json(items, args.json); wrote.append(str(args.json))
+    if args.jsonl:
+        write_jsonl(items, args.jsonl); wrote.append(str(args.jsonl))
+
+    if not args.quiet:
+        print(render_table(items))
+
+    print(f"trace-prefetch {__version__}: {len(ok)} parsed, {errors} error(s)",
+          file=sys.stderr)
+    for w in wrote:
+        print(f"  wrote {w}", file=sys.stderr)
+
+    return 1 if errors and not ok else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

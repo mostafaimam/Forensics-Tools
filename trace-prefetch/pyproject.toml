@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "trace-prefetch"
+version = "0.1.0"
+description = "Cross-platform Windows Prefetch (.pf) parser, versions 17-31 (incl. Windows 10/11 MAM)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "prefetch", "incident-response", "windows", "xpress"]
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Security",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/trace-prefetch"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+
+[project.scripts]
+trace-prefetch = "trace_prefetch.cli:main"
+
+[tool.setuptools]
+packages = ["trace_prefetch"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
