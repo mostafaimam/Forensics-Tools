@@ -36,6 +36,7 @@ Priority is roughly top-to-bottom within each group.
 - **windows_prefetch** — Prefetch `.pf` v17-31 incl. Windows 10/11 `MAM` compression
 - **analysis_timeline** — super-timeline builder + viewer (console, self-contained HTML, `tkinter` window)
 - **linux_utmp** — `wtmp` / `btmp` / `utmp` / `lastlog` login records → timeline + paired login/logout sessions
+- **windows_lnk** — Shell Link (`.lnk`): target metadata + MAC times, TrackerDataBlock (machine ID + MAC), `BEEF0004` shell items ($MFT refs); `tkinter` viewer
 - **windows_amcache** — `Amcache.hve` parser: executables (SHA-1), installed programs, drivers; modern + legacy layouts
 - **windows_shimcache** — AppCompatCache / ShimCache parser (program presence + Win7/8 execution), `SYSTEM` hive or live registry
 - **macos_plist** — binary + XML property lists → CSV / JSON; `NSKeyedArchiver` unwrapping; Apple timestamp conversion
@@ -69,7 +70,7 @@ Priority is roughly top-to-bottom within each group.
 - **windows_mft** / **windows_evtx** / **windows_registry** — see **Next up** for the remaining work (more plugins, `sk` security descriptors, multi-hive load, RegBack diffing).
 - **windows_reglog** — see **Next up** (old-format `DIRT` logs; auto-invoke from `windows_registry`).
 - **windows_recentfilecache** — `RecentFileCache.bcf` parser.
-- **windows_lnk** (+GUI) — Shell Link (`.lnk`) binary format, `LinkTargetIDList` shell items, extra-data blocks, MAC times, machine ID / volume serial.
+- **windows_lnk** — see **Next up** (fuller shell-item type coverage, `PropertyStoreDataBlock`).
 - **windows_jumplist** (+GUI) — `AutomaticDestinations` (OLE compound file, embedded LNK streams + `DestList`) and `CustomDestinations`.
 - **windows_shellbags** (+GUI) — `BagMRU` / `Bags` from `UsrClass.dat` / `NTUSER.DAT`: folder-access tree with first/last interacted times.
 - **windows_srum** — `SRUDB.dat` (ESE) network / process / energy / push-notification tables, optionally joined with the SOFTWARE hive for interface names.
