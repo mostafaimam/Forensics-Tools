@@ -76,7 +76,13 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _open(path: Path) -> RegistryHive:
-    return RegistryHive(path.read_bytes())
+    hive = RegistryHive(path.read_bytes())
+    if hive.base.is_dirty:
+        print(f"note: {path.name} is DIRTY (seq {hive.base.primary_sequence}"
+              f"/{hive.base.secondary_sequence}); the newest changes are still "
+              f"in its .LOG1/.LOG2 - run 'windows_reglog' first for a complete "
+              f"view", file=sys.stderr)
+    return hive
 
 
 def _cmd_dump(a, log) -> int:

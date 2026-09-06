@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "windows_reglog"
+version = "0.1.0"
+description = "Replay Windows registry transaction logs (.LOG1/.LOG2) into a clean hive"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "registry", "transaction-log", "hive", "windows"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/windows/windows_reglog"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+windows_reglog = "windows_reglog.cli:main"
+[tool.setuptools]
+packages = ["windows_reglog"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]

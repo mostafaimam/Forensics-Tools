@@ -29,6 +29,7 @@ Priority is roughly top-to-bottom within each group.
 - **recovery_carve** — file recovery by magic-byte signature carving with structural validators
 - **recovery_metadata** — NTFS `$MFT` metadata recovery: list allocated + deleted entries, extract content (incl. deleted), `cat` by entry number
 - **windows_registry** — offline `regf` hive parser: dump / key / search / deleted-key recovery, 8 built-in plugins, `tkinter` browser
+- **windows_reglog** — transaction-log (`.LOG1` / `.LOG2`) replay: `HvLE` entries, Marvin32 verification, dirty-hive recovery
 - **windows_evtx** — event logs (`.evtx`): from-scratch binary + BinXml parser → standardised CSV / JSON / JSONL / XML, event-ID / provider / level / time filters
 - **windows_mft** — NTFS `$MFT` + `$UsnJrnl:$J`: timeline, ADS, `$SI`/`$FN` timestomp detection, bodyfile; `tkinter` `$MFT` browser
 - **windows_recycle** — Recycle Bin: `$I` / `$R` / `INFO2` / `INFO`
@@ -40,7 +41,7 @@ Priority is roughly top-to-bottom within each group.
 1. **windows_mft** — `$Boot`, `$SDS` security descriptors, `$ATTRIBUTE_LIST` (heavily fragmented files), `$LogFile`; `--offset` partition auto-detection; short-name / hard-link columns.
 2. **recovery_metadata** — FAT / exFAT, ext2-4 (+ journal), HFS+, APFS; `--offset` partition auto-detection; live-volume input (`\\.\C:`).
 3. **windows_evtx** — event-ID → friendly-description **maps** (TOML), locale message resolution, recovered records from chunk slack, CRC verification.
-4. **windows_reglog** — transaction-log replay for dirty hives.
+4. **windows_reglog** — old-format (`DIRT`) Windows 7 logs; auto-invoke from `windows_registry`.
 5. **mounting_image** (+GUI) — read-only mount of raw / `E01` / `VHD(X)` / `VMDK` images and partitions.
 
 ## Acquisition — `acquisition/`
@@ -62,7 +63,7 @@ Priority is roughly top-to-bottom within each group.
 ## Windows artefact parsers — `windows/`
 
 - **windows_mft** / **windows_evtx** / **windows_registry** — see **Next up** for the remaining work (more plugins, `sk` security descriptors, multi-hive load, RegBack diffing).
-- **windows_reglog** — replay registry transaction logs (`.LOG1` / `.LOG2`) into a hive so downstream tools see a clean hive; used automatically by `windows_registry` when a hive is dirty.
+- **windows_reglog** — see **Next up** (old-format `DIRT` logs; auto-invoke from `windows_registry`).
 - **windows_amcache** — `Amcache.hve` (program presence / installation / driver / device data).
 - **windows_shimcache** — `AppCompatCache` / ShimCache (SYSTEM hive) execution & presence order.
 - **windows_recentfilecache** — `RecentFileCache.bcf` parser.

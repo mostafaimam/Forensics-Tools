@@ -43,6 +43,7 @@ Full roadmap and every planned tool: **[BACKLOG.md](BACKLOG.md)**.
 | Tool | Status | Purpose |
 |---|---|---|
 | [**windows_registry**](windows/windows_registry/) | ✅ v0.1 | Offline hive (`regf`) parser — dump / search / deleted-key recovery, 8 built-in plugins (run-keys, services, userassist, usbstor, …), `tkinter` browser |
+| [**windows_reglog**](windows/windows_reglog/) | ✅ v0.1 | Replay registry transaction logs (`.LOG1` / `.LOG2`) into a dirty hive — `HvLE` entries + Marvin32 verification — so parsers see a clean, current hive |
 | [**windows_evtx**](windows/windows_evtx/) | ✅ v0.1 | Event logs (`.evtx`) — from-scratch binary + BinXml parser → standardised CSV / JSON / JSONL / XML with event-ID, provider, level and time filters |
 | [**windows_mft**](windows/windows_mft/) | ✅ v0.1 | NTFS `$MFT` + `$UsnJrnl:$J` — full timeline, ADS listing, `$SI`/`$FN` timestomp detection; CSV / JSON / bodyfile; `tkinter` `$MFT` browser (`windows_mft gui`) |
 | [**windows_recycle**](windows/windows_recycle/) | ✅ v0.1 | Recycle Bin — Vista+ `$I` / `$R` and legacy `INFO2` / `INFO`; content matching; CSV / JSON |
@@ -57,8 +58,8 @@ Full roadmap and every planned tool: **[BACKLOG.md](BACKLOG.md)**.
 ### next up
 
 `recovery_metadata` FAT / ext4 / APFS support · `mounting_image` (image
-mounting, CLI + GUI) · `windows_reglog` (transaction-log replay) ·
-`windows_amcache` / `windows_shimcache` · `linux_utmp` · `macos_plist`.
+mounting, CLI + GUI) · `windows_amcache` / `windows_shimcache` ·
+`linux_utmp` · `macos_plist`.
 
 ---
 
