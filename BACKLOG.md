@@ -57,7 +57,7 @@ Priority is roughly top-to-bottom within each group.
 2. **recovery_metadata** — FAT / exFAT, ext2-4 (+ journal), HFS+, APFS; `--offset` partition auto-detection; live-volume input (`\\.\C:`).
 3. **windows_evtx** — event-ID → friendly-description **maps** (TOML), locale message resolution, recovered records from chunk slack, CRC verification.
 4. **windows_reglog** — old-format (`DIRT`) Windows 7 logs; auto-invoke from `windows_registry`.
-5. **analysis_encryption** — detect encrypted / password-protected files and containers (report only), per the user's FTK-parity ask.
+5. **analysis_email** — PST / OST / MBOX / EML / MSG message + attachment inventory, per the user's FTK-parity ask.
 
 ## Acquisition — `acquisition/`
 
@@ -149,7 +149,7 @@ plain data files rather than a downloaded symbol server.
 - **analysis_email** — `PST` / `OST` / `MBOX` / `EML` / `MSG` → message + attachment inventory, threading, header analysis.
 - **analysis_gallery** — extract + thumbnail pictures / video, EXIF / GPS, perceptual-hash grouping.
 - **analysis_dedupe** — done. Size-prefiltered content grouping, reclaimable bytes, distinct-file list, `--against` baseline diff (new vs seen). Remaining: fuzzy/similarity dedupe, shared hash cache.
-- **analysis_encryption** — detect encrypted / password-protected files and containers (BitLocker, Office, PDF, archives, VeraCrypt heuristics); **report only, no cracking**.
+- **analysis_encryption** — done. Signature checks (PGP/age/OpenSSL/Office/PDF/ZIP/RAR/7z/BitLocker/LUKS/DMG/KeePass/SQLCipher) + sampled-entropy fallback for headerless containers; verdict encrypted/password-protected/high-entropy/clear; exit 1 on a hit. Remaining: legacy .doc/.xls FIB flags, keychain / APFS-encrypted volumes.
 - **analysis_report** — case report generator: bundle findings, tagged rows and an `analysis_timeline` export into one HTML / JSON package.
 
 ## Utilities & viewers — `utilities/`
