@@ -42,6 +42,7 @@ Full roadmap and every planned tool: **[BACKLOG.md](BACKLOG.md)**.
 
 | Tool | Status | Purpose |
 |---|---|---|
+| [**windows_mft**](windows/windows_mft/) | ✅ v0.1 | NTFS `$MFT` + `$UsnJrnl:$J` — full timeline, ADS listing, `$SI`/`$FN` timestomp detection; CSV / JSON / bodyfile; `tkinter` `$MFT` browser (`windows_mft gui`) |
 | [**windows_recycle**](windows/windows_recycle/) | ✅ v0.1 | Recycle Bin — Vista+ `$I` / `$R` and legacy `INFO2` / `INFO`; content matching; CSV / JSON |
 | [**windows_prefetch**](windows/windows_prefetch/) | ✅ v0.1 | Prefetch `.pf` v17-31, including the Windows 10/11 `MAM` / XPRESS-Huffman compressed format (pure-Python decompressor) |
 
@@ -53,9 +54,9 @@ Full roadmap and every planned tool: **[BACKLOG.md](BACKLOG.md)**.
 
 ### next up
 
-`windows_mft` (NTFS `$MFT` timeline + graphical browser) · `windows_evtx`
-(event logs) · `recovery_metadata` FAT / ext4 / APFS support ·
-`mounting_image` (image mounting, CLI + GUI) · `linux_utmp` · `macos_plist`.
+`windows_evtx` (event logs) · `recovery_metadata` FAT / ext4 / APFS support ·
+`mounting_image` (image mounting, CLI + GUI) · `windows_registry` (+GUI) ·
+`linux_utmp` · `macos_plist`.
 
 ---
 
