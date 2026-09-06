@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "acquisition_ram"
+version = "0.1.0"
+description = "Live memory acquisition: Linux physical RAM via /proc/kcore to LiME / raw / padded; Windows & macOS collect the memory-bearing files (page file, hibernation, crash dumps)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "memory", "ram", "acquisition", "lime", "kcore", "hiberfil", "pagefile"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/acquisition/acquisition_ram"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+acquisition_ram = "acquisition_ram.cli:main"
+[tool.setuptools]
+packages = ["acquisition_ram"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -27,6 +27,7 @@ Priority is roughly top-to-bottom within each group.
 ## Done
 
 - **acquisition_collect** — targeted triage acquisition (Windows / Linux / macOS), live + VSS, hashing, chain-of-custody manifest
+- **acquisition_ram** — live memory acquisition: Linux physical RAM via `/proc/kcore` + `/proc/iomem` → LiME / raw / padded, streaming MD5+SHA-1+SHA-256; Windows / macOS collect the memory-bearing files (page file, `hiberfil.sys` / `sleepimage`, crash dumps), `--source` for a mounted image; acquisition log + JSON manifest
 - **recovery_carve** — file recovery by magic-byte signature carving with structural validators
 - **recovery_metadata** — NTFS `$MFT` metadata recovery: list allocated + deleted entries, extract content (incl. deleted), `cat` by entry number
 - **windows_registry** — offline `regf` hive parser: dump / key / search / deleted-key recovery, ~50 built-in RegRipper-style plugins (auto-selected by hive kind) + `--plugin-dir` external-plugin loader, `tkinter` browser
@@ -56,12 +57,12 @@ Priority is roughly top-to-bottom within each group.
 2. **recovery_metadata** — FAT / exFAT, ext2-4 (+ journal), HFS+, APFS; `--offset` partition auto-detection; live-volume input (`\\.\C:`).
 3. **windows_evtx** — event-ID → friendly-description **maps** (TOML), locale message resolution, recovered records from chunk slack, CRC verification.
 4. **windows_reglog** — old-format (`DIRT`) Windows 7 logs; auto-invoke from `windows_registry`.
-5. **acquisition_ram** — live memory acquisition (user asked: memory acquisition before the remaining FTK-parity tools).
+5. **memory_image** — the shared RAM-dump loader (identify format, LiME ↔ raw ↔ padded ↔ ELF core convert, carve a region) that the other `memory_*` tools build on.
 
 ## Acquisition — `acquisition/`
 
 - **acquisition_image** (+GUI) — done (above). Remaining: EWF v2 (`Ex01`), AFF4, resumable acquisition, remote (SSH / iSCSI) sources, entropy-aware compression.
-- **acquisition_ram** — live memory acquisition: Linux `/proc/kcore` → raw / LiME / padded, macOS best-effort; Windows writes a raw dump where a kernel primitive is available and otherwise collects the page file + `hiberfil.sys` + crash dumps. SHA-256 during capture, acquisition manifest.
+- **acquisition_ram** — done (above). Remaining: LiME `--compress`, AVML-compatible output, non-x86-64 `PAGE_OFFSET` layouts, an optional Windows kernel-driver path, `hiberfil.sys` / `sleepimage` → raw (overlaps `memory_image`).
 
 ## Imaging & mounting — `mounting/`
 

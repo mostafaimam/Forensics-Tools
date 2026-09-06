@@ -32,6 +32,7 @@ Full roadmap and every planned tool: **[BACKLOG.md](BACKLOG.md)**.
 |---|---|---|
 | [**acquisition_collect**](acquisition/acquisition_collect/) | ✅ v0.1 | Targeted artefact acquisition from a live system or mounted image — locked-file handling, Volume Shadow Copy, streaming hashes, chain-of-custody manifest (Windows / Linux / macOS) |
 | [**acquisition_image**](acquisition/acquisition_image/) | ✅ v0.1 | Create + verify forensic images — **raw / split / EWF `E01`** write, streaming MD5+SHA-1+SHA-256, bad-sector zero-fill + logging, acquisition log / manifest / HTML report; CLI + `tkinter` wizard |
+| [**acquisition_ram**](acquisition/acquisition_ram/) | ✅ v0.1 | Live memory acquisition — Linux physical RAM via `/proc/kcore` → **LiME / raw / padded** with streaming hashing; Windows / macOS collect the memory-bearing files (page file, `hiberfil.sys`, crash dumps) |
 
 ### `mounting/`
 
@@ -86,11 +87,10 @@ Full roadmap and every planned tool: **[BACKLOG.md](BACKLOG.md)**.
 
 ### next up
 
-`acquisition_ram` (live memory acquisition) ·
+`memory/` (RAM-image analysis — `memory_image`, `memory_pslist`, `memory_netscan`, …) ·
 `analysis_email` (PST/MBOX) · `analysis_gallery` · `analysis_dedupe` — FTK-parity ·
 `recovery_metadata` FAT / ext4 / APFS support ·
-`linux_journal` (systemd binary journal) · `macos_quarantine` / `macos_knowledgec` (build on `macos_plist` + SQLite) ·
-`memory/` (RAM-image analysis).
+`linux_journal` (systemd binary journal) · `macos_quarantine` / `macos_knowledgec` (build on `macos_plist` + SQLite).
 
 ---
 
@@ -117,7 +117,7 @@ flowchart LR
 | ② Open the image | Turn the `E01` / `VHD` / `VMDK` container into readable bytes and locate the partitions. |
 | ③ File-system timeline | Build the MACB backbone from file-system metadata; recover deleted + unallocated content. |
 | ④ OS artefacts | Parse the registry / logs / execution / user-activity artefacts for that OS. |
-| ⑤ Memory | If a RAM image exists: processes, network, injected code, in-memory secrets. |
+| ⑤ Memory | Capture RAM with `acquisition_ram` (or collect the page file / `hiberfil.sys`); then processes, network, injected code, in-memory secrets. |
 | ⑥ Correlate | Merge every tool's CSV/JSON into one UTC super-timeline; pivot on the window of interest. |
 | ⑦ Report | Package findings, tagged rows and the timeline into a shareable bundle. |
 
