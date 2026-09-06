@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "linux_syslog"
+version = "0.1.0"
+description = "Normalise classic Linux text logs (syslog / messages / auth.log / secure, incl. rotated and .gz) into a record timeline or structured security events"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "linux", "syslog", "auth.log", "secure", "ssh", "sudo", "logs"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/linux/linux_syslog"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+linux_syslog = "linux_syslog.cli:main"
+[tool.setuptools]
+packages = ["linux_syslog"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]

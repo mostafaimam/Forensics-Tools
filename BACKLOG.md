@@ -43,6 +43,7 @@ Priority is roughly top-to-bottom within each group.
 - **windows_shimcache** — AppCompatCache / ShimCache parser (program presence + Win7/8 execution), `SYSTEM` hive or live registry
 - **macos_plist** — binary + XML property lists → CSV / JSON; `NSKeyedArchiver` unwrapping; Apple timestamp conversion
 - **linux_cron** — scheduled-execution inventory: system / user crontabs, `cron.d`, `cron.{hourly,daily,weekly,monthly}`, anacrontab, `at` jobs, systemd timers → one normalised row per job, plain-language schedule, suspicious-entry flags
+- **linux_syslog** — classic text-log normaliser: `syslog` / `messages` / `auth.log` / `secure` (+ rotated / `.gz`), BSD + RFC 5424 formats → record timeline or structured security events (SSH / sudo / su / PAM / session / cron / account)
 
 ## Next up
 
@@ -90,7 +91,7 @@ Priority is roughly top-to-bottom within each group.
 
 - **linux_utmp** — 32-bit `struct utmp`, `utmpx`, musl stub handling; join with `linux_syslog` SSH auth lines.
 - **linux_journal** — systemd journal (`.journal`) binary format reader with field filters
-- **linux_syslog** — classic `syslog` / `messages` / `auth.log` normaliser (incl. rotated / `.gz`)
+- **linux_syslog** — done (above). Remaining: `klog` ring-buffer files, per-boot grouping, join SSH events to `linux_utmp` sessions.
 - **linux_audit** — `auditd` `audit.log` records → normalised events
 - **linux_bashhist** — shell history across users, `HISTTIMEFORMAT` timestamps, `.python_history` / `.mysql_history` / `.viminfo`
 - **linux_cron** — done (above). Remaining: resolve systemd `OnCalendar` to concrete next-run times; `fcron` / generator output; per-file owner from image inode metadata.
