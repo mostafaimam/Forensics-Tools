@@ -35,6 +35,7 @@ Priority is roughly top-to-bottom within each group.
 - **windows_recycle** — Recycle Bin: `$I` / `$R` / `INFO2` / `INFO`
 - **windows_prefetch** — Prefetch `.pf` v17-31 incl. Windows 10/11 `MAM` compression
 - **analysis_timeline** — super-timeline builder + viewer (console, self-contained HTML, `tkinter` window)
+- **linux_utmp** — `wtmp` / `btmp` / `utmp` / `lastlog` login records → timeline + paired login/logout sessions
 
 ## Next up
 
@@ -82,7 +83,7 @@ Priority is roughly top-to-bottom within each group.
 
 ## Linux artefact parsers — `linux/`
 
-- **linux_utmp** — `wtmp` / `btmp` / `utmp` / `lastlog` binary login records → session timeline
+- **linux_utmp** — 32-bit `struct utmp`, `utmpx`, musl stub handling; join with `linux_syslog` SSH auth lines.
 - **linux_journal** — systemd journal (`.journal`) binary format reader with field filters
 - **linux_syslog** — classic `syslog` / `messages` / `auth.log` normaliser (incl. rotated / `.gz`)
 - **linux_audit** — `auditd` `audit.log` records → normalised events

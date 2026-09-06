@@ -55,11 +55,17 @@ Full roadmap and every planned tool: **[BACKLOG.md](BACKLOG.md)**.
 |---|---|---|
 | [**analysis_timeline**](analysis/analysis_timeline/) | ✅ v0.1 | Merge every tool's output into one sorted UTC super-timeline. Console, self-contained **HTML viewer**, and a `tkinter` **desktop window** (`analysis_timeline gui`) |
 
+### `linux/`
+
+| Tool | Status | Purpose |
+|---|---|---|
+| [**linux_utmp**](linux/linux_utmp/) | ✅ v0.1 | `wtmp` / `btmp` / `utmp` / `lastlog` login records → record timeline + paired login/logout **sessions** |
+
 ### next up
 
 `recovery_metadata` FAT / ext4 / APFS support · `mounting_image` (image
 mounting, CLI + GUI) · `windows_amcache` / `windows_shimcache` ·
-`linux_utmp` · `macos_plist`.
+`linux_journal` · `macos_plist`.
 
 ---
 
