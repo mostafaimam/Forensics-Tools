@@ -96,6 +96,7 @@ Full roadmap and every planned tool: the private roadmap.
 | Tool | Status | Purpose |
 |---|---|---|
 | [**browser_history**](browser/browser_history/) | ✅ v0.1 | Web history, downloads and typed URLs from **Chrome / Edge / Brave / Opera / Firefox / Tor / Safari** — read-only + WAL-safe `sqlite3` parse, one normalised timeline; flags IP-literal hosts, punycode, paste / anonymiser / tunnel sites, `.exe` / `.ps1` downloads, `file://` access |
+| [**browser_cookies**](browser/browser_cookies/) | ✅ v0.1 | Cookies from the same browsers (Safari `Cookies.binarycookies` included) — host, expiry, `Secure` / `HttpOnly` / `SameSite`, session vs persistent; **detects session / auth cookies** (proof a user was logged in) and flags IP-literal / tunnel hosts and `__Host-` / `__Secure-` prefix violations; values are metadata-only unless `--with-values` |
 
 ### `memory/`
 
@@ -112,7 +113,7 @@ Full roadmap and every planned tool: the private roadmap.
 
 ### next up
 
-`browser_cookies` / `browser_cache` / `browser_extensions` ·
+`browser_cache` / `browser_extensions` / `browser_sessions` ·
 `memory_handles` / `memory_hashdump` (reporting only) ·
 `recovery_metadata` FAT / ext4 / APFS support ·
 `linux_journal` (systemd binary journal) · `linux_audit` ·
