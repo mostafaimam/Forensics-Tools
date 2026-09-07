@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "analysis_gallery"
+version = "0.1.0"
+description = "Picture and video gallery for an evidence set: EXIF/GPS, perceptual-hash grouping, HTML contact sheet"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "gallery", "exif", "gps", "perceptual hash", "images", "video"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/analysis/analysis_gallery"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+analysis_gallery = "analysis_gallery.cli:main"
+[tool.setuptools]
+packages = ["analysis_gallery"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
