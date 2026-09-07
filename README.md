@@ -98,10 +98,11 @@ Full roadmap and every planned tool: the private roadmap.
 | [**memory_strings**](memory/memory_strings/) | ✅ v0.1 | Address-aware string extraction from a RAM dump — ASCII + UTF-16LE runs tagged with the physical address, built-in IOC pattern library (url / registry / powershell / keys / wallets / cards …) |
 | [**memory_pslist**](memory/memory_pslist/) | ✅ v0.1 | Windows process enumeration by **pool-tag scanning** — profile-independent `_EPROCESS` heuristic; finds **hidden and exited** processes; confidence-scored |
 | [**memory_netscan**](memory/memory_netscan/) | ✅ v0.1 | Network connections + sockets from a Windows RAM dump — pool-tag scan for TCP/UDP endpoints and listeners, **x64 page-table translation** (self-referential PML4, no profile) to resolve the owning process and addresses; finds **hidden / closed** connections |
+| [**memory_malfind**](memory/memory_malfind/) | ✅ v0.1 | Injected / unbacked executable memory — pool-tag scan for private (`VadS`) regions that are **executable**: reflectively-loaded DLLs, hollowed sections, shellcode; classifies each (PE / shellcode prologue / RWX high-entropy), attributes it to a process, dumps the region start |
 
 ### next up
 
-`memory_malfind` (injected code) · `memory_dlllist` / `memory_handles` ·
+`memory_dlllist` / `memory_handles` / `memory_svcscan` ·
 `recovery_metadata` FAT / ext4 / APFS support ·
 `linux_journal` (systemd binary journal) · `linux_audit` ·
 `macos_quarantine` / `macos_knowledgec` (build on `macos_plist` + SQLite) ·
@@ -149,7 +150,7 @@ flowchart TD
     D --> E["windows_prefetch ✅ · windows_shimcache ✅ · windows_amcache ✅ — execution evidence"]
     E --> F["windows_lnk ✅ · windows_jumplist ✅ · windows_recycle ✅ — opened files, source host, deletions"]
     F --> G["windows_evtx ✅ — logon, service install, 4688, PowerShell 4104"]
-    G --> H["memory/* ⏳ — pslist · netscan · malfind · in-memory hives · hashdump"]
+    G --> H["memory/* — pslist ✅ · netscan ✅ · malfind ✅ · strings ✅ · in-memory hives ⏳ · hashdump ⏳"]
     H --> I["analysis_timeline ✅ — merge every output into one sorted UTC timeline"]
     I --> J["analysis_report ⏳"]
 ```
@@ -224,13 +225,14 @@ flowchart TD
    ```
 
 8. **Memory** — if RAM was captured: `memory_pslist` ✅ (pool-tag process
-   scan), `memory_netscan` ✅ (connections + sockets), `memory_strings` ✅
-   (address-tagged IOCs); `memory_malfind`, `memory_registry` (hives live in
-   RAM) and `memory_hashdump` are ⏳.
+   scan), `memory_netscan` ✅ (connections + sockets), `memory_malfind` ✅
+   (injected / RWX code), `memory_strings` ✅ (address-tagged IOCs);
+   `memory_registry` (hives live in RAM) and `memory_hashdump` are ⏳.
 
    ```bash
    memory_pslist  MEMORY.DMP --terminated-only --csv procs.csv
    memory_netscan MEMORY.DMP --established --csv connections.csv
+   memory_malfind MEMORY.DMP --min-confidence medium --csv injected.csv
    ```
 
 9. **Correlate & report.** Feed every CSV / JSON to `analysis_timeline` for
