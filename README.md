@@ -25,13 +25,15 @@ documentation. Tools are organised into categories.
 | [`mobile/`](mobile/) | logical mobile extractions — iOS backups, Android `adb` backups |
 | [`apps/`](apps/) | chat & collaboration apps — Teams, Slack, Signal, Discord, Telegram |
 
-Every **planned** tool already has a spec-stub `README.md` in its own
-directory describing what it will do — browse the category folders above.
-The full roadmap is tracked privately.
+The tables below list every tool, built (✅) and planned (📋). Each planned
+tool already has a spec-stub `README.md` in its own directory describing what
+it will do. The full roadmap is tracked privately.
 
 ---
 
-## Tools available now
+## Tools
+
+✅ built and tested · 📋 planned (every planned tool has a spec-stub README in its directory — click its name)
 
 ### `acquisition/`
 
@@ -46,6 +48,12 @@ The full roadmap is tracked privately.
 | Tool | Status | Purpose |
 |---|---|---|
 | [**mounting_image**](mounting/mounting_image/) | ✅ v0.1 | Read-only access to raw / split / **E01** / **VHD** / **VMDK** images — container + MBR/GPT inspection, raw export, **built-in NBD server + client** (no `nbd-client`), **`mount` as a real read-only drive** (Windows drive letter, macOS volume, Linux mount); CLI + `tkinter` GUI |
+| [**mounting_vsc**](mounting/mounting_vsc/) | 📋 planned | Enumerate and mount every Volume Shadow Copy on a volume · GUI |
+| [**mounting_partitions**](mounting/mounting_partitions/) | 📋 planned | Map the partition layout of a disk image (no mounting) |
+| [**mounting_bitlocker**](mounting/mounting_bitlocker/) | 📋 planned | Unlock a BitLocker volume with a supplied key |
+| [**mounting_luks**](mounting/mounting_luks/) | 📋 planned | Unlock a LUKS1 / LUKS2 volume with a passphrase or keyfile |
+| [**mounting_veracrypt**](mounting/mounting_veracrypt/) | 📋 planned | Unlock a TrueCrypt / VeraCrypt container or partition with a password |
+| [**mounting_fvde**](mounting/mounting_fvde/) | 📋 planned | Unlock an APFS / CoreStorage FileVault volume with a password or recovery key |
 
 ### `recovery/`
 
@@ -53,6 +61,7 @@ The full roadmap is tracked privately.
 |---|---|---|
 | [**recovery_carve**](recovery/recovery_carve/) | ✅ v0.1 | Signature carving — recover files by magic bytes + structural validators, no file system needed |
 | [**recovery_metadata**](recovery/recovery_metadata/) | ✅ v0.1 | Metadata recovery — walk the NTFS `$MFT`, list allocated + deleted entries with paths and `MACB` times, extract content (incl. deleted files), `cat` one entry by number |
+| [**recovery_fs**](recovery/recovery_fs/) | 📋 planned | Generic read-only file-system walker (NTFS / FAT / exFAT / ext / HFS+ / APFS) |
 
 ### `windows/`
 
@@ -68,6 +77,29 @@ The full roadmap is tracked privately.
 | [**windows_mft**](windows/windows_mft/) | ✅ v0.1 | NTFS `$MFT` + `$UsnJrnl:$J` — full timeline, ADS listing, `$SI`/`$FN` timestomp detection; CSV / JSON / bodyfile; `tkinter` `$MFT` browser (`windows_mft gui`) |
 | [**windows_recycle**](windows/windows_recycle/) | ✅ v0.1 | Recycle Bin — Vista+ `$I` / `$R` and legacy `INFO2` / `INFO`; content matching; CSV / JSON |
 | [**windows_prefetch**](windows/windows_prefetch/) | ✅ v0.1 | Prefetch `.pf` v17-31, including the Windows 10/11 `MAM` / XPRESS-Huffman compressed format (pure-Python decompressor) |
+| [**windows_recentfilecache**](windows/windows_recentfilecache/) | 📋 planned | Parse RecentFileCache.bcf |
+| [**windows_shellbags**](windows/windows_shellbags/) | 📋 planned | Reconstruct the ShellBags folder-access tree · GUI |
+| [**windows_srum**](windows/windows_srum/) | 📋 planned | Parse SRUDB.dat (System Resource Usage Monitor) |
+| [**windows_sum**](windows/windows_sum/) | 📋 planned | Parse the Microsoft User Access Logs (SUM) |
+| [**windows_timeline**](windows/windows_timeline/) | 📋 planned | Parse the Windows 10/11 Timeline (ActivitiesCache.db) |
+| [**windows_sqlmap**](windows/windows_sqlmap/) | 📋 planned | Locate SQLite databases in a target and process them with named maps |
+| [**windows_esedb**](windows/windows_esedb/) | 📋 planned | Generic ESE / JET (.edb) database reader |
+| [**windows_usn**](windows/windows_usn/) | 📋 planned | Standalone $UsnJrnl:$J parser / carver |
+| [**windows_sdb**](windows/windows_sdb/) | 📋 planned | Parse application shim databases (.sdb) · GUI |
+| [**windows_wer**](windows/windows_wer/) | 📋 planned | Parse Windows Error Reporting (.wer) reports |
+| [**windows_bits**](windows/windows_bits/) | 📋 planned | Parse the BITS transfer history (qmgr.db / qmgr*.dat) |
+| [**windows_tasks**](windows/windows_tasks/) | 📋 planned | Parse Scheduled Tasks (Tasks XML + TaskCache registry) |
+| [**windows_wmi**](windows/windows_wmi/) | 📋 planned | Parse the WMI repository for persistence (OBJECTS.DATA / INDEX.BTR) |
+| [**windows_defender**](windows/windows_defender/) | 📋 planned | Parse Microsoft Defender logs, detection history and quarantine |
+| [**windows_pslogging**](windows/windows_pslogging/) | 📋 planned | PowerShell forensics: ScriptBlock, Module logging and transcripts |
+| [**windows_usbdevices**](windows/windows_usbdevices/) | 📋 planned | Reconstruct removable-device history |
+| [**windows_webcache**](windows/windows_webcache/) | 📋 planned | Parse WebCacheV01.dat (WinINET history / cookies / cache) |
+| [**windows_thumbcache**](windows/windows_thumbcache/) | 📋 planned | Extract thumbnails from thumbcache_*.db and map them to paths |
+| [**windows_notifications**](windows/windows_notifications/) | 📋 planned | Parse the notification history (wpndatabase.db / appdb.dat) |
+| [**windows_bam**](windows/windows_bam/) | 📋 planned | Parse Background Activity Moderator / DAM last-execution data |
+| [**windows_spooler**](windows/windows_spooler/) | 📋 planned | Parse print-spool artefacts (.spl / .shd) |
+| [**windows_logfile**](windows/windows_logfile/) | 📋 planned | Analyse the NTFS $LogFile transaction log |
+| [**windows_sigma**](windows/windows_sigma/) | 📋 planned | Lightweight detection-rules engine over parsed event data |
 
 ### `analysis/`
 
@@ -82,6 +114,10 @@ The full roadmap is tracked privately.
 | [**analysis_index**](analysis/analysis_index/) | ✅ v0.1 | Full-text index + search over a collection — text / markup / OOXML / email / string-carving extraction; **boolean / phrase / `NEAR` / prefix / regex** queries with snippets; SQLite, no FTS extension |
 | [**analysis_gallery**](analysis/analysis_gallery/) | ✅ v0.1 | Picture + video gallery — find media by content signature, extract **EXIF / QuickTime metadata + GPS**, group visually near-identical images by **perceptual hash**, build a self-contained **HTML contact sheet**; in-tree JPEG / PNG / GIF / BMP decoders |
 | [**analysis_view**](analysis/analysis_view/) | ✅ v0.1 | Review any table (CSV / TSV / JSON / **XLSX**) — merge sources, per-column filters, sort, conditional row colouring, and **tags + a notes column + a reviewed flag** saved to a sidecar; exports a self-contained interactive **HTML review page**. Where the reconstruction gets annotated |
+| [**analysis_dpapi**](analysis/analysis_dpapi/) | 📋 planned | Decrypt Windows DPAPI blobs with supplied secrets (reporting for IR) |
+| [**analysis_antiforensics**](analysis/analysis_antiforensics/) | 📋 planned | Correlate anti-forensic and tampering indicators into one report |
+| [**analysis_fuzzyhash**](analysis/analysis_fuzzyhash/) | 📋 planned | Similarity hashing and clustering (CTPH + locality hashes) |
+| [**analysis_enrich**](analysis/analysis_enrich/) | 📋 planned | Post-process a timeline bundle: IOC match, ATT&CK tags, geo, known-file |
 
 ### `linux/`
 
@@ -91,12 +127,34 @@ The full roadmap is tracked privately.
 | [**linux_cron**](linux/linux_cron/) | ✅ v0.1 | Scheduled-execution inventory — crontabs, `cron.d`, run-parts, anacron, `at` jobs, systemd timers → normalised rows with plain-language schedules + suspicious-entry flags |
 | [**linux_syslog**](linux/linux_syslog/) | ✅ v0.1 | `syslog` / `messages` / `auth.log` / `secure` (+ rotated / `.gz`), BSD + RFC 5424 → record timeline or **structured security events** (SSH, sudo, su, PAM, session, cron, account) |
 | [**linux_bashhist**](linux/linux_bashhist/) | ✅ v0.1 | Shell / REPL history for all users (bash, zsh, fish, sh, python, mysql, psql, sqlite, node, redis) → merged timeline, tampering markers, attacker-command flags |
+| [**linux_journal**](linux/linux_journal/) | 📋 planned | Read the systemd journal (.journal) binary format |
+| [**linux_audit**](linux/linux_audit/) | 📋 planned | Normalise auditd audit.log records |
+| [**linux_units**](linux/linux_units/) | 📋 planned | Inventory systemd unit files and review persistence |
+| [**linux_packages**](linux/linux_packages/) | 📋 planned | Reconstruct package install / upgrade / remove history |
+| [**linux_sshkeys**](linux/linux_sshkeys/) | 📋 planned | Review SSH keys, known hosts and sshd configuration |
+| [**linux_persistence**](linux/linux_persistence/) | 📋 planned | One sweep for every userland persistence vector on Linux |
+| [**linux_containers**](linux/linux_containers/) | 📋 planned | Parse Docker / containerd / Podman on-disk state |
+| [**linux_networkmgr**](linux/linux_networkmgr/) | 📋 planned | Parse NetworkManager profiles, wpa_supplicant and network config |
 
 ### `macos/`
 
 | Tool | Status | Purpose |
 |---|---|---|
 | [**macos_plist**](macos/macos_plist/) | ✅ v0.1 | Binary + XML property lists → CSV / JSON; **unwraps `NSKeyedArchiver`**; Apple timestamp conversion |
+| [**macos_unifiedlog**](macos/macos_unifiedlog/) | 📋 planned | Parse the macOS unified log (.tracev3) |
+| [**macos_fsevents**](macos/macos_fsevents/) | 📋 planned | Parse /.fseventsd file-system change records |
+| [**macos_knowledgec**](macos/macos_knowledgec/) | 📋 planned | Parse knowledgeC.db / CoreDuet app-usage and device state |
+| [**macos_quarantine**](macos/macos_quarantine/) | 📋 planned | Parse LaunchServices quarantine events (downloads) |
+| [**macos_spotlight**](macos/macos_spotlight/) | 📋 planned | Parse the Spotlight metadata store (.spotlight-V100 store.db) |
+| [**macos_launchd**](macos/macos_launchd/) | 📋 planned | Review LaunchAgents / LaunchDaemons persistence |
+| [**macos_installhistory**](macos/macos_installhistory/) | 📋 planned | Parse InstallHistory.plist and /var/db/receipts |
+| [**macos_tcc**](macos/macos_tcc/) | 📋 planned | Parse the TCC.db privacy-permission database |
+| [**macos_dslocal**](macos/macos_dslocal/) | 📋 planned | Parse local account records from /var/db/dslocal |
+| [**macos_coreanalytics**](macos/macos_coreanalytics/) | 📋 planned | Parse CoreAnalytics (.core_analytics) app-usage aggregates |
+| [**macos_powerlog**](macos/macos_powerlog/) | 📋 planned | Parse the macOS PowerLog (CurrentPowerlog.PLSQL) |
+| [**macos_netusage**](macos/macos_netusage/) | 📋 planned | Parse netusage.sqlite per-process network usage |
+| [**macos_bt**](macos/macos_bt/) | 📋 planned | Parse Bluetooth paired-device history |
+| [**macos_screentime**](macos/macos_screentime/) | 📋 planned | Parse Screen Time app-usage data (RMAdminStore / knowledgeC) |
 
 ### `browser/`
 
@@ -105,6 +163,15 @@ The full roadmap is tracked privately.
 | [**browser_history**](browser/browser_history/) | ✅ v0.1 | Web history, downloads and typed URLs from **Chrome / Edge / Brave / Opera / Firefox / Tor / Safari** — read-only + WAL-safe `sqlite3` parse, one normalised timeline; flags IP-literal hosts, punycode, paste / anonymiser / tunnel sites, `.exe` / `.ps1` downloads, `file://` access |
 | [**browser_cookies**](browser/browser_cookies/) | ✅ v0.1 | Cookies from the same browsers (Safari `Cookies.binarycookies` included) — host, expiry, `Secure` / `HttpOnly` / `SameSite`, session vs persistent; **detects session / auth cookies** (proof a user was logged in) and flags IP-literal / tunnel hosts and `__Host-` / `__Secure-` prefix violations; values are metadata-only unless `--with-values` |
 | [**browser_extensions**](browser/browser_extensions/) | ✅ v0.1 | Installed extensions from Chromium `Preferences` / Firefox `extensions.json` — id, version, install source, enabled state, **host + API permissions**; risk-scores each and flags **sideloaded**, **unsigned** (Firefox), developer-mode, policy-installed, `debugger` / `nativeMessaging` / `management` / `<all_urls>`+`webRequest`, and custom update URLs (Google / Mozilla first-party components recognised) |
+| [**browser_downloads**](browser/browser_downloads/) | 📋 planned | Download history: source URL, referrer, target path, danger flag |
+| [**browser_cache**](browser/browser_cache/) | 📋 planned | List and extract cached HTTP responses |
+| [**browser_autofill**](browser/browser_autofill/) | 📋 planned | Autofill entries, saved profiles and masked payment cards |
+| [**browser_logins**](browser/browser_logins/) | 📋 planned | Saved-login metadata (origin, username, timestamps) — no passwords |
+| [**browser_sessions**](browser/browser_sessions/) | 📋 planned | Open windows / tabs / form data at last close |
+| [**browser_bookmarks**](browser/browser_bookmarks/) | 📋 planned | Bookmarks with added / modified times |
+| [**browser_shortcuts**](browser/browser_shortcuts/) | 📋 planned | Omnibox typed-text → URL shortcuts and site-engagement data |
+| [**browser_localstorage**](browser/browser_localstorage/) | 📋 planned | Per-origin Local Storage and IndexedDB key/value data |
+| [**browser_favicons**](browser/browser_favicons/) | 📋 planned | Favicons DB — sites visited even after history was cleared |
 
 ### `network/`
 
@@ -112,6 +179,10 @@ The full roadmap is tracked privately.
 |---|---|---|
 | [**network_pcap**](network/network_pcap/) | ✅ v0.1 | Pure-Python `pcap` / `pcapng` reader — decodes Ethernet / SLL / raw-IP down to IPv4 / IPv6 + TCP / UDP / ICMP, reassembles **bidirectional flows**, extracts **DNS** queries/answers and **HTTP** requests (response merged in); flags cleartext creds, plaintext protocols to the internet, DNS tunnelling / DGA names, port scans, `.exe` downloads, high-egress flows |
 | [**network_http**](network/network_http/) | ✅ v0.1 | **Carve HTTP transfers out of a capture** — TCP reassembly (out-of-order, retransmits), HTTP/1.x parsing (`chunked` + `gzip` / `deflate` decoded), request↔response pairing; hashes every transferred body, `--extract` writes them to disk (name from `Content-Disposition` / URL / magic bytes), carves **uploads** too; flags PE / ELF / script / archive bodies, content-type mismatches, credentials in uploads, non-browser user-agents, IP-literal hosts |
+| [**network_dns**](network/network_dns/) | 📋 planned | DNS activity from captures, OS resolver caches and hosts files |
+| [**network_flows**](network/network_flows/) | 📋 planned | NetFlow v5/v9 / IPFIX / sFlow record reader and conversation summary |
+| [**network_logs**](network/network_logs/) | 📋 planned | Normalise firewall / proxy / IDS text logs into one schema |
+| [**network_arp**](network/network_arp/) | 📋 planned | IP ↔ MAC ↔ hostname ↔ time mapping from ARP and DHCP data |
 
 ### `memory/`
 
@@ -125,6 +196,56 @@ The full roadmap is tracked privately.
 | [**memory_dlllist**](memory/memory_dlllist/) | ✅ v0.1 | Loaded modules per process — pool-tag scan for image VADs, recovers each module's full path via `_MMVAD → Subsection → ControlArea → FileObject`, flags **user-writable load paths**, mislocated system DLLs, and executable image regions with **no backing file** (manual maps) |
 | [**memory_cmdline**](memory/memory_cmdline/) | ✅ v0.1 | Process command lines — walks `_EPROCESS → PEB → RTL_USER_PROCESS_PARAMETERS` for the full command line, image path, working directory, window title and environment; flags **LOLBins** (`powershell -enc`, `certutil -urlcache`, `regsvr32 /i:http`, …) and argv[0] masquerading |
 | [**memory_svcscan**](memory/memory_svcscan/) | ✅ v0.1 | Windows services — scans `services.exe` memory for `_SERVICE_RECORD` (`sErv`) structures to rebuild the service list **without the registry** (finds services deleted from `HKLM\…\Services`); name, display name, type, state, PID, binary path; flags user-writable / LOLBin / driver-from-temp binaries |
+| [**memory_handles**](memory/memory_handles/) | 📋 planned | List open handles per process and the kernel object table |
+| [**memory_registry**](memory/memory_registry/) | 📋 planned | Locate registry hives in memory and read keys only present in RAM |
+| [**memory_hashdump**](memory/memory_hashdump/) | 📋 planned | Extract local NT password hashes from a memory image (reporting only) |
+| [**memory_lsasecrets**](memory/memory_lsasecrets/) | 📋 planned | Extract LSA secrets and cached domain credentials (reporting only) |
+| [**memory_filescan**](memory/memory_filescan/) | 📋 planned | Scan for _FILE_OBJECT structures in a memory image |
+| [**memory_dumpfiles**](memory/memory_dumpfiles/) | 📋 planned | Reconstruct file contents from the memory cache manager |
+| [**memory_consoles**](memory/memory_consoles/) | 📋 planned | Reconstruct console / conhost screen and command history buffers |
+| [**memory_timers**](memory/memory_timers/) | 📋 planned | Enumerate kernel timers (KTIMER) from a memory image |
+| [**memory_callbacks**](memory/memory_callbacks/) | 📋 planned | Enumerate kernel notification callbacks |
+| [**memory_ssdt**](memory/memory_ssdt/) | 📋 planned | Inspect the SSDT / IDT and driver IRP tables for hooks |
+| [**memory_linux**](memory/memory_linux/) | 📋 planned | Linux memory-image analysis (process list, modules, network, history) |
+| [**memory_macos**](memory/memory_macos/) | 📋 planned | macOS memory-image analysis (best-effort, version-gated) |
+| [**memory_yara**](memory/memory_yara/) | 📋 planned | Scan process and kernel memory with YARA-style rules |
+
+### `utilities/`
+
+| Tool | Status | Purpose |
+|---|---|---|
+| [**utilities_strings**](utilities/utilities_strings/) | 📋 planned | String extraction with a built-in forensic regex library |
+| [**utilities_hash**](utilities/utilities_hash/) | 📋 planned | Hash a file set / tree / image's files into a manifest |
+| [**utilities_ole**](utilities/utilities_ole/) | 📋 planned | OLE2 / compound-file and Office metadata extraction |
+| [**utilities_hex**](utilities/utilities_hex/) | 📋 planned | Hex viewer and data interpreter · GUI |
+| [**utilities_ezview**](utilities/utilities_ezview/) | 📋 planned | Zero-dependency viewer for common document and text formats · GUI |
+
+### `cloud/`
+
+| Tool | Status | Purpose |
+|---|---|---|
+| [**cloud_onedrive**](cloud/cloud_onedrive/) | 📋 planned | Parse OneDrive sync metadata and ODL logs |
+| [**cloud_dropbox**](cloud/cloud_dropbox/) | 📋 planned | Parse Dropbox sync databases |
+| [**cloud_gdrive**](cloud/cloud_gdrive/) | 📋 planned | Parse Google Drive / Backup & Sync metadata |
+| [**cloud_box**](cloud/cloud_box/) | 📋 planned | Parse the Box Drive metadata database |
+| [**cloud_m365ual**](cloud/cloud_m365ual/) | 📋 planned | Normalise the Microsoft 365 Unified Audit Log |
+| [**cloud_azuread**](cloud/cloud_azuread/) | 📋 planned | Parse Entra ID (Azure AD) sign-in and audit logs |
+| [**cloud_cloudtrail**](cloud/cloud_cloudtrail/) | 📋 planned | Normalise AWS CloudTrail logs into events and summaries |
+| [**cloud_gws**](cloud/cloud_gws/) | 📋 planned | Parse Google Workspace admin / login / Drive audit activity |
+
+### `mobile/`
+
+| Tool | Status | Purpose |
+|---|---|---|
+| [**mobile_iosbackup**](mobile/mobile_iosbackup/) | 📋 planned | Read iTunes / Finder iOS backups |
+| [**mobile_android**](mobile/mobile_android/) | 📋 planned | Read adb backups and logical Android copies |
+| [**mobile_appcommon**](mobile/mobile_appcommon/) | 📋 planned | Shared SQLite / plist / protobuf helpers for mobile-extraction parsers |
+
+### `apps/`
+
+| Tool | Status | Purpose |
+|---|---|---|
+| [**app_chat**](apps/app_chat/) | 📋 planned | Chat / collaboration app forensics with per-application adapters |
 
 ### next up
 
