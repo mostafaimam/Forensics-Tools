@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "network_http"
+version = "0.1.0"
+description = "Carve HTTP transfers out of a pcap / pcapng: TCP reassembly, HTTP/1.x parsing, gzip / chunked decode, file extraction with hashes"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "network", "pcap", "http", "carving", "file extraction"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/network/network_http"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+network_http = "network_http.cli:main"
+[tool.setuptools]
+packages = ["network_http"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]

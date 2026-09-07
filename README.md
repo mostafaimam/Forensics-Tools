@@ -106,6 +106,7 @@ Full roadmap and every planned tool: the private roadmap.
 | Tool | Status | Purpose |
 |---|---|---|
 | [**network_pcap**](network/network_pcap/) | ✅ v0.1 | Pure-Python `pcap` / `pcapng` reader — decodes Ethernet / SLL / raw-IP down to IPv4 / IPv6 + TCP / UDP / ICMP, reassembles **bidirectional flows**, extracts **DNS** queries/answers and **HTTP** requests (response merged in); flags cleartext creds, plaintext protocols to the internet, DNS tunnelling / DGA names, port scans, `.exe` downloads, high-egress flows |
+| [**network_http**](network/network_http/) | ✅ v0.1 | **Carve HTTP transfers out of a capture** — TCP reassembly (out-of-order, retransmits), HTTP/1.x parsing (`chunked` + `gzip` / `deflate` decoded), request↔response pairing; hashes every transferred body, `--extract` writes them to disk (name from `Content-Disposition` / URL / magic bytes), carves **uploads** too; flags PE / ELF / script / archive bodies, content-type mismatches, credentials in uploads, non-browser user-agents, IP-literal hosts |
 
 ### `memory/`
 
@@ -122,7 +123,7 @@ Full roadmap and every planned tool: the private roadmap.
 
 ### next up
 
-`network_http` (object carving) / `network_dns` / `network_flows` (NetFlow) ·
+`network_dns` (query-log analysis) / `network_flows` (NetFlow / IPFIX) / `network_logs` (firewall / IDS) ·
 `browser_cache` / `browser_autofill` / `browser_sessions` ·
 `memory_handles` / `memory_hashdump` (reporting only) ·
 `recovery_metadata` FAT / ext4 / APFS support ·
