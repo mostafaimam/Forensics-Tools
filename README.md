@@ -21,8 +21,13 @@ documentation. Tools are organised into categories.
 | [`memory/`](memory/) | RAM-image analysis — processes, network, injection, in-memory hives |
 | [`analysis/`](analysis/) | timeline building, indexing, correlation, reporting |
 | [`utilities/`](utilities/) | strings, hashing, hex / file viewers |
+| [`cloud/`](cloud/) | cloud & SaaS logs — OneDrive, Dropbox, M365 / Entra, CloudTrail, Workspace |
+| [`mobile/`](mobile/) | logical mobile extractions — iOS backups, Android `adb` backups |
+| [`apps/`](apps/) | chat & collaboration apps — Teams, Slack, Signal, Discord, Telegram |
 
-Full roadmap and every planned tool: the private roadmap.
+Every **planned** tool already has a spec-stub `README.md` in its own
+directory describing what it will do — browse the category folders above.
+The full roadmap is tracked privately.
 
 ---
 
