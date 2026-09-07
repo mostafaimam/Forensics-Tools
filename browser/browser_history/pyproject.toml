@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "browser_history"
+version = "0.1.0"
+description = "Web history, downloads and typed URLs from Chrome / Edge / Firefox / Safari stores (read-only, WAL-safe), with suspicious-URL flagging"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "browser", "history", "chrome", "firefox", "downloads"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/browser/browser_history"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+browser_history = "browser_history.cli:main"
+[tool.setuptools]
+packages = ["browser_history"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]

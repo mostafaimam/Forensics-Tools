@@ -16,6 +16,7 @@ documentation. Tools are organised into categories.
 | [`windows/`](windows/) | Windows artefact parsers |
 | [`linux/`](linux/) | Linux artefact parsers |
 | [`macos/`](macos/) | macOS artefact parsers |
+| [`browser/`](browser/) | web browser artefacts — history, downloads, cache, cookies |
 | [`memory/`](memory/) | RAM-image analysis — processes, network, injection, in-memory hives |
 | [`analysis/`](analysis/) | timeline building, indexing, correlation, reporting |
 | [`utilities/`](utilities/) | strings, hashing, hex / file viewers |
@@ -90,6 +91,12 @@ Full roadmap and every planned tool: the private roadmap.
 |---|---|---|
 | [**macos_plist**](macos/macos_plist/) | ✅ v0.1 | Binary + XML property lists → CSV / JSON; **unwraps `NSKeyedArchiver`**; Apple timestamp conversion |
 
+### `browser/`
+
+| Tool | Status | Purpose |
+|---|---|---|
+| [**browser_history**](browser/browser_history/) | ✅ v0.1 | Web history, downloads and typed URLs from **Chrome / Edge / Brave / Opera / Firefox / Tor / Safari** — read-only + WAL-safe `sqlite3` parse, one normalised timeline; flags IP-literal hosts, punycode, paste / anonymiser / tunnel sites, `.exe` / `.ps1` downloads, `file://` access |
+
 ### `memory/`
 
 | Tool | Status | Purpose |
@@ -105,11 +112,11 @@ Full roadmap and every planned tool: the private roadmap.
 
 ### next up
 
+`browser_cookies` / `browser_cache` / `browser_extensions` ·
 `memory_handles` / `memory_hashdump` (reporting only) ·
 `recovery_metadata` FAT / ext4 / APFS support ·
 `linux_journal` (systemd binary journal) · `linux_audit` ·
-`macos_quarantine` / `macos_knowledgec` (build on `macos_plist` + SQLite) ·
-browser forensics (history / downloads / cache — new `browser/` category).
+`macos_quarantine` / `macos_knowledgec` (build on `macos_plist` + SQLite).
 
 ---
 
