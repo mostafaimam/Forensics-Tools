@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "memory_svcscan"
+version = "0.1.0"
+description = "Recover the Windows service database from services.exe memory (finds services missing from the registry), profile-independent"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "memory", "services", "svcscan", "scm", "incident response"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/memory/memory_svcscan"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+memory_svcscan = "memory_svcscan.cli:main"
+[tool.setuptools]
+packages = ["memory_svcscan"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]

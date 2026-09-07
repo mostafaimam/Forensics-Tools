@@ -101,10 +101,11 @@ Full roadmap and every planned tool: the private roadmap.
 | [**memory_malfind**](memory/memory_malfind/) | ✅ v0.1 | Injected / unbacked executable memory — pool-tag scan for private (`VadS`) regions that are **executable**: reflectively-loaded DLLs, hollowed sections, shellcode; classifies each (PE / shellcode prologue / RWX high-entropy), attributes it to a process, dumps the region start |
 | [**memory_dlllist**](memory/memory_dlllist/) | ✅ v0.1 | Loaded modules per process — pool-tag scan for image VADs, recovers each module's full path via `_MMVAD → Subsection → ControlArea → FileObject`, flags **user-writable load paths**, mislocated system DLLs, and executable image regions with **no backing file** (manual maps) |
 | [**memory_cmdline**](memory/memory_cmdline/) | ✅ v0.1 | Process command lines — walks `_EPROCESS → PEB → RTL_USER_PROCESS_PARAMETERS` for the full command line, image path, working directory, window title and environment; flags **LOLBins** (`powershell -enc`, `certutil -urlcache`, `regsvr32 /i:http`, …) and argv[0] masquerading |
+| [**memory_svcscan**](memory/memory_svcscan/) | ✅ v0.1 | Windows services — scans `services.exe` memory for `_SERVICE_RECORD` (`sErv`) structures to rebuild the service list **without the registry** (finds services deleted from `HKLM\…\Services`); name, display name, type, state, PID, binary path; flags user-writable / LOLBin / driver-from-temp binaries |
 
 ### next up
 
-`memory_handles` / `memory_svcscan` ·
+`memory_handles` / `memory_hashdump` (reporting only) ·
 `recovery_metadata` FAT / ext4 / APFS support ·
 `linux_journal` (systemd binary journal) · `linux_audit` ·
 `macos_quarantine` / `macos_knowledgec` (build on `macos_plist` + SQLite) ·
@@ -152,7 +153,7 @@ flowchart TD
     D --> E["windows_prefetch ✅ · windows_shimcache ✅ · windows_amcache ✅ — execution evidence"]
     E --> F["windows_lnk ✅ · windows_jumplist ✅ · windows_recycle ✅ — opened files, source host, deletions"]
     F --> G["windows_evtx ✅ — logon, service install, 4688, PowerShell 4104"]
-    G --> H["memory/* — pslist ✅ · netscan ✅ · malfind ✅ · dlllist ✅ · cmdline ✅ · strings ✅ · in-memory hives ⏳ · hashdump ⏳"]
+    G --> H["memory/* — pslist ✅ · netscan ✅ · malfind ✅ · dlllist ✅ · cmdline ✅ · svcscan ✅ · strings ✅ · in-memory hives ⏳ · hashdump ⏳"]
     H --> I["analysis_timeline ✅ — merge every output into one sorted UTC timeline"]
     I --> J["analysis_report ✅ · analysis_gallery ✅ (media + EXIF/GPS)"]
 ```
@@ -230,6 +231,7 @@ flowchart TD
    scan), `memory_netscan` ✅ (connections + sockets), `memory_malfind` ✅
    (injected / RWX code), `memory_dlllist` ✅ (loaded modules + load-path
    anomalies), `memory_cmdline` ✅ (command lines + LOLBins),
+   `memory_svcscan` ✅ (services, incl. ones missing from the registry),
    `memory_strings` ✅ (address-tagged IOCs); `memory_registry` (hives live
    in RAM) and `memory_hashdump` are ⏳.
 
@@ -239,6 +241,7 @@ flowchart TD
    memory_malfind MEMORY.DMP --min-confidence medium --csv injected.csv
    memory_dlllist MEMORY.DMP --notable-only --csv modules.csv
    memory_cmdline MEMORY.DMP --notable-only --csv cmdlines.csv
+   memory_svcscan MEMORY.DMP --notable-only --csv services.csv
    ```
 
 9. **Correlate & report.** Feed every CSV / JSON to `analysis_timeline` for
