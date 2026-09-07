@@ -73,6 +73,7 @@ Full roadmap and every planned tool: the private roadmap.
 | [**analysis_dedupe**](analysis/analysis_dedupe/) | ✅ v0.1 | Hash-based deduplication — content grouping, reclaimable bytes, distinct-file list, `--against` baseline diff |
 | [**analysis_kff**](analysis/analysis_kff/) | ✅ v0.1 | Known File Filter — import NSRL / Project VIC / HashKeeper / plain hash sets into a local SQLite index; classify files or hashes as **known-good / known-bad / notable / unknown** |
 | [**analysis_index**](analysis/analysis_index/) | ✅ v0.1 | Full-text index + search over a collection — text / markup / OOXML / email / string-carving extraction; **boolean / phrase / `NEAR` / prefix / regex** queries with snippets; SQLite, no FTS extension |
+| [**analysis_gallery**](analysis/analysis_gallery/) | ✅ v0.1 | Picture + video gallery — find media by content signature, extract **EXIF / QuickTime metadata + GPS**, group visually near-identical images by **perceptual hash**, build a self-contained **HTML contact sheet**; in-tree JPEG / PNG / GIF / BMP decoders |
 
 ### `linux/`
 
@@ -96,13 +97,15 @@ Full roadmap and every planned tool: the private roadmap.
 | [**memory_image**](memory/memory_image/) | ✅ v0.1 | Identify / map / convert RAM dumps — raw / **LiME** / ELF core / **Windows crash dump**; physical range map, OS hints, `raw`↔`lime`↔`padded`, carve a region. The shared loader for the `memory_*` tools |
 | [**memory_strings**](memory/memory_strings/) | ✅ v0.1 | Address-aware string extraction from a RAM dump — ASCII + UTF-16LE runs tagged with the physical address, built-in IOC pattern library (url / registry / powershell / keys / wallets / cards …) |
 | [**memory_pslist**](memory/memory_pslist/) | ✅ v0.1 | Windows process enumeration by **pool-tag scanning** — profile-independent `_EPROCESS` heuristic; finds **hidden and exited** processes; confidence-scored |
+| [**memory_netscan**](memory/memory_netscan/) | ✅ v0.1 | Network connections + sockets from a Windows RAM dump — pool-tag scan for TCP/UDP endpoints and listeners, **x64 page-table translation** (self-referential PML4, no profile) to resolve the owning process and addresses; finds **hidden / closed** connections |
 
 ### next up
 
-`analysis_gallery` (media + EXIF) — FTK-parity ·
-`memory_netscan` / `memory_malfind` (RAM analysis) ·
+`memory_malfind` (injected code) · `memory_dlllist` / `memory_handles` ·
 `recovery_metadata` FAT / ext4 / APFS support ·
-`linux_journal` (systemd binary journal) · `macos_quarantine` / `macos_knowledgec` (build on `macos_plist` + SQLite).
+`linux_journal` (systemd binary journal) · `linux_audit` ·
+`macos_quarantine` / `macos_knowledgec` (build on `macos_plist` + SQLite) ·
+browser forensics (history / downloads / cache — new `browser/` category).
 
 ---
 
@@ -220,8 +223,15 @@ flowchart TD
    windows_evtx Security.evtx --event-id 4624,4625,4688 --csv logons.csv
    ```
 
-8. **Memory** (⏳) — if RAM was captured: `memory_pslist`, `memory_netscan`,
-   `memory_malfind`, `memory_registry` (hives live in RAM), `memory_hashdump`.
+8. **Memory** — if RAM was captured: `memory_pslist` ✅ (pool-tag process
+   scan), `memory_netscan` ✅ (connections + sockets), `memory_strings` ✅
+   (address-tagged IOCs); `memory_malfind`, `memory_registry` (hives live in
+   RAM) and `memory_hashdump` are ⏳.
+
+   ```bash
+   memory_pslist  MEMORY.DMP --terminated-only --csv procs.csv
+   memory_netscan MEMORY.DMP --established --csv connections.csv
+   ```
 
 9. **Correlate & report.** Feed every CSV / JSON to `analysis_timeline` for
    one sorted UTC view (console, HTML, or `tkinter`); narrow to the window,
