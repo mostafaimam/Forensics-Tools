@@ -16,7 +16,8 @@ documentation. Tools are organised into categories.
 | [`windows/`](windows/) | Windows artefact parsers |
 | [`linux/`](linux/) | Linux artefact parsers |
 | [`macos/`](macos/) | macOS artefact parsers |
-| [`browser/`](browser/) | web browser artefacts — history, downloads, cache, cookies |
+| [`browser/`](browser/) | web browser artefacts — history, downloads, cookies, extensions |
+| [`network/`](network/) | packet captures — flows, DNS, HTTP, suspicious traffic |
 | [`memory/`](memory/) | RAM-image analysis — processes, network, injection, in-memory hives |
 | [`analysis/`](analysis/) | timeline building, indexing, correlation, reporting |
 | [`utilities/`](utilities/) | strings, hashing, hex / file viewers |
@@ -99,6 +100,12 @@ Full roadmap and every planned tool: the private roadmap.
 | [**browser_cookies**](browser/browser_cookies/) | ✅ v0.1 | Cookies from the same browsers (Safari `Cookies.binarycookies` included) — host, expiry, `Secure` / `HttpOnly` / `SameSite`, session vs persistent; **detects session / auth cookies** (proof a user was logged in) and flags IP-literal / tunnel hosts and `__Host-` / `__Secure-` prefix violations; values are metadata-only unless `--with-values` |
 | [**browser_extensions**](browser/browser_extensions/) | ✅ v0.1 | Installed extensions from Chromium `Preferences` / Firefox `extensions.json` — id, version, install source, enabled state, **host + API permissions**; risk-scores each and flags **sideloaded**, **unsigned** (Firefox), developer-mode, policy-installed, `debugger` / `nativeMessaging` / `management` / `<all_urls>`+`webRequest`, and custom update URLs (Google / Mozilla first-party components recognised) |
 
+### `network/`
+
+| Tool | Status | Purpose |
+|---|---|---|
+| [**network_pcap**](network/network_pcap/) | ✅ v0.1 | Pure-Python `pcap` / `pcapng` reader — decodes Ethernet / SLL / raw-IP down to IPv4 / IPv6 + TCP / UDP / ICMP, reassembles **bidirectional flows**, extracts **DNS** queries/answers and **HTTP** requests (response merged in); flags cleartext creds, plaintext protocols to the internet, DNS tunnelling / DGA names, port scans, `.exe` downloads, high-egress flows |
+
 ### `memory/`
 
 | Tool | Status | Purpose |
@@ -114,6 +121,7 @@ Full roadmap and every planned tool: the private roadmap.
 
 ### next up
 
+`network_http` (object carving) / `network_dns` / `network_flows` (NetFlow) ·
 `browser_cache` / `browser_autofill` / `browser_sessions` ·
 `memory_handles` / `memory_hashdump` (reporting only) ·
 `recovery_metadata` FAT / ext4 / APFS support ·
