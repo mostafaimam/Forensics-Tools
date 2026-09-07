@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "memory_cmdline"
+version = "0.1.0"
+description = "Recover process command lines from a Windows RAM dump via PEB / RTL_USER_PROCESS_PARAMETERS (profile-independent), with LOLBin flagging"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "memory", "cmdline", "peb", "lolbin", "incident response"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/memory/memory_cmdline"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+memory_cmdline = "memory_cmdline.cli:main"
+[tool.setuptools]
+packages = ["memory_cmdline"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
