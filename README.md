@@ -76,6 +76,7 @@ Full roadmap and every planned tool: the private roadmap.
 | [**analysis_kff**](analysis/analysis_kff/) | ✅ v0.1 | Known File Filter — import NSRL / Project VIC / HashKeeper / plain hash sets into a local SQLite index; classify files or hashes as **known-good / known-bad / notable / unknown** |
 | [**analysis_index**](analysis/analysis_index/) | ✅ v0.1 | Full-text index + search over a collection — text / markup / OOXML / email / string-carving extraction; **boolean / phrase / `NEAR` / prefix / regex** queries with snippets; SQLite, no FTS extension |
 | [**analysis_gallery**](analysis/analysis_gallery/) | ✅ v0.1 | Picture + video gallery — find media by content signature, extract **EXIF / QuickTime metadata + GPS**, group visually near-identical images by **perceptual hash**, build a self-contained **HTML contact sheet**; in-tree JPEG / PNG / GIF / BMP decoders |
+| [**analysis_view**](analysis/analysis_view/) | ✅ v0.1 | Review any table (CSV / TSV / JSON / **XLSX**) — merge sources, per-column filters, sort, conditional row colouring, and **tags + a notes column + a reviewed flag** saved to a sidecar; exports a self-contained interactive **HTML review page**. Where the reconstruction gets annotated |
 
 ### `linux/`
 
@@ -172,7 +173,7 @@ flowchart TD
     F --> G["windows_evtx ✅ — logon, service install, 4688, PowerShell 4104"]
     G --> H["memory/* — pslist ✅ · netscan ✅ · malfind ✅ · dlllist ✅ · cmdline ✅ · svcscan ✅ · strings ✅ · in-memory hives ⏳ · hashdump ⏳"]
     H --> I["analysis_timeline ✅ — merge every output into one sorted UTC timeline"]
-    I --> J["analysis_report ✅ · analysis_gallery ✅ (media + EXIF/GPS)"]
+    I --> J["analysis_view ✅ (filter · tag · annotate) -> analysis_report ✅ · analysis_gallery ✅"]
 ```
 
 1. **Acquire.** On a live host, `acquisition_collect` with the Windows target
@@ -261,13 +262,17 @@ flowchart TD
    memory_svcscan MEMORY.DMP --notable-only --csv services.csv
    ```
 
-9. **Correlate & report.** Feed every CSV / JSON to `analysis_timeline` for
-   one sorted UTC view (console, HTML, or `tkinter`); narrow to the window,
-   tag rows, and (⏳ `analysis_report`) package the result.
+9. **Correlate, review & report.** Feed every CSV / JSON to
+   `analysis_timeline` for one sorted UTC view; then `analysis_view` to
+   filter it down, **tag the rows that matter, note why, and mark the rest
+   reviewed** (saved to a sidecar), and `analysis_report` to package the
+   result.
 
    ```bash
    analysis_timeline mft.csv sys_*.csv user_*.csv logons.csv \
        --from 2026-08-01 --to 2026-08-07 --html case01_timeline.html
+   analysis_view timeline.csv --rule 'severity~high=#fdd' \
+       --review case01.review.json --html case01_review.html
    ```
 
 ---
