@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "browser_extensions"
+version = "0.1.0"
+description = "List installed browser extensions with permissions and install source; flag sideloaded / unsigned / over-permissioned add-ons"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "browser", "extensions", "chrome", "firefox", "permissions"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/browser/browser_extensions"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+browser_extensions = "browser_extensions.cli:main"
+[tool.setuptools]
+packages = ["browser_extensions"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
