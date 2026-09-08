@@ -1,40 +1,75 @@
 # browser_bookmarks
 
-> **Status — planned.** This directory is a specification stub; the tool is
-> not implemented yet. The design below is the contract it will be built to and
-> may be refined during development.
+**The bookmark tree, with timestamps and the deleted ones.**
+`browser_bookmarks` reads the Chromium `Bookmarks` JSON — and diffs it against
+`Bookmarks.bak` to surface entries that were removed — and Firefox
+`moz_bookmarks` in `places.sqlite`.
 
-**Bookmarks with added / modified times.**
+Each bookmark is one row: the full folder path (`Bookmarks Bar/Work/Tools`),
+title, URL, and the dates it was added and last modified. Bookmarklets
+(`javascript:` URLs), `file://` / `ftp://` targets, raw-IP hosts and
+`.bak`-only survivors are flagged. Read-only and WAL-safe. Pure Python
+standard library.
 
-Reads Chromium `Bookmarks` (JSON, plus the `Bookmarks.bak`) and Firefox
-`moz_bookmarks` in `places.sqlite`: the full folder tree, each item's URL,
-title, and date added / last modified.
+![browser_bookmarks GUI](docs/screenshot.png)
 
-## Planned scope
+## Usage
 
-- Recursive folder-tree flattening with full paths
-- Chromium checksum note; recover items only in `Bookmarks.bak`
-- Firefox bookmark / place join with visit counts
-- CSV / JSON
+```
+browser_bookmarks ./Bookmarks
+browser_bookmarks /mnt/evidence/Users --csv bookmarks.csv
+browser_bookmarks ./profile --folder Admin --grep 'onion|drive'
+browser_bookmarks ./profile --deleted-only
+browser_bookmarks ./Users --gui
+```
 
-## Inputs
+Point it at a `Bookmarks` / `places.sqlite` file, or a folder to walk.
 
-Chromium `Bookmarks` / `Bookmarks.bak`, Firefox `places.sqlite`.
+| flag | effect |
+|------|--------|
+| `--folder SUBSTR` | bookmarks whose folder path contains this |
+| `--grep REGEX` | match title / URL / folder |
+| `--deleted-only` | only entries found only in `Bookmarks.bak` |
+| `--browser NAME` | one browser only |
+| `--notable-only` / `--min-severity` | filter by the flags raised |
+| `--csv PATH` / `--json PATH` | write the table instead of the text report |
 
-## Outputs
+## Why it matters
 
-- Human-readable summary on stdout
-- `--csv PATH` — UTF-8 with BOM, spreadsheet-injection-safe
-- `--json PATH` — structured records
+Bookmarks are deliberate — a user saved that page on purpose, and the
+`date_added` says when they first cared about it. The `Bookmarks.bak` (Chromium
+keeps the previous version) is a small, free source of *deleted* bookmarks: a
+site removed from the bar right before an interview or a search warrant is
+worth knowing about.
 
-All timestamps UTC (ISO-8601). Exit code is non-zero when nothing is found or
-(where applicable) when a flagged item is present.
+## Flags
 
-## Related tools
+| flag | meaning |
+|------|---------|
+| `bookmarklet (javascript: URL)` | executable code stored as a bookmark |
+| `bookmark to a local file (file://)` | points at a path on the machine |
+| `bookmark to an FTP resource` | `ftp://` / `sftp://` target |
+| `bookmark to a browser-internal page` | `chrome://` / `about:` / `chrome-extension://` |
+| `bookmark to a raw IP address` | host is a bare public IP |
+| `bookmark to a non-standard port (N)` | not 80 / 443 / 8080 / 8443 |
+| `only present in Bookmarks.bak (deleted bookmark)` | in the backup but not the live file |
 
-`browser_history`, `browser_favicons`.
+## Limitations (v0.1)
 
----
+- The `Bookmarks.bak` diff shows what was in the *last* saved version — a
+  bookmark added and deleted between two Chromium writes is not captured.
+- Firefox keeps a bookmark-change history in `moz_bookmarks` /
+  `moz_places` deletions and in JSON backups (`bookmarkbackups/*.jsonlz4`) —
+  those backups are not parsed yet (only the live `places.sqlite`).
+- Chromium bookmark `date_last_used` is recorded only in recent builds.
+- Safari bookmarks live in `Bookmarks.plist` (binary plist) — not read yet.
 
-Part of **Forensics Tools** — Python 3.11+, standard library only,
-cross-platform, read-only. See the [top-level README](../../README.md).
+## Tests
+
+```
+cd browser/browser_bookmarks && python -m pytest -q
+```
+
+Synthetic Chromium `Bookmarks` (+ a `.bak` with an extra entry) and a Firefox
+`places.sqlite` exercise the tree walk, the folder-path reconstruction, the
+`.bak` diff, every flag and the CLI.
