@@ -8,6 +8,12 @@ import pytest
 from browser_sessions import output
 from browser_sessions.analyze import analyze
 from browser_sessions.cli import main
+
+
+def _recs(path):
+    import json as _j
+    d = _j.loads(open(path, encoding="utf-8").read())
+    return d["records"] if isinstance(d, dict) and "records" in d else d
 from browser_sessions.lz4 import lz4_block_decompress, mozlz4_decompress
 
 import _synth as S
@@ -152,10 +158,10 @@ def test_cli_csv_json_filters(tmp_path):
     rc = main([str(f), "--csv", str(csv_p), "--json", str(js_p), "-q"])
     assert rc == 0
     assert csv_p.read_bytes().startswith(b"\xef\xbb\xbf")
-    assert len(json.loads(js_p.read_text())) == 2
+    assert len(_recs(js_p)) == 2
 
     main([str(f), "--closed-only", "--json", str(js_p), "-q"])
-    only = json.loads(js_p.read_text())
+    only = _recs(js_p)
     assert len(only) == 1 and only[0]["current_url"] == "https://b.example/"
 
 

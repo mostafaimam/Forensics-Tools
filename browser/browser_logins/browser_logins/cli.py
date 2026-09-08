@@ -5,9 +5,9 @@ import re
 import sys
 from pathlib import Path
 
-from browser_logins import __version__
+from browser_logins import __version__, tracelib
 from browser_logins.analyze import analyze
-from browser_logins.output import COLUMNS, render, row, write_csv, write_json
+from browser_logins.output import COLUMNS, render, row
 
 _SEV = {"none": 0, "low": 1, "medium": 2, "high": 3}
 
@@ -41,6 +41,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--csv", type=Path)
     p.add_argument("--json", type=Path)
     p.add_argument("-q", "--quiet", action="store_true")
+    tracelib.add_arguments(p)
     return p
 
 
@@ -56,6 +57,15 @@ def main(argv: list[str] | None = None) -> int:
         if not p.exists():
             print(f"not found: {p}", file=sys.stderr)
             return 2
+
+    ctx = tracelib.context(a, "browser_logins", __version__)
+    try:
+        ctx.limits.check_paths([str(p) for p in a.paths])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
+    for p in a.paths:
+        ctx.add_input(str(p))
 
     res = analyze([str(p) for p in a.paths])
 
@@ -77,14 +87,19 @@ def main(argv: list[str] | None = None) -> int:
         rows.append(r)
 
     if a.csv:
-        write_csv(rows, a.csv)
+        tracelib.write_csv(rows, a.csv, COLUMNS, ctx,
+                           confidence="high", tz="utc-native")
     if a.json:
-        write_json(rows, a.json)
+        tracelib.write_json(rows, a.json, ctx,
+                            confidence="high", tz="utc-native")
     if not a.quiet and not (a.csv or a.json):
         print(render(rows, res.findings), end="")
 
     bl = sum(1 for r in rows if r["blacklisted"])
     fl = sum(1 for r in rows if r["notable"])
+    for _e in res.errors:
+        ctx.error("source-error", _e)
+    _mpath = ctx.finish(outputs=[a.csv, a.json])
     print(f"browser_logins: {res.stores} store(s) -> {len(rows)} record(s) "
           f"({bl} never-save), {fl} flagged", file=sys.stderr)
     for e in res.errors:

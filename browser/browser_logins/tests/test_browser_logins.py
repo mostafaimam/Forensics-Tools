@@ -9,6 +9,12 @@ from browser_logins import output
 from browser_logins.analyze import analyze
 from browser_logins.cli import main
 
+
+def _recs(path):
+    import json as _j
+    d = _j.loads(open(path, encoding="utf-8").read())
+    return d["records"] if isinstance(d, dict) and "records" in d else d
+
 import _synth as S
 
 C = datetime(2026, 1, 1, 9, 0, tzinfo=timezone.utc)
@@ -118,13 +124,13 @@ def test_cli_csv_json_filters(tmp_path):
     assert rc == 0
     assert csv_p.read_bytes().startswith(b"\xef\xbb\xbf")
     # blacklist excluded by default
-    assert len(json.loads(js_p.read_text())) == 2
+    assert len(_recs(js_p)) == 2
 
     main([str(db), "--include-blacklist", "--json", str(js_p), "-q"])
-    assert len(json.loads(js_p.read_text())) == 3
+    assert len(_recs(js_p)) == 3
 
     main([str(db), "--host", "github", "--json", str(js_p), "-q"])
-    assert json.loads(js_p.read_text())[0]["username"] == "alice"
+    assert _recs(js_p)[0]["username"] == "alice"
 
 
 def test_csv_injection_guard():

@@ -9,6 +9,12 @@ from browser_bookmarks import output
 from browser_bookmarks.analyze import analyze
 from browser_bookmarks.cli import main
 
+
+def _recs(path):
+    import json as _j
+    d = _j.loads(open(path, encoding="utf-8").read())
+    return d["records"] if isinstance(d, dict) and "records" in d else d
+
 import _synth as S
 
 A = datetime(2026, 3, 1, 12, 0, tzinfo=timezone.utc)
@@ -110,14 +116,14 @@ def test_cli_csv_json_filters(tmp_path):
     rc = main([str(bm), "--csv", str(csv_p), "--json", str(js_p), "-q"])
     assert rc == 0
     assert csv_p.read_bytes().startswith(b"\xef\xbb\xbf")
-    assert len(json.loads(js_p.read_text())) == 3
+    assert len(_recs(js_p)) == 3
 
     main([str(bm), "--deleted-only", "--json", str(js_p), "-q"])
-    only = json.loads(js_p.read_text())
+    only = _recs(js_p)
     assert len(only) == 1 and only[0]["title"] == "Deleted"
 
     main([str(bm), "--grep", "github", "--json", str(js_p), "-q"])
-    assert json.loads(js_p.read_text())[0]["title"] == "GitHub"
+    assert _recs(js_p)[0]["title"] == "GitHub"
 
 
 def test_csv_injection_guard():

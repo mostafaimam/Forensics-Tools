@@ -9,6 +9,12 @@ from browser_downloads import flags, output
 from browser_downloads.analyze import analyze
 from browser_downloads.cli import main
 
+
+def _recs(path):
+    import json as _j
+    d = _j.loads(open(path, encoding="utf-8").read())
+    return d["records"] if isinstance(d, dict) and "records" in d else d
+
 import _synth as S
 
 T0 = datetime(2026, 11, 14, 9, 0, 0, tzinfo=timezone.utc)
@@ -153,14 +159,14 @@ def test_cli_csv_json_filters(tmp_path):
                str(js_p), "-q"])
     assert rc == 0
     assert csv_p.read_bytes().startswith(b"\xef\xbb\xbf")
-    assert len(json.loads(js_p.read_text())) == 2
+    assert len(_recs(js_p)) == 2
 
     main([str(hist), "--no-fs", "--notable-only", "--json", str(js_p), "-q"])
-    only = json.loads(js_p.read_text())
+    only = _recs(js_p)
     assert len(only) == 1 and only[0]["filename"] == "b.exe"
 
     main([str(hist), "--no-fs", "--grep", r"\.pdf$", "--json", str(js_p), "-q"])
-    assert json.loads(js_p.read_text())[0]["filename"] == "a.pdf"
+    assert _recs(js_p)[0]["filename"] == "a.pdf"
 
 
 def test_csv_injection_guard():

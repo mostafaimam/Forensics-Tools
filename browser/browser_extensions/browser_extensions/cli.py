@@ -5,8 +5,8 @@ import re
 import sys
 from pathlib import Path
 
-from browser_extensions import __version__
-from browser_extensions.output import COLUMNS, render, row, write_csv, write_json
+from browser_extensions import __version__, tracelib
+from browser_extensions.output import COLUMNS, render, row
 from browser_extensions.scan import scan
 
 _RANK = {"low": 0, "medium": 1, "high": 2}
@@ -45,6 +45,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--csv", type=Path)
     p.add_argument("--json", type=Path)
     p.add_argument("-q", "--quiet", action="store_true")
+    tracelib.add_arguments(p)
     return p
 
 
@@ -60,6 +61,15 @@ def main(argv: list[str] | None = None) -> int:
         if not p.exists():
             print(f"not found: {p}", file=sys.stderr)
             return 2
+
+    ctx = tracelib.context(a, "browser_extensions", __version__)
+    try:
+        ctx.limits.check_paths([str(p) for p in a.paths])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
+    for p in a.paths:
+        ctx.add_input(str(p))
 
     grep = re.compile(a.grep, re.I) if a.grep else None
     prog = None
@@ -98,15 +108,20 @@ def main(argv: list[str] | None = None) -> int:
         rows.append(r)
 
     if a.csv:
-        write_csv(rows, a.csv)
+        tracelib.write_csv(rows, a.csv, COLUMNS, ctx,
+                           confidence="high", tz="utc-native")
     if a.json:
-        write_json(rows, a.json)
+        tracelib.write_json(rows, a.json, ctx,
+                            confidence="high", tz="utc-native")
     if not a.quiet and not (a.csv or a.json):
         print(render(rows), end="")
 
     hi = sum(1 for r in rows if r["risk"] == "high")
     side = sum(1 for r in rows if r["notable"] and "sideload"
                in r["notable"])
+    for _e in res.errors:
+        ctx.error("source-error", _e)
+    _mpath = ctx.finish(outputs=[a.csv, a.json])
     print(f"browser_extensions: {res.stores} store(s) -> {len(rows)} "
           f"extension(s), {hi} high-risk, {side} sideloaded", file=sys.stderr)
     for e in res.errors:

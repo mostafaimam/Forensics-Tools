@@ -11,6 +11,12 @@ from browser_cache import output, simplecache
 from browser_cache.analyze import analyze
 from browser_cache.cli import main
 
+
+def _recs(path):
+    import json as _j
+    d = _j.loads(open(path, encoding="utf-8").read())
+    return d["records"] if isinstance(d, dict) and "records" in d else d
+
 import _synth as S
 
 R = datetime(2026, 11, 14, 9, 0, tzinfo=timezone.utc)
@@ -153,13 +159,13 @@ def test_cli_csv_json_filters(tmp_path):
     rc = main([str(cd), "--csv", str(csv_p), "--json", str(js_p), "-q"])
     assert rc == 0
     assert csv_p.read_bytes().startswith(b"\xef\xbb\xbf")
-    assert len(json.loads(js_p.read_text())) == 2
+    assert len(_recs(js_p)) == 2
 
     main([str(cd), "--content-type", "javascript", "--json", str(js_p), "-q"])
-    assert len(json.loads(js_p.read_text())) == 1
+    assert len(_recs(js_p)) == 1
 
     main([str(cd), "--grep", r"\.css$", "--json", str(js_p), "-q"])
-    assert json.loads(js_p.read_text())[0]["url"].endswith("b.css")
+    assert _recs(js_p)[0]["url"].endswith("b.css")
 
 
 def test_not_a_cache(tmp_path):

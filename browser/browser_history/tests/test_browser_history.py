@@ -6,6 +6,12 @@ import pytest
 
 from browser_history import timeconv
 from browser_history.cli import main
+
+
+def _recs(path):
+    import json as _j
+    d = _j.loads(open(path, encoding="utf-8").read())
+    return d["records"] if isinstance(d, dict) and "records" in d else d
 from browser_history.discover import find
 from browser_history.flags import flag_url, severity
 from browser_history.output import row

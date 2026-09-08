@@ -4,6 +4,12 @@ import json
 import pytest
 
 from browser_extensions.cli import main
+
+
+def _recs(path):
+    import json as _j
+    d = _j.loads(open(path, encoding="utf-8").read())
+    return d["records"] if isinstance(d, dict) and "records" in d else d
 from browser_extensions.discover import find
 from browser_extensions.flags import flag
 from browser_extensions.model import Extension
