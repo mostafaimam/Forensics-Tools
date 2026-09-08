@@ -6,13 +6,14 @@ each tool's package to keep every tool zero-dependency and self-contained.
 | file | what it is |
 |------|-----------|
 | [`tracelib.py`](tracelib.py) | forensic-output layer: chain-of-custody manifest, input/output hashing, per-row provenance columns, standard warnings, parser-confidence and timestamp-provenance vocabularies, and resource limits |
-| [`sync_tracelib.py`](sync_tracelib.py) | pushes `tracelib.py` into every tool that imports it; `--check` mode for CI |
+| [`fuzzlib.py`](fuzzlib.py) | a small deterministic mutation fuzzer for the binary parsers — catches unbounded reads, index errors, hangs and runaway allocation on malformed input |
+| [`sync_shared.py`](sync_shared.py) | pushes the canonical helpers into every tool that references them; `--check` mode for CI |
 | [`tests/`](tests/) | tests for the canonical copies |
 
 ```bash
-python shared/sync_tracelib.py            # copy the canonical tracelib to every tool
-python shared/sync_tracelib.py --check    # CI: non-zero exit if any copy is stale
-cd shared && python -m pytest -q          # test the canonical copy
+python shared/sync_shared.py            # copy the canonical helpers to every tool
+python shared/sync_shared.py --check    # CI: non-zero exit if any copy is stale
+cd shared && python -m pytest -q        # test the canonical copies
 ```
 
 ## What `tracelib` gives every tool
@@ -104,11 +105,32 @@ def main(argv=None):
     print(ctx.summary_line(len(rows)), file=sys.stderr)
 ```
 
-Then run `python shared/sync_tracelib.py` to drop the module into the package.
+Then run `python shared/sync_shared.py` to drop the module into the package.
+
+## Fuzzing the binary parsers
+
+`fuzzlib.fuzz(parse_fn, seeds, iterations=..., seed=...)` mutates valid seed
+inputs (bit flips, truncation, extension, length storms, chunk duplication)
+and asserts every call returns or raises an *expected* exception — never
+hangs past `per_call_seconds`, never allocates past `max_alloc_mb`. Runs
+with a fixed RNG seed so a failure reproduces. `accepts="path"` writes the
+mutated bytes to a temp file for parsers that take a path.
+
+```python
+from mytool import fuzzlib
+from mytool import pcap
+
+def test_fuzz_pcap(tmp_path):
+    fuzzlib.fuzz(lambda b: list(pcap.read(b)), [valid_pcap_bytes],
+                 iterations=400, seed=1, accepts="path", tmp_path=tmp_path)
+```
+
+`test_fuzz.py` is present in `network_pcap`, `network_flows`,
+`browser_sessions` and `browser_cache`.
 
 ## Status
 
-`tracelib` is adopted in: `network_pcap`, `network_http`, `network_dns`,
-`network_flows`, `network_logs`, `network_arp`. Roll-out to the remaining
-categories is in progress; a tool without it still emits UTC-only,
+`tracelib` is adopted in all six `network/` tools and all nine `browser/`
+tools. Roll-out to `memory/`, `analysis/`, `windows/`, `linux/`, `macos/` and
+the rest is in progress; a tool without it still emits UTC-only,
 injection-safe CSV/JSON — it just does not yet write a manifest.
