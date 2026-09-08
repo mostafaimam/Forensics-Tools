@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "network_flows"
+version = "0.1.0"
+description = "NetFlow v5 / v9, IPFIX and sFlow reader: conversation reassembly, top-talker / port summaries, beacon / scan / exfil flags"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "network", "netflow", "ipfix", "sflow", "flows"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/network/network_flows"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+network_flows = "network_flows.cli:main"
+[tool.setuptools]
+packages = ["network_flows"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
