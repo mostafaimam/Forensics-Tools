@@ -23,8 +23,8 @@ Adopting `tracelib` in a tool's `cli.py` adds, to **every run**:
 ### 1. A run manifest (chain of custody)
 
 A JSON sidecar written next to the first output as `<output>.manifest.json`
-(or `<tool>.<timestamp>.manifest.json` when there is no file output),
-recording:
+(a text-only run writes `<tool>.<timestamp>.manifest.json` only when
+`--case-id` / `--examiner` / `--evidence-id` is set), recording:
 
 - the tool and version, and the **exact command line**
 - `--case-id`, `--examiner`, `--evidence-id`, `--notes` (or the
@@ -38,8 +38,10 @@ recording:
 ### 2. Per-row provenance
 
 CSV gains `evidence_source`, `parser_confidence`, `tz_provenance` columns
-(and `case_id` / `evidence_id` when set); JSON records gain the same fields
-and the whole document is wrapped as `{"manifest": {...}, "records": [...]}`.
+(and `case_id` / `evidence_id` when set); JSON records gain the same fields.
+JSON stays a bare list by default (existing consumers are unaffected) —
+`tracelib.write_json(..., envelope=True)` wraps it as
+`{"manifest": {...}, "records": [...]}` instead.
 
 `--no-provenance` turns all of this off for quick interactive use.
 
