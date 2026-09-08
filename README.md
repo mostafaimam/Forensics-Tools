@@ -164,7 +164,7 @@ it will do. The full roadmap is tracked privately.
 | [**browser_cookies**](browser/browser_cookies/) | ✅ v0.1 | Cookies from the same browsers (Safari `Cookies.binarycookies` included) — host, expiry, `Secure` / `HttpOnly` / `SameSite`, session vs persistent; **detects session / auth cookies** (proof a user was logged in) and flags IP-literal / tunnel hosts and `__Host-` / `__Secure-` prefix violations; values are metadata-only unless `--with-values` |
 | [**browser_extensions**](browser/browser_extensions/) | ✅ v0.1 | Installed extensions from Chromium `Preferences` / Firefox `extensions.json` — id, version, install source, enabled state, **host + API permissions**; risk-scores each and flags **sideloaded**, **unsigned** (Firefox), developer-mode, policy-installed, `debugger` / `nativeMessaging` / `management` / `<all_urls>`+`webRequest`, and custom update URLs (Google / Mozilla first-party components recognised) |
 | [**browser_downloads**](browser/browser_downloads/) | ✅ v0.1 | **Download history cross-referenced to disk** — Chromium `History.downloads` (+ URL chains) and Firefox `places.sqlite` / legacy `downloads.sqlite`, merged with `.crdownload` / `.part` leftovers and the NTFS `:Zone.Identifier` (MOTW `ZoneId` / `HostUrl` / `ReferrerUrl`); per-download present/missing/partial + size + optional SHA-256; flags double extensions, MIME/extension mismatch, raw-IP sources, MOTW executables, redirected downloads |
-| [**browser_cache**](browser/browser_cache/) | 📋 planned | List and extract cached HTTP responses |
+| [**browser_cache**](browser/browser_cache/) | ✅ v0.1 | **List + extract cached HTTP responses** — Chromium **Simple Cache** (`SimpleFileHeader` / `SimpleFileEOF` + `HttpResponseInfo` pickle, from scratch) and Firefox **cache2** (data + metadata: hash chunks, header, key, `response-head`); per-object URL / status / content-type / size / timestamps; `--extract` writes bodies (`gzip` / `deflate` decoded) with SHA-256; flags executable bodies, type/body mismatch, raw-IP hosts, partial caches |
 | [**browser_autofill**](browser/browser_autofill/) | ✅ v0.1 | **Form-field history + saved profiles + card metadata** from Chromium `Web Data` (`autofill`, `autofill_profiles` / `contact_info`, `credit_cards`) and Firefox `formhistory.sqlite` — one row per field with first/last use + count; CVV / SSN / password-shaped values masked, card numbers never read; flags sensitive fields, search-box queries, emails / phones, saved-address contact details |
 | [**browser_logins**](browser/browser_logins/) | ✅ v0.1 | **Saved-login metadata only** from Chromium `Login Data` and Firefox `logins.json` (+ `key4.db`) — origin, realm, username, created / last-used / password-changed times, use count, never-save list; the encrypted password is never decrypted or emitted; flags `http://` origins, bare-IP / non-FQDN hosts, primary-password-protected stores; per-host credential counts |
 | [**browser_sessions**](browser/browser_sessions/) | ✅ v0.1 | **Tabs / windows open at last close** — Chromium SNSS command stream (`Session_*` / `Last Session`, from-scratch `base::Pickle` reader) and Firefox `sessionstore.jsonlz4` (**bundled `mozLz4` + LZ4 block decoder**, no `lz4` package); per-tab window / position / pinned / current URL+title / history depth / last-accessed / recently-closed; flags restored form data, sign-in pages, `file://` and raw-IP tabs |
@@ -249,14 +249,16 @@ it will do. The full roadmap is tracked privately.
 
 ### next up
 
-`browser_cache` / `browser_autofill` / `browser_sessions` / `browser_logins` ·
 `memory_handles` / `memory_hashdump` (reporting only) ·
 `recovery_metadata` FAT / ext4 / APFS support ·
 `linux_journal` (systemd binary journal) · `linux_audit` ·
-`macos_quarantine` / `macos_knowledgec` (build on `macos_plist` + SQLite).
+`macos_quarantine` / `macos_knowledgec` (build on `macos_plist` + SQLite) ·
+`browser_shortcuts` / `browser_localstorage` / `browser_favicons`.
 
-The `network/` category is complete for v0.1: `network_pcap`,
-`network_http`, `network_dns`, `network_flows`, `network_logs`, `network_arp`.
+The **`network/`** category is complete for v0.1 (`network_pcap` · `http` ·
+`dns` · `flows` · `logs` · `arp`); **`browser/`** now covers history,
+downloads, cookies, extensions, autofill, logins, bookmarks, sessions and
+cache (LevelDB-backed `shortcuts` / `localstorage` / `favicons` still to come).
 
 ---
 
