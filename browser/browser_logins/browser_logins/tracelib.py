@@ -290,9 +290,12 @@ class RunContext:
                 pass
         if real:
             mpath = str(real[0]) + ".manifest.json"
-        else:
+        elif self.case_id or self.examiner or self.evidence_id:
+            # a text-only run, but the examiner asked for provenance
             stamp = self.started_utc.replace(":", "").replace("-", "")
             mpath = f"{self.tool}.{stamp}.manifest.json"
+        else:
+            return None                       # nothing to accompany
         try:
             Path(mpath).write_text(
                 json.dumps(self.manifest(), indent=2), encoding="utf-8")
