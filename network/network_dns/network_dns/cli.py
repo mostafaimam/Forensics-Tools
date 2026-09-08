@@ -5,10 +5,9 @@ import re
 import sys
 from pathlib import Path
 
-from network_dns import __version__
+from network_dns import __version__, tracelib
 from network_dns.analyze import analyze
-from network_dns.flags import severity
-from network_dns.output import COLUMNS, render, row, write_csv, write_json
+from network_dns.output import COLUMNS, render, row
 
 _SEV = {"none": 0, "low": 1, "medium": 2, "high": 3}
 
@@ -39,6 +38,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--csv", type=Path)
     p.add_argument("--json", type=Path)
     p.add_argument("-q", "--quiet", action="store_true")
+    tracelib.add_arguments(p)
     return p
 
 
@@ -54,6 +54,15 @@ def main(argv: list[str] | None = None) -> int:
             print(f"not found: {p}", file=sys.stderr)
             return 2
 
+    ctx = tracelib.context(a, "network_dns", __version__)
+    try:
+        ctx.limits.check_paths([str(p) for p in a.paths])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
+    for p in a.paths:
+        ctx.add_input(str(p))
+
     grep = re.compile(a.grep, re.I) if a.grep else None
     prog = None
     if not a.quiet:
@@ -64,6 +73,8 @@ def main(argv: list[str] | None = None) -> int:
     res = analyze([str(p) for p in a.paths], progress=prog)
     if not a.quiet:
         sys.stderr.write("\r" + " " * 40 + "\r")
+    for e in res.errors:
+        ctx.error("source-error", e)
 
     rows = []
     for rec in res.names:
@@ -79,16 +90,21 @@ def main(argv: list[str] | None = None) -> int:
         rows.append(r)
 
     if a.csv:
-        write_csv(rows, a.csv)
+        tracelib.write_csv(rows, a.csv, COLUMNS, ctx,
+                           confidence="medium", tz="utc-native")
     if a.json:
-        write_json(rows, a.json)
+        tracelib.write_json(rows, a.json, ctx,
+                            confidence="medium", tz="utc-native")
     if not a.quiet and not (a.csv or a.json):
         print(render(rows), end="")
+
+    mpath = ctx.finish(outputs=[a.csv, a.json])
 
     src = ", ".join(f"{k}:{v}" for k, v in sorted(res.sources.items()))
     fl = sum(1 for r in rows if r["notable"])
     print(f"network_dns: {res.events} events ({src or 'none'}) -> "
-          f"{len(rows)} name(s), {fl} flagged", file=sys.stderr)
+          f"{len(rows)} name(s), {fl} flagged"
+          + (f"; manifest {mpath}" if mpath else ""), file=sys.stderr)
     for e in res.errors:
         print(f"  ! {e}", file=sys.stderr)
     return 0 if rows else 1

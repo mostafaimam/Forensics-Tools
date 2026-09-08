@@ -5,9 +5,9 @@ import re
 import sys
 from pathlib import Path
 
-from network_logs import __version__
+from network_logs import __version__, tracelib
 from network_logs.analyze import analyze
-from network_logs.output import COLUMNS, render, row, write_csv, write_json
+from network_logs.output import COLUMNS, render, row
 
 _SEV = {"none": 0, "low": 1, "medium": 2, "high": 3}
 
@@ -45,6 +45,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--csv", type=Path)
     p.add_argument("--json", type=Path)
     p.add_argument("-q", "--quiet", action="store_true")
+    tracelib.add_arguments(p)
     return p
 
 
@@ -66,6 +67,15 @@ def main(argv: list[str] | None = None) -> int:
         def prog(n):  # noqa: E306
             sys.stderr.write(f"\r  {n} events")
             sys.stderr.flush()
+
+    ctx = tracelib.context(a, "network_logs", __version__)
+    try:
+        ctx.limits.check_paths([str(p) for p in a.paths])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
+    for p in a.paths:
+        ctx.add_input(str(p))
 
     res = analyze([str(p) for p in a.paths], progress=prog)
     if not a.quiet:
@@ -94,12 +104,17 @@ def main(argv: list[str] | None = None) -> int:
         rows.append(r)
 
     if a.csv:
-        write_csv(rows, a.csv)
+        tracelib.write_csv(rows, a.csv, COLUMNS, ctx,
+                           confidence="medium", tz="assumed-utc")
     if a.json:
-        write_json(rows, a.json)
+        tracelib.write_json(rows, a.json, ctx,
+                            confidence="medium", tz="assumed-utc")
     if not a.quiet and not (a.csv or a.json):
         print(render(rows, res.findings), end="")
 
+    for _e in res.errors:
+        ctx.error("source-error", _e)
+    _mpath = ctx.finish(outputs=[a.csv, a.json])
     fmts = ", ".join(f"{k}:{v}" for k, v in sorted(res.formats.items()))
     fl = sum(1 for r in rows if r["notable"])
     print(f"network_logs: {len(res.events)} events ({fmts or 'none'}) -> "

@@ -12,6 +12,11 @@ from network_dns.cli import main
 import _synth as S
 
 
+def _recs(path):
+    d = json.loads(open(path, encoding="utf-8").read())
+    return d["records"] if isinstance(d, dict) and "records" in d else d
+
+
 def _w(tmp_path, packets, name="c.pcap"):
     p = tmp_path / name
     p.write_bytes(S.pcap(packets))
@@ -179,15 +184,52 @@ def test_cli_csv_json_and_filters(tmp_path):
     assert rc == 0
     raw = csv_p.read_bytes()
     assert raw.startswith(b"\xef\xbb\xbf")
-    data = json.loads(js_p.read_text())
+    data = _recs(js_p)
     assert len(data) == 2
 
     main([str(cap), "--notable-only", "--json", str(js_p), "-q"])
-    only = json.loads(js_p.read_text())
+    only = _recs(js_p)
     assert len(only) == 1 and only[0]["qname"].endswith("evil.top")
 
     main([str(cap), "--grep", r"good\.", "--json", str(js_p), "-q"])
-    assert json.loads(js_p.read_text())[0]["qname"] == "good.example.com"
+    assert _recs(js_p)[0]["qname"] == "good.example.com"
+
+
+def test_provenance_manifest_and_columns(tmp_path):
+    cap = _w(tmp_path, [
+        S.q("good.example.com"),
+        S.r("good.example.com", answers=[("A", "1.2.3.4", 3600)]),
+    ])
+    csv_p = tmp_path / "n.csv"
+    js_p = tmp_path / "n.json"
+    main([str(cap), "--csv", str(csv_p), "--json", str(js_p), "-q",
+          "--case-id", "CASE-7", "--examiner", "A. Nalyst",
+          "--evidence-id", "EV-3"])
+    # CSV gains provenance columns
+    head = csv_p.read_bytes().decode("utf-8-sig").splitlines()[0].split(",")
+    for col in ("evidence_source", "parser_confidence", "tz_provenance",
+                "case_id", "evidence_id"):
+        assert col in head
+    # CSV manifest sidecar
+    m = json.loads((tmp_path / "n.csv.manifest.json").read_text())
+    assert m["case_id"] == "CASE-7" and m["examiner"] == "A. Nalyst"
+    assert m["inputs"][0]["path"].endswith("c.pcap")
+    assert len(m["inputs"][0]["sha256"]) == 64
+    assert m["outputs"][0]["sha256"]                       # output hashed
+    # JSON manifest envelope + per-row provenance
+    doc = json.loads(js_p.read_text())
+    assert doc["manifest"]["evidence_id"] == "EV-3"
+    assert doc["records"][0]["parser_confidence"] == "medium"
+    assert doc["records"][0]["tz_provenance"] == "utc-native"
+
+
+def test_no_provenance_flag(tmp_path):
+    cap = _w(tmp_path, [S.q("x.example.com")])
+    js_p = tmp_path / "n.json"
+    main([str(cap), "--json", str(js_p), "-q", "--no-provenance"])
+    doc = json.loads(js_p.read_text())
+    assert "manifest" not in doc
+    assert not (tmp_path / "n.json.manifest.json").exists()
 
 
 def test_csv_injection_guard():

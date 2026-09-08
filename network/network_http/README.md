@@ -77,6 +77,16 @@ credentials in an upload).
   out-of-spec pipelined server can misalign them.
 - `chunked` + `Content-Encoding` are handled; other transfer codings are not.
 
+## Chain of custody
+
+Every run writes a `<output>.manifest.json` sidecar recording the tool version,
+the exact command line, `--case-id` / `--examiner` / `--evidence-id`, start and
+finish time (UTC), the host, and the **SHA-256 of every input and output file**.
+CSV rows carry `evidence_source` / `parser_confidence` / `tz_provenance`
+columns; JSON is wrapped as `{"manifest": {...}, "records": [...]}`.
+`--no-provenance` disables this. `--max-input-bytes` / `--max-records` /
+`--wall-seconds` bound a run against hostile or oversized evidence.
+
 ## Tests
 
 ```

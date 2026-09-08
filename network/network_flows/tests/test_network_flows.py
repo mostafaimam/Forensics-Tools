@@ -11,6 +11,12 @@ from network_flows.cli import main
 import _synth as S
 
 
+def _recs(path):
+    import json as _j
+    d = _j.loads(open(path, encoding="utf-8").read())
+    return d["records"] if isinstance(d, dict) and "records" in d else d
+
+
 def _w(tmp_path, blob, name):
     p = tmp_path / name
     p.write_bytes(blob)
@@ -145,21 +151,48 @@ def test_cli_csv_json_summary_filters(tmp_path):
     rc = main([str(p), "--csv", str(csv_p), "--json", str(js_p), "-q"])
     assert rc == 0
     assert csv_p.read_bytes().startswith(b"\xef\xbb\xbf")
-    data = json.loads(js_p.read_text())
+    data = _recs(js_p)
     assert len(data) == 2
 
     main([str(p), "--port", "22", "--json", str(js_p), "-q"])
-    only = json.loads(js_p.read_text())
+    only = _recs(js_p)
     assert len(only) == 1 and only[0]["server_port"] == 22
 
     main([str(p), "--host", "10.0.0.0/24", "--json", str(js_p), "-q"])
-    assert len(json.loads(js_p.read_text())) == 2
+    assert len(_recs(js_p)) == 2
 
 
 def test_not_a_flow_file(tmp_path):
     p = _w(tmp_path, b"\x00\x01\x02\x03not flow data", "x.bin")
     res = analyze([str(p)])
     assert res.errors and "not a NetFlow" in res.errors[0]
+
+
+def test_provenance_manifest_and_columns(tmp_path):
+    import json as _j
+    blob = S.nf5([{"src": "10.0.0.5", "dst": "1.2.3.4", "dport": 443,
+                   "proto": 6, "octets": 5000, "pkts": 10}])
+    p = _w(tmp_path, blob, "e.nf5")
+    csv_p = tmp_path / "c.csv"
+    js_p = tmp_path / "c.json"
+    main([str(p), "--csv", str(csv_p), "--json", str(js_p), "-q",
+          "--case-id", "IR-2026-11", "--evidence-id", "PCAP-01"])
+    head = csv_p.read_bytes().decode("utf-8-sig").splitlines()[0].split(",")
+    assert "evidence_source" in head and "parser_confidence" in head
+    m = _j.loads((tmp_path / "c.csv.manifest.json").read_text())
+    assert m["case_id"] == "IR-2026-11"
+    assert len(m["inputs"][0]["sha256"]) == 64
+    assert m["outputs"][0]["sha256"]
+    doc = _j.loads(js_p.read_text())
+    assert doc["manifest"]["evidence_id"] == "PCAP-01"
+    assert doc["records"][0]["parser_confidence"] == "medium"
+
+
+def test_resource_limit_rejects_big_input(tmp_path):
+    p = tmp_path / "big.nf5"
+    p.write_bytes(b"\x00\x00\x00\x05" + b"\x00" * 2000)
+    rc = main([str(p), "-q", "--max-input-bytes", "500"])
+    assert rc == 3
 
 
 def test_csv_injection_guard():

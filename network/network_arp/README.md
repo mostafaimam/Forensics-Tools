@@ -71,6 +71,16 @@ multi-MAC IP, a multi-IP MAC and gratuitous ARP are `medium`.
 - pcap passive bindings trust the Ethernet source address; a spoofed frame
   produces a spoofed binding (which is often exactly what you want to see).
 
+## Chain of custody
+
+Every run writes a `<output>.manifest.json` sidecar recording the tool version,
+the exact command line, `--case-id` / `--examiner` / `--evidence-id`, start and
+finish time (UTC), the host, and the **SHA-256 of every input and output file**.
+CSV rows carry `evidence_source` / `parser_confidence` / `tz_provenance`
+columns; JSON is wrapped as `{"manifest": {...}, "records": [...]}`.
+`--no-provenance` disables this. `--max-input-bytes` / `--max-records` /
+`--wall-seconds` bound a run against hostile or oversized evidence.
+
 ## Tests
 
 ```

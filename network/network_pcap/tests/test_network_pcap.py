@@ -12,6 +12,11 @@ from network_pcap.layers import decode
 
 import _synth as s
 
+
+def _recs(path):
+    d = json.loads(open(path, encoding="utf-8").read())
+    return d["records"] if isinstance(d, dict) and "records" in d else d
+
 C, DNS, SRV, EVIL = "10.0.0.50", "10.0.0.1", "93.184.216.34", "185.43.99.42"
 T = 1_700_000_000.0
 
@@ -177,7 +182,7 @@ def test_cli_views(tmp_path):
     p = _write(tmp_path)
     d = tmp_path / "d.json"
     main([str(p), "--dns", "--json", str(d), "-q"])
-    dns = json.loads(d.read_text())
+    dns = _recs(d)
     assert any("evil.top" in r["query"] for r in dns)
 
     h = tmp_path / "h.csv"
@@ -210,7 +215,7 @@ def test_cli_grep(tmp_path):
     p = _write(tmp_path)
     out = tmp_path / "g.json"
     main([str(p), "--http", "--grep", "gate", "--json", str(out), "-q"])
-    assert any("gate.php" in r["url"] for r in json.loads(out.read_text()))
+    assert any("gate.php" in r["url"] for r in _recs(out))
 
 
 def test_cli_no_path():

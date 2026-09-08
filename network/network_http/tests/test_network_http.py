@@ -11,6 +11,12 @@ from network_http.cli import main
 
 import _synth as S
 
+
+def _recs(path):
+    import json as _j
+    d = _j.loads(open(path, encoding="utf-8").read())
+    return d["records"] if isinstance(d, dict) and "records" in d else d
+
 PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 400 + b"IEND\xaeB`\x82"
 MZ = b"MZ\x90\x00" + b"\x03\x00" * 300 + b"This program cannot be run in DOS mode"
 HTML = b"<!DOCTYPE html><html><body>" + b"hello world " * 500 + b"</body></html>"
@@ -177,7 +183,7 @@ def test_cli_csv_and_json(tmp_path, capsys):
     raw = csv_p.read_bytes()
     assert raw.startswith(b"\xef\xbb\xbf")          # UTF-8 BOM
     assert b"sha256" in raw.splitlines()[0]
-    data = json.loads(json_p.read_text())
+    data = _recs(json_p)
     assert data[0]["sha256"] == hashlib.sha256(PNG).hexdigest()
 
 
@@ -192,15 +198,15 @@ def test_cli_filters(tmp_path):
     cap = _write(tmp_path, packets)
     out = tmp_path / "o.json"
     main([str(cap), "--notable-only", "--json", str(out), "-q"])
-    rows = json.loads(out.read_text())
+    rows = _recs(out)
     assert len(rows) == 1
     assert rows[0]["filename"] == "evil.exe"
 
     main([str(cap), "--min-severity", "high", "--json", str(out), "-q"])
-    assert len(json.loads(out.read_text())) == 1
+    assert len(_recs(out)) == 1
 
     main([str(cap), "--grep", r"\.txt", "--json", str(out), "-q"])
-    assert json.loads(out.read_text())[0]["filename"] == "clean.txt"
+    assert _recs(out)[0]["filename"] == "clean.txt"
 
 
 def test_csv_injection_guard():

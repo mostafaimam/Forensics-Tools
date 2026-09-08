@@ -89,3 +89,14 @@ million-packet capture down to the handful worth reading.
 * Gzipped / chunked HTTP bodies are not inflated.
 * Object carving (pulling transferred files out of the streams) is a
   separate planned tool (`network_http`).
+
+## Chain of custody
+
+Every run writes a `<output>.manifest.json` sidecar recording the tool version,
+the exact command line, `--case-id` / `--examiner` / `--evidence-id`, start and
+finish time (UTC), the host, and the **SHA-256 of every input and output file**.
+CSV rows carry `evidence_source` / `parser_confidence` / `tz_provenance`
+columns; JSON is wrapped as `{"manifest": {...}, "records": [...]}`.
+`--no-provenance` disables this. `--max-input-bytes` / `--max-records` /
+`--wall-seconds` bound a run against hostile or oversized evidence.
+

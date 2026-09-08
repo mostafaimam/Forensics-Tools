@@ -11,6 +11,12 @@ from network_arp.cli import main
 import _synth as S
 
 
+def _recs(path):
+    import json as _j
+    d = _j.loads(open(path, encoding="utf-8").read())
+    return d["records"] if isinstance(d, dict) and "records" in d else d
+
+
 def _w(tmp_path, content, name):
     p = tmp_path / name
     if isinstance(content, bytes):
@@ -125,14 +131,14 @@ def test_cli_csv_json_filters(tmp_path):
     rc = main([str(p), "--csv", str(csv_p), "--json", str(js_p), "-q"])
     assert rc == 0
     assert csv_p.read_bytes().startswith(b"\xef\xbb\xbf")
-    assert len(json.loads(js_p.read_text())) == 2
+    assert len(_recs(js_p)) == 2
 
     main([str(p), "--ip", "192.168.1.51", "--json", str(js_p), "-q"])
-    only = json.loads(js_p.read_text())
+    only = _recs(js_p)
     assert len(only) == 1 and only[0]["mac"] == "00:0c:29:aa:bb:cc"
 
     main([str(p), "--host", "bob", "--json", str(js_p), "-q"])
-    assert json.loads(js_p.read_text())[0]["ip"] == "192.168.1.51"
+    assert _recs(js_p)[0]["ip"] == "192.168.1.51"
 
 
 def test_unrecognised_source(tmp_path):

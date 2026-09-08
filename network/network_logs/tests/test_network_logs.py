@@ -9,6 +9,12 @@ from network_logs import formats, output
 from network_logs.analyze import analyze
 from network_logs.cli import main
 
+
+def _recs(path):
+    import json as _j
+    d = _j.loads(open(path, encoding="utf-8").read())
+    return d["records"] if isinstance(d, dict) and "records" in d else d
+
 IPTABLES = textwrap.dedent("""\
     Nov 14 09:12:01 gw kernel: [UFW BLOCK] IN=eth0 OUT= MAC=aa:bb SRC=185.43.99.42 DST=10.0.0.5 LEN=60 PROTO=TCP SPT=53122 DPT=22 WINDOW=1024 SYN
     Nov 14 09:12:02 gw kernel: [UFW BLOCK] IN=eth0 OUT= SRC=185.43.99.42 DST=10.0.0.5 LEN=60 PROTO=TCP SPT=53123 DPT=23
@@ -133,13 +139,13 @@ def test_cli_csv_json_filters(tmp_path):
     rc = main([str(p), "--csv", str(csv_p), "--json", str(js_p), "-q"])
     assert rc == 0
     assert csv_p.read_bytes().startswith(b"\xef\xbb\xbf")
-    assert len(json.loads(js_p.read_text())) == 3
+    assert len(_recs(js_p)) == 3
 
     main([str(p), "--action", "deny", "--json", str(js_p), "-q"])
-    assert len(json.loads(js_p.read_text())) == 2
+    assert len(_recs(js_p)) == 2
 
     main([str(p), "--port", "443", "--json", str(js_p), "-q"])
-    assert json.loads(js_p.read_text())[0]["dport"] == 443
+    assert _recs(js_p)[0]["dport"] == 443
 
 
 def test_unrecognised_format(tmp_path):

@@ -5,13 +5,11 @@ import re
 import sys
 from pathlib import Path
 
-from network_pcap import __version__
+from network_pcap import __version__, tracelib
 from network_pcap.analyze import analyze
-from network_pcap.flags import severity
 from network_pcap.output import (DNS_COLUMNS, FLOW_COLUMNS, HTTP_COLUMNS,
                                  dns_row, flow_row, http_row, render_dns,
-                                 render_flows, render_http, write_csv,
-                                 write_json)
+                                 render_flows, render_http)
 
 _SEV = {"none": 0, "low": 1, "medium": 2, "high": 3}
 
@@ -53,6 +51,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--csv", type=Path)
     p.add_argument("--json", type=Path)
     p.add_argument("-q", "--quiet", action="store_true")
+    tracelib.add_arguments(p)
     return p
 
 
@@ -68,6 +67,15 @@ def main(argv: list[str] | None = None) -> int:
             print(f"not found: {p}", file=sys.stderr)
             return 2
 
+    ctx = tracelib.context(a, "network_pcap", __version__)
+    try:
+        ctx.limits.check_paths([str(p) for p in a.paths])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
+    for p in a.paths:
+        ctx.add_input(str(p))
+
     grep = re.compile(a.grep, re.I) if a.grep else None
     prog = None
     if not a.quiet:
@@ -78,6 +86,8 @@ def main(argv: list[str] | None = None) -> int:
     cap = analyze([str(p) for p in a.paths], progress=prog)
     if not a.quiet:
         sys.stderr.write("\r" + " " * 40 + "\r")
+    for e in cap.errors:
+        ctx.error("capture-error", e)
 
     view = "dns" if a.dns else "http" if a.http else "flows"
     if view == "dns":
@@ -116,16 +126,20 @@ def main(argv: list[str] | None = None) -> int:
         out.append(r)
 
     if a.csv:
-        write_csv(out, cols, a.csv)
+        tracelib.write_csv(out, a.csv, cols, ctx,
+                           confidence="high", tz="utc-native")
     if a.json:
-        write_json(out, a.json)
+        tracelib.write_json(out, a.json, ctx,
+                            confidence="high", tz="utc-native")
     if not a.quiet and not (a.csv or a.json):
         print(render(out), end="")
 
+    mpath = ctx.finish(outputs=[a.csv, a.json])
     fl = sum(1 for r in out if r.get("notable"))
     print(f"network_pcap: {cap.packets} packets ({cap.decoded} decoded) -> "
           f"{len(cap.flows)} flows, {len(cap.dns)} DNS, {len(cap.http)} HTTP; "
-          f"showing {len(out)} {view}, {fl} flagged", file=sys.stderr)
+          f"showing {len(out)} {view}, {fl} flagged"
+          + (f"; manifest {mpath}" if mpath else ""), file=sys.stderr)
     for e in cap.errors:
         print(f"  ! {e}", file=sys.stderr)
     return 0 if out else 1
