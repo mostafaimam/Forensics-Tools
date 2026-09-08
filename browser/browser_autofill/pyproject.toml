@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "browser_autofill"
+version = "0.1.0"
+description = "Form-field history, saved address profiles and payment-card metadata from Chromium Web Data and Firefox formhistory.sqlite (card numbers never output)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "browser", "autofill", "formhistory", "chrome", "firefox"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/browser/browser_autofill"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+browser_autofill = "browser_autofill.cli:main"
+[tool.setuptools]
+packages = ["browser_autofill"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
