@@ -182,7 +182,7 @@ it will do. The full roadmap is tracked privately.
 | [**network_dns**](network/network_dns/) | ✅ v0.1 | One DNS timeline from a `pcap` (self-contained UDP/TCP DNS parser), the Windows `ipconfig /displaydns` cache, `systemd-resolved` dumps and `hosts` files — per-name first/last seen, query types, answers + TTLs, resolvers, clients; flags encoded / high-entropy labels (tunnelling / DGA), large `TXT` / `NULL` answers, `AXFR`, NXDOMAIN bursts, fast-flux, and `hosts`-file redirects of real domains |
 | [**network_flows**](network/network_flows/) | ✅ v0.1 | **NetFlow v5 / v9 / IPFIX / sFlow reader** — parses the wire record formats (v9 / IPFIX templates cached and reused across messages; sFlow raw-header flow samples), reassembles unidirectional flows into `proto · client · server · port` conversations with bytes / packets each way; top-talker / server-port / protocol summaries; flags bulk exfil (outbound-heavy), regular beacons, scan fan-out, SYN-only probes, long-lived flows |
 | [**network_logs**](network/network_logs/) | ✅ v0.1 | **Normalise firewall / proxy / IDS text logs** — iptables / nftables, `pflog` (tcpdump text), Windows Firewall `pfirewall.log`, Squid `access.log`, Zeek `conn.log` (TSV) and Suricata `eve.json` → one flow / event schema; per-event flags (IDS alerts, blocked inbound, abused ports, credentials in proxied URLs, raw-IP requests) plus cross-log findings (blocked-event bursts, port sweeps) |
-| [**network_arp**](network/network_arp/) | 📋 planned | IP ↔ MAC ↔ hostname ↔ time mapping from ARP and DHCP data |
+| [**network_arp**](network/network_arp/) | ✅ v0.1 | **IP ↔ MAC ↔ hostname ↔ time mapping** from ISC `dhcpd.leases`, the Windows DHCP audit CSV, `arp -a` / `ip neigh` dumps and ARP frames (+ passive src bindings) in a `pcap`; one row per binding with first/last seen, hostnames, sources and OUI vendor; flags time-overlapping IP conflicts (ARP spoofing), one MAC on many IPs, gratuitous ARP and locally-administered MACs |
 
 ### `memory/`
 
@@ -249,12 +249,14 @@ it will do. The full roadmap is tracked privately.
 
 ### next up
 
-`network_dns` (query-log analysis) / `network_flows` (NetFlow / IPFIX) / `network_logs` (firewall / IDS) ·
-`browser_cache` / `browser_autofill` / `browser_sessions` ·
+`browser_downloads` / `browser_cache` / `browser_autofill` / `browser_sessions` ·
 `memory_handles` / `memory_hashdump` (reporting only) ·
 `recovery_metadata` FAT / ext4 / APFS support ·
 `linux_journal` (systemd binary journal) · `linux_audit` ·
 `macos_quarantine` / `macos_knowledgec` (build on `macos_plist` + SQLite).
+
+The `network/` category is complete for v0.1: `network_pcap`,
+`network_http`, `network_dns`, `network_flows`, `network_logs`, `network_arp`.
 
 ---
 
