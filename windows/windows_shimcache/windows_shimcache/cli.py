@@ -7,7 +7,7 @@ import json
 import sys
 from pathlib import Path
 
-from windows_shimcache import __version__
+from windows_shimcache import __version__, tracelib
 from windows_shimcache.extract import (
     from_blob_file,
     from_hive_file,
@@ -63,6 +63,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--executed-only", action="store_true",
                    help="Windows 7/8: keep only entries flagged executed")
     p.add_argument("-q", "--quiet", action="store_true")
+    tracelib.add_arguments(p)
     return p
 
 
@@ -108,6 +109,18 @@ def main(argv: list[str] | None = None) -> int:
               file=sys.stderr)
         return 2
 
+    ctx = tracelib.context(args, "windows_shimcache", __version__)
+    try:
+        ctx.limits.check_paths([str(f) for f in args.inputs])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
+    for f in args.inputs:
+        ctx.add_input(str(f))
+    if args.registry:
+        ctx.notes = (ctx.notes + " " if ctx.notes else "") + \
+            "live-registry AppCompatCache included"
+
     for f in args.inputs:
         if not f.exists():
             print(f"! not found: {f}", file=sys.stderr)
@@ -129,12 +142,15 @@ def main(argv: list[str] | None = None) -> int:
             rows.append(_row(e, str(f)))
 
     if args.csv:
-        _write_csv(rows, args.csv)
+        tracelib.write_csv(rows, args.csv, COLUMNS, ctx,
+                           confidence="medium", tz="utc-native")
     if args.json:
-        args.json.write_text(json.dumps(rows, indent=2), encoding="utf-8")
+        tracelib.write_json(rows, args.json, ctx,
+                            confidence="medium", tz="utc-native")
     if not args.quiet and not (args.csv or args.json):
         print(_render(rows))
 
+    _mpath = ctx.finish(outputs=[args.csv, args.json])
     print(f"windows_shimcache {__version__}: {len(rows)} entr(y|ies) from "
           f"{parsed} file(s)", file=sys.stderr)
     return 1 if parsed == 0 else 0

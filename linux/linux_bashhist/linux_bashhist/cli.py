@@ -6,9 +6,9 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from linux_bashhist import __version__
+from linux_bashhist import __version__, tracelib
 from linux_bashhist.collect import collect_file, collect_root
-from linux_bashhist.output import entry_row, render_table, write_csv, write_json
+from linux_bashhist.output import COLUMNS, entry_row, render_table
 
 _MIN = datetime(1, 1, 1, tzinfo=timezone.utc)
 
@@ -51,6 +51,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--csv", type=Path)
     p.add_argument("--json", type=Path)
     p.add_argument("-q", "--quiet", action="store_true")
+    tracelib.add_arguments(p)
     return p
 
 
@@ -87,6 +88,16 @@ def main(argv: list[str] | None = None) -> int:
         build_parser().print_help()
         return 2
 
+    ctx = tracelib.context(args, "linux_bashhist", __version__)
+    _ins = list(args.file or []) + ([args.root] if args.root else [])
+    try:
+        ctx.limits.check_paths([str(x) for x in _ins])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
+    for _x in _ins:
+        ctx.add_input(str(_x))
+
     marker_rows = [e for e in entries if not e.command and e.note]
     cmd_rows = [e for e in entries if e.command]
 
@@ -110,9 +121,11 @@ def main(argv: list[str] | None = None) -> int:
 
     rows = [entry_row(e) for e in shown]
     if args.csv:
-        write_csv(rows, args.csv)
+        tracelib.write_csv(rows, args.csv, COLUMNS, ctx,
+                           confidence="high", tz="assumed-utc")
     if args.json:
-        write_json(rows, args.json)
+        tracelib.write_json(rows, args.json, ctx,
+                            confidence="high", tz="assumed-utc")
     if not args.quiet and not (args.csv or args.json):
         print(render_table(rows))
 
@@ -122,6 +135,7 @@ def main(argv: list[str] | None = None) -> int:
            f"{dated} timestamped, {flagged} flagged")
     if marker_rows:
         msg += f", {len(marker_rows)} tampering marker(s)"
+    ctx.finish(outputs=[args.csv, args.json])
     print(msg, file=sys.stderr)
     return 0 if cmd_rows or marker_rows else 1
 

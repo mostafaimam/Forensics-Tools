@@ -7,7 +7,7 @@ import json
 import sys
 from pathlib import Path
 
-from windows_lnk import __version__
+from windows_lnk import __version__, tracelib
 from windows_lnk.lnk import LnkError, iso, parse
 
 COLUMNS = [
@@ -95,6 +95,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--json", type=Path)
     p.add_argument("--no-recurse", action="store_true")
     p.add_argument("-q", "--quiet", action="store_true")
+    tracelib.add_arguments(p)
     return p
 
 
@@ -118,6 +119,15 @@ def main(argv: list[str] | None = None) -> int:
         print("error: no .lnk files found", file=sys.stderr)
         return 2
 
+    ctx = tracelib.context(args, "windows_lnk", __version__)
+    try:
+        ctx.limits.check_paths([str(f) for f in files])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
+    for f in files:
+        ctx.add_input(str(f))
+
     parsed = []
     errors = 0
     for f in files:
@@ -127,20 +137,18 @@ def main(argv: list[str] | None = None) -> int:
             errors += 1
             print(f"! {f}: {e}", file=sys.stderr)
 
+    if errors:
+        ctx.warn("partial", "parse-error", f"{errors} .lnk file(s) failed")
     if args.csv:
-        with args.csv.open("w", encoding="utf-8-sig", newline="") as fh:
-            w = csv.DictWriter(fh, fieldnames=COLUMNS, dialect="excel",
-                               extrasaction="ignore")
-            w.writeheader()
-            for lnk, src in parsed:
-                w.writerow({k: _san(v) for k, v in _row(lnk, src).items()})
+        tracelib.write_csv([_row(lnk, src) for lnk, src in parsed], args.csv,
+                           COLUMNS, ctx, confidence="high", tz="utc-native")
     if args.json:
-        args.json.write_text(
-            json.dumps([_json_obj(lnk, src) for lnk, src in parsed],
-                       indent=2, default=str), encoding="utf-8")
+        tracelib.write_json([_json_obj(lnk, src) for lnk, src in parsed],
+                            args.json, ctx, confidence="high", tz="utc-native")
     if not args.quiet and not (args.csv or args.json):
         print(_render(parsed))
 
+    _mpath = ctx.finish(outputs=[args.csv, args.json])
     print(f"windows_lnk {__version__}: {len(parsed)} parsed, {errors} error(s)",
           file=sys.stderr)
     return 1 if errors and not parsed else 0

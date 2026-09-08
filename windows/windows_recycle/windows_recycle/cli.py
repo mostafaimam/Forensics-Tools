@@ -5,7 +5,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from windows_recycle import __version__
+from windows_recycle import __version__, tracelib
 from windows_recycle.output import (
     render_table,
     write_csv,
@@ -47,6 +47,7 @@ def build_parser() -> argparse.ArgumentParser:
                    help="only show records that failed to parse")
     p.add_argument("-q", "--quiet", action="store_true",
                    help="suppress the console table (use with --csv/--json)")
+    tracelib.add_arguments(p)
     return p
 
 
@@ -55,6 +56,15 @@ def main(argv: list[str] | None = None) -> int:
     if getattr(args, "gui", False):
         from windows_recycle.gui import run_gui
         return run_gui([str(x) for x in (args.paths or [])])
+
+    ctx = tracelib.context(args, "windows_recycle", __version__)
+    try:
+        ctx.limits.check_paths([str(x) for x in args.paths])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
+    for _x in args.paths:
+        ctx.add_input(str(_x))
 
     result = scan(args.paths, recursive=not args.no_recurse)
     records = result.records
@@ -81,6 +91,9 @@ def main(argv: list[str] | None = None) -> int:
         write_jsonl(records, args.jsonl)
         wrote.append(str(args.jsonl))
 
+    if errors:
+        ctx.warn("partial", "parse-error", f"{errors} record(s) / file(s) failed to parse")
+    _mpath = ctx.finish(outputs=[args.csv, args.json, args.jsonl])
     if not args.quiet:
         print(render_table(records))
 

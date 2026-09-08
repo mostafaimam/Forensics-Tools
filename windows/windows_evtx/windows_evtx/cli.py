@@ -4,7 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from windows_evtx import __version__
+from windows_evtx import __version__, tracelib
 from windows_evtx.evtx import EvtxError, FileHeader, iter_chunks, iter_records
 from windows_evtx.evtx.headers import FILE_HEADER_SIZE
 from windows_evtx.evtx.record import parse_record
@@ -58,6 +58,7 @@ def build_parser() -> argparse.ArgumentParser:
     flt.add_argument("--to", dest="dt_to", metavar="WHEN")
     flt.add_argument("--errors-only", action="store_true",
                      help="only records that failed to parse")
+    tracelib.add_arguments(p)
     return p
 
 
@@ -83,6 +84,15 @@ def main(argv: list[str] | None = None) -> int:
     if not files:
         print("error: no .evtx files found", file=sys.stderr)
         return 2
+
+    ctx = tracelib.context(args, "windows_evtx", __version__)
+    try:
+        ctx.limits.check_paths([str(x) for x in files])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
+    for _x in files:
+        ctx.add_input(str(_x))
 
     dt_from = _iso(args.dt_from) if args.dt_from else None
     dt_to = _iso(args.dt_to) if args.dt_to else None
@@ -128,6 +138,9 @@ def main(argv: list[str] | None = None) -> int:
     records.sort(key=lambda r: (r.time_created_utc or r.timestamp_utc,
                                 r.record_id))
 
+    if errors:
+        ctx.warn("partial", "parse-error", f"{errors} record(s) / file(s) failed to parse")
+    _mpath = ctx.finish(outputs=[args.csv, args.json, args.jsonl, args.xml])
     src = files[0].name if len(files) == 1 else f"{len(files)} files"
     if args.csv:
         write_csv(records, args.csv, src)

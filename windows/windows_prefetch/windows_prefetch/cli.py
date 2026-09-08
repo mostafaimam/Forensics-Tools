@@ -5,7 +5,7 @@ import os
 import sys
 from pathlib import Path
 
-from windows_prefetch import __version__
+from windows_prefetch import __version__, tracelib
 from windows_prefetch.models import PrefetchFile
 from windows_prefetch.output import (
     render_table,
@@ -61,6 +61,7 @@ def build_parser() -> argparse.ArgumentParser:
                    help="always use the pure-Python decompressor")
     p.add_argument("--errors-only", action="store_true")
     p.add_argument("-q", "--quiet", action="store_true")
+    tracelib.add_arguments(p)
     return p
 
 
@@ -71,6 +72,15 @@ def main(argv: list[str] | None = None) -> int:
         return run_gui([str(x) for x in (args.paths or [])])
     if args.no_native:
         os.environ["WINDOWS_PREFETCH_NO_NATIVE"] = "1"
+
+    ctx = tracelib.context(args, "windows_prefetch", __version__)
+    try:
+        ctx.limits.check_paths([str(x) for x in _iter_pf_paths(args.paths, not args.no_recurse)])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
+    for _x in _iter_pf_paths(args.paths, not args.no_recurse):
+        ctx.add_input(str(_x))
 
     items: list[PrefetchFile] = []
     for path in _iter_pf_paths(args.paths, not args.no_recurse):
@@ -96,6 +106,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.jsonl:
         write_jsonl(items, args.jsonl); wrote.append(str(args.jsonl))
 
+    if errors:
+        ctx.warn("partial", "parse-error", f"{errors} record(s) / file(s) failed to parse")
+    _mpath = ctx.finish(outputs=[args.csv, getattr(args, 'files_csv', None), args.json, args.jsonl])
     if not args.quiet:
         print(render_table(items))
 

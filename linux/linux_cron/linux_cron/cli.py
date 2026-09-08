@@ -4,11 +4,11 @@ import argparse
 import sys
 from pathlib import Path
 
-from linux_cron import __version__
+from linux_cron import __version__, tracelib
 from linux_cron.collect import collect_file, collect_root, guess_kind
 from linux_cron.cronexpr import CronError
 from linux_cron.cronexpr import parse as parse_expr
-from linux_cron.output import job_row, render_table, write_csv, write_json
+from linux_cron.output import COLUMNS, job_row, render_table
 
 _ORDER = {s: i for i, s in enumerate(
     ["system-crontab", "cron.d", "user-crontab", "run-parts", "anacron",
@@ -58,6 +58,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--csv", type=Path)
     p.add_argument("--json", type=Path)
     p.add_argument("-q", "--quiet", action="store_true")
+    tracelib.add_arguments(p)
     return p
 
 
@@ -92,6 +93,16 @@ def main(argv: list[str] | None = None) -> int:
         build_parser().print_help()
         return 2
 
+    ctx = tracelib.context(args, "linux_cron", __version__)
+    _ins = list(args.file or []) + ([args.root] if args.root else [])
+    try:
+        ctx.limits.check_paths([str(x) for x in _ins])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
+    for _x in _ins:
+        ctx.add_input(str(_x))
+
     if args.source:
         jobs = [j for j in jobs if j.source in args.source]
     if args.user:
@@ -104,14 +115,17 @@ def main(argv: list[str] | None = None) -> int:
     rows = [job_row(j) for j in jobs]
 
     if args.csv:
-        write_csv(rows, args.csv)
+        tracelib.write_csv(rows, args.csv, COLUMNS, ctx,
+                           confidence="high", tz="utc-native")
     if args.json:
-        write_json(rows, args.json)
+        tracelib.write_json(rows, args.json, ctx,
+                            confidence="high", tz="utc-native")
     if not args.quiet and not (args.csv or args.json):
         print(render_table(rows))
 
     flagged = sum(1 for j in jobs if j.notable)
     errored = sum(1 for j in jobs if j.error)
+    ctx.finish(outputs=[args.csv, args.json])
     print(f"linux_cron {__version__}: {len(jobs)} job(s), {flagged} flagged"
           + (f", {errored} with parse errors" if errored else ""),
           file=sys.stderr)

@@ -4,7 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from windows_reglog import __version__
+from windows_reglog import __version__, tracelib
 from windows_reglog.logfile import BaseBlock, RegLogError, parse_log
 from windows_reglog.replay import replay_files
 
@@ -45,6 +45,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--no-verify", action="store_true",
                    help="skip Marvin32 hash verification of log entries")
     p.add_argument("-q", "--quiet", action="store_true")
+    tracelib.add_arguments(p)
     return p
 
 
@@ -64,6 +65,16 @@ def main(argv: list[str] | None = None) -> int:
     if missing:
         print(f"log not found: {missing}", file=sys.stderr)
         return 2
+
+    ctx = tracelib.context(args, "windows_reglog", __version__)
+    try:
+        ctx.limits.check_paths([str(args.hive)] + [str(p) for p in logs])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
+    ctx.add_input(str(args.hive))
+    for _lp in logs:
+        ctx.add_input(str(_lp))
 
     try:
         base = BaseBlock.parse(args.hive.read_bytes())
@@ -127,6 +138,9 @@ def main(argv: list[str] | None = None) -> int:
     elif res.changed:
         print("(no -o given; recovered hive not written)", file=sys.stderr)
 
+    for _n in res.notes:
+        ctx.warn("partial", "replay-note", _n)
+    ctx.finish(outputs=[args.out] if args.out else [])
     return 0
 
 

@@ -5,7 +5,7 @@ import gzip
 import sys
 from pathlib import Path
 
-from linux_utmp import __version__
+from linux_utmp import __version__, tracelib
 from linux_utmp.lastlog import looks_like_lastlog
 from linux_utmp.lastlog import parse as parse_lastlog
 from linux_utmp.output import (
@@ -16,8 +16,6 @@ from linux_utmp.output import (
     record_row,
     render_table,
     session_row,
-    write_csv,
-    write_json,
 )
 from linux_utmp.sessions import build_sessions
 from linux_utmp.utmp import looks_like_utmp
@@ -85,6 +83,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--csv", type=Path)
     p.add_argument("--json", type=Path)
     p.add_argument("-q", "--quiet", action="store_true")
+    tracelib.add_arguments(p)
     return p
 
 
@@ -94,6 +93,14 @@ def _iso_key(s: str) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    try:
+        tracelib.Limits(
+            max_input_bytes=getattr(args, 'max_input_bytes', 0)
+            or tracelib.Limits().max_input_bytes
+        ).check_paths([str(x) for x in (getattr(args, 'inputs', None) or [])])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
     if getattr(args, "gui", False):
         from linux_utmp.gui import run_gui
         return run_gui([str(x) for x in (args.inputs or [])])
@@ -169,12 +176,18 @@ def _filter_sessions(rows, args, dt_from, dt_to):
 
 
 def _emit(rows, columns, args) -> None:
+    ctx = tracelib.context(args, "linux_utmp", __version__)
+    for _x in getattr(args, "inputs", None) or []:
+        ctx.add_input(str(_x))
     if args.csv:
-        write_csv(rows, columns, args.csv)
+        tracelib.write_csv(rows, args.csv, columns, ctx,
+                           confidence="high", tz="utc-native")
     if args.json:
-        write_json(rows, args.json)
+        tracelib.write_json(rows, args.json, ctx,
+                            confidence="high", tz="utc-native")
     if not args.quiet and not (args.csv or args.json):
         print(render_table(rows, columns))
+    ctx.finish(outputs=[args.csv, args.json])
 
 
 if __name__ == "__main__":

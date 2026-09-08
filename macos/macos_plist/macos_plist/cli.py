@@ -5,10 +5,10 @@ import json
 import sys
 from pathlib import Path
 
-from macos_plist import __version__
+from macos_plist import __version__, tracelib
 from macos_plist.flatten import flatten, get_path, json_safe
 from macos_plist.nskeyedarchiver import is_keyed_archive, unwrap
-from macos_plist.output import flat_rows, render, write_csv, write_json
+from macos_plist.output import FLAT_COLUMNS, flat_rows, render, write_json
 from macos_plist.reader import load_file
 
 
@@ -41,6 +41,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--recurse", action="store_true", default=True)
     p.add_argument("--no-recurse", dest="recurse", action="store_false")
     p.add_argument("-q", "--quiet", action="store_true")
+    tracelib.add_arguments(p)
     return p
 
 
@@ -66,6 +67,15 @@ def main(argv: list[str] | None = None) -> int:
         print("error: no plist files found", file=sys.stderr)
         return 2
 
+    ctx = tracelib.context(args, "macos_plist", __version__)
+    try:
+        ctx.limits.check_paths([str(f) for f in files])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
+    for f in files:
+        ctx.add_input(str(f))
+
     loaded: list[tuple] = []
     errors = 0
     for f in files:
@@ -89,13 +99,15 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.csv:
-        write_csv(flat_rows(loaded), args.csv)
+        tracelib.write_csv(flat_rows(loaded), args.csv, FLAT_COLUMNS,
+                           ctx, confidence="high", tz="utc-native")
     if args.json:
         write_json(loaded, args.json)
     if not args.quiet and not (args.csv or args.json):
         print(render(loaded))
 
     ka = sum(1 for lp, _v in loaded if lp.is_keyed_archive)
+    ctx.finish(outputs=[args.csv, args.json])
     print(f"macos_plist {__version__}: {len(files)} file(s), {ka} keyed "
           f"archive(s), {errors} parse error(s)", file=sys.stderr)
     return 1 if errors and errors == len(files) else 0

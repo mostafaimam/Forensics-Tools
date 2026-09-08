@@ -7,7 +7,7 @@ import json
 import sys
 from pathlib import Path
 
-from windows_jumplist import __version__
+from windows_jumplist import __version__, tracelib
 from windows_jumplist.jumplist import parse_file
 from windows_jumplist.lnk import iso
 from windows_jumplist.ole import OleError
@@ -74,6 +74,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--json", type=Path)
     p.add_argument("--pinned-only", action="store_true")
     p.add_argument("-q", "--quiet", action="store_true")
+    tracelib.add_arguments(p)
     return p
 
 
@@ -96,6 +97,15 @@ def main(argv: list[str] | None = None) -> int:
         print("error: no jump-list files found", file=sys.stderr)
         return 2
 
+    ctx = tracelib.context(args, "windows_jumplist", __version__)
+    try:
+        ctx.limits.check_paths([str(f) for f in files])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
+    for f in files:
+        ctx.add_input(str(f))
+
     lists = []
     errors = 0
     for f in files:
@@ -112,19 +122,19 @@ def main(argv: list[str] | None = None) -> int:
                 continue
             rows.append(r)
 
+    if errors:
+        ctx.warn("partial", "parse-error",
+                 f"{errors} jump-list file(s) failed to parse")
     if args.csv:
-        with args.csv.open("w", encoding="utf-8-sig", newline="") as fh:
-            w = csv.DictWriter(fh, fieldnames=COLUMNS, dialect="excel",
-                               extrasaction="ignore")
-            w.writeheader()
-            for r in rows:
-                w.writerow({k: _san(r.get(k, "")) for k in COLUMNS})
+        tracelib.write_csv(rows, args.csv, COLUMNS, ctx,
+                           confidence="high", tz="utc-native")
     if args.json:
-        args.json.write_text(json.dumps(rows, indent=2, default=str),
-                             encoding="utf-8")
+        tracelib.write_json(rows, args.json, ctx,
+                            confidence="high", tz="utc-native")
     if not args.quiet and not (args.csv or args.json):
         print(_render(lists))
 
+    _mpath = ctx.finish(outputs=[args.csv, args.json])
     total_items = sum(len(jl.items) for jl in lists)
     print(f"windows_jumplist {__version__}: {len(lists)} list(s), "
           f"{total_items} item(s), {errors} error(s)", file=sys.stderr)

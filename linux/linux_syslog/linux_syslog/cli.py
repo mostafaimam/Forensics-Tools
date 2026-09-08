@@ -6,7 +6,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from linux_syslog import __version__
+from linux_syslog import __version__, tracelib
 from linux_syslog.collect import discover, iter_records, parse_tz
 from linux_syslog.events import extract
 from linux_syslog.output import (
@@ -15,8 +15,6 @@ from linux_syslog.output import (
     event_row,
     record_row,
     render_table,
-    write_csv,
-    write_json,
 )
 
 
@@ -73,6 +71,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--csv", type=Path)
     p.add_argument("--json", type=Path)
     p.add_argument("-q", "--quiet", action="store_true")
+    tracelib.add_arguments(p)
     return p
 
 
@@ -99,6 +98,14 @@ def _files(args) -> list[Path]:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    try:
+        tracelib.Limits(
+            max_input_bytes=getattr(args, 'max_input_bytes', 0)
+            or tracelib.Limits().max_input_bytes
+        ).check_paths([str(x) for x in (getattr(args, 'inputs', None) or [])])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
     if getattr(args, "gui", False):
         from linux_syslog.gui import run_gui
         return run_gui([str(x) for x in (args.inputs or [])])
@@ -196,12 +203,18 @@ def _in_window(ts, dt_from, dt_to) -> bool:
 
 
 def _emit(rows, columns, args) -> None:
+    ctx = tracelib.context(args, "linux_syslog", __version__)
+    for _x in getattr(args, "inputs", None) or []:
+        ctx.add_input(str(_x))
     if args.csv:
-        write_csv(rows, columns, args.csv)
+        tracelib.write_csv(rows, args.csv, columns, ctx,
+                           confidence="high", tz="assumed-utc")
     if args.json:
-        write_json(rows, args.json)
+        tracelib.write_json(rows, args.json, ctx,
+                            confidence="high", tz="assumed-utc")
     if not args.quiet and not (args.csv or args.json):
         print(render_table(rows, columns))
+    ctx.finish(outputs=[args.csv, args.json])
 
 
 if __name__ == "__main__":
