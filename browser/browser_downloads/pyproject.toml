@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "browser_downloads"
+version = "0.1.0"
+description = "Browser download history (Chromium / Firefox) cross-referenced with .crdownload / .part leftovers and the NTFS Zone.Identifier (Mark-of-the-Web)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "browser", "downloads", "chrome", "firefox", "zone.identifier", "motw"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/browser/browser_downloads"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+browser_downloads = "browser_downloads.cli:main"
+[tool.setuptools]
+packages = ["browser_downloads"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
