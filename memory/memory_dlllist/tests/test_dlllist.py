@@ -4,6 +4,12 @@ import json
 import pytest
 
 from memory_dlllist.cli import main
+
+
+def _recs(path):
+    import json as _j
+    d = _j.loads(open(path, encoding="utf-8").read())
+    return d["records"] if isinstance(d, dict) and "records" in d else d
 from memory_dlllist.dlllist import scan
 from memory_dlllist.imagevad import scan as vad_scan
 from memory_dlllist.loader import MemoryImage

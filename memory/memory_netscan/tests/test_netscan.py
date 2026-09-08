@@ -2,6 +2,12 @@ import csv
 import json
 
 from memory_netscan.cli import main
+
+
+def _recs(path):
+    import json as _j
+    d = _j.loads(open(path, encoding="utf-8").read())
+    return d["records"] if isinstance(d, dict) and "records" in d else d
 from memory_netscan.loader import MemoryImage
 from memory_netscan.netscan import scan
 from memory_netscan.pagemap import Pml4, find_kernel_dtb
@@ -113,7 +119,7 @@ def test_cli_filters(tmp_path):
 
     out = tmp_path / "tcp.json"
     main([str(p), "--proto", "tcp", "--json", str(out), "-q"])
-    assert all(r["proto"] == "TCP" for r in json.loads(out.read_text()))
+    assert all(r["proto"] == "TCP" for r in _recs(out))
 
     out2 = tmp_path / "lis.csv"
     main([str(p), "--listeners", "--csv", str(out2), "-q"])

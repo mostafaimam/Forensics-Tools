@@ -8,7 +8,7 @@ import re
 import sys
 from pathlib import Path
 
-from windows_amcache import __version__
+from windows_amcache import __version__, tracelib
 from windows_amcache.amcache import parse
 from windows_amcache.hive import HiveError
 
@@ -50,6 +50,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--with-sha1", action="store_true",
                    help="keep only records that carry a SHA-1")
     p.add_argument("-q", "--quiet", action="store_true")
+    tracelib.add_arguments(p)
     return p
 
 
@@ -63,6 +64,14 @@ def main(argv: list[str] | None = None) -> int:
     if not args.hive.exists():
         print(f"hive not found: {args.hive}", file=sys.stderr)
         return 2
+
+    ctx = tracelib.context(args, "windows_amcache", __version__)
+    try:
+        ctx.limits.check_paths([str(args.hive)])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
+    ctx.add_input(str(args.hive))
 
     rx = None
     if args.grep:
@@ -92,17 +101,15 @@ def main(argv: list[str] | None = None) -> int:
     rows.sort(key=lambda r: (r["category"], str(r["name"]).lower()))
 
     if args.csv:
-        with args.csv.open("w", encoding="utf-8-sig", newline="") as fh:
-            w = csv.DictWriter(fh, fieldnames=COLUMNS, dialect="excel",
-                               extrasaction="ignore")
-            w.writeheader()
-            for r in rows:
-                w.writerow({k: _san(r.get(k, "")) for k in COLUMNS})
+        tracelib.write_csv(rows, args.csv, COLUMNS, ctx,
+                           confidence="high", tz="utc-native")
     if args.json:
-        args.json.write_text(json.dumps(rows, indent=2, default=str),
-                             encoding="utf-8")
+        tracelib.write_json(rows, args.json, ctx,
+                            confidence="high", tz="utc-native")
     if not args.quiet and not (args.csv or args.json):
         print(_render(rows))
+
+    _mpath = ctx.finish(outputs=[args.csv, args.json])
 
     by_cat = {}
     for r in rows:

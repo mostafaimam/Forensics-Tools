@@ -4,6 +4,12 @@ import json
 import pytest
 
 from memory_cmdline.cli import main
+
+
+def _recs(path):
+    import json as _j
+    d = _j.loads(open(path, encoding="utf-8").read())
+    return d["records"] if isinstance(d, dict) and "records" in d else d
 from memory_cmdline.cmdline import scan
 from memory_cmdline.flags import flag, severity
 from memory_cmdline.loader import MemoryImage
@@ -121,7 +127,7 @@ def test_cli_csv_json(tmp_path):
     rows = list(csv.DictReader(out.open(encoding="utf-8-sig")))
     assert rows[0]["process"] == "powershell.exe"
     assert "powershell-encoded" in rows[0]["notable"]
-    data = json.loads(js.read_text())
+    data = _recs(js)
     assert data[0]["severity"] == "high"
 
 

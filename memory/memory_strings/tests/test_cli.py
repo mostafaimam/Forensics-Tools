@@ -4,6 +4,12 @@ from _synth import lime_with
 from memory_strings.cli import main
 
 
+def _recs(path):
+    import json as _j
+    d = _j.loads(open(path, encoding="utf-8").read())
+    return d["records"] if isinstance(d, dict) and "records" in d else d
+
+
 def test_scan_classified_csv(tmp_path):
     p = tmp_path / "m.lime"
     p.write_bytes(lime_with({

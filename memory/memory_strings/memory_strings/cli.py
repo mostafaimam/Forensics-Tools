@@ -4,9 +4,9 @@ import argparse
 import sys
 from pathlib import Path
 
-from memory_strings import __version__
+from memory_strings import __version__, tracelib
 from memory_strings.loader import MemoryImage, MemoryImageError
-from memory_strings.output import render, row, write_csv, write_json
+from memory_strings.output import COLUMNS, render, row
 from memory_strings.patterns import LIBRARY
 from memory_strings.scan import scan
 
@@ -56,6 +56,7 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--csv", type=Path)
     s.add_argument("--json", type=Path)
     s.add_argument("-q", "--quiet", action="store_true")
+    tracelib.add_arguments(s)
     return p
 
 
@@ -69,6 +70,13 @@ def _cmd_scan(a) -> int:
     if not a.image.exists():
         print(f"not found: {a.image}", file=sys.stderr)
         return 2
+    ctx = tracelib.context(a, "memory_strings", __version__)
+    try:
+        ctx.limits.check_paths([str(a.image)])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
+    ctx.add_input(str(a.image))
     try:
         img = MemoryImage(a.image)
     except MemoryImageError as e:
@@ -85,12 +93,15 @@ def _cmd_scan(a) -> int:
     img.close()
 
     if a.csv:
-        write_csv(rows, a.csv)
+        tracelib.write_csv(rows, a.csv, COLUMNS, ctx,
+                           confidence="high", tz="utc-native")
     if a.json:
-        write_json(rows, a.json)
+        tracelib.write_json(rows, a.json, ctx,
+                            confidence="high", tz="utc-native")
     if not a.quiet and not (a.csv or a.json):
         print(render(rows), end="")
 
+    _mpath = ctx.finish(outputs=[a.csv, a.json])
     by_cat = {}
     for r in rows:
         if r["category"]:

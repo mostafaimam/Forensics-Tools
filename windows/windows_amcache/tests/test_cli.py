@@ -5,6 +5,12 @@ from _synth import build_legacy_amcache, build_modern_amcache
 from windows_amcache.cli import main
 
 
+def _recs(path):
+    import json as _j
+    d = _j.loads(open(path, encoding="utf-8").read())
+    return d["records"] if isinstance(d, dict) and "records" in d else d
+
+
 def test_csv(tmp_path):
     (tmp_path / "Amcache.hve").write_bytes(build_modern_amcache())
     out = tmp_path / "a.csv"
@@ -31,7 +37,7 @@ def test_with_sha1_filter(tmp_path):
     (tmp_path / "Amcache.hve").write_bytes(build_modern_amcache())
     out = tmp_path / "s.json"
     main([str(tmp_path / "Amcache.hve"), "--with-sha1", "--json", str(out), "-q"])
-    data = json.loads(out.read_text())
+    data = _recs(out)
     assert data and all(d["sha1"] for d in data)
 
 

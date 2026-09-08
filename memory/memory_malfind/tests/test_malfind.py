@@ -5,6 +5,12 @@ import pytest
 
 from memory_malfind.analyze import classify, shannon
 from memory_malfind.cli import main
+
+
+def _recs(path):
+    import json as _j
+    d = _j.loads(open(path, encoding="utf-8").read())
+    return d["records"] if isinstance(d, dict) and "records" in d else d
 from memory_malfind.loader import MemoryImage
 from memory_malfind.malfind import scan
 from memory_malfind.procs import scan as proc_scan

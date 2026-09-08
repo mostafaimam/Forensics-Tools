@@ -5,6 +5,12 @@ from _synth import eprocess, lime_with
 from memory_pslist.cli import main
 
 
+def _recs(path):
+    import json as _j
+    d = _j.loads(open(path, encoding="utf-8").read())
+    return d["records"] if isinstance(d, dict) and "records" in d else d
+
+
 def _dump(tmp_path):
     p = tmp_path / "mem.lime"
     p.write_bytes(lime_with([

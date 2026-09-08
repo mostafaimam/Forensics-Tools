@@ -1,0 +1,38 @@
+{
+  "schema": "forensics-tools/run-manifest/1",
+  "tool": "memory_cmdline",
+  "tool_version": "0.1.0",
+  "command_line": [
+    "C:\\Users\\Mostafa\\AppData\\Local\\Programs\\Python\\Python314\\Lib\\site-packages\\pytest\\__main__.py",
+    "-q"
+  ],
+  "case_id": "",
+  "examiner": "",
+  "evidence_id": "",
+  "notes": "",
+  "started_utc": "2026-09-08T11:36:19Z",
+  "finished_utc": "2026-09-08T11:36:19Z",
+  "environment": {
+    "host": "DESKTOP-85DLGH4",
+    "user": "Mostafa",
+    "python": "3.14.2",
+    "platform": "Windows-10-10.0.19045-SP0"
+  },
+  "inputs": [
+    {
+      "path": "C:\\Users\\Mostafa\\AppData\\Local\\Temp\\pytest-of-Mostafa\\pytest-344\\test_cli_text0\\m.lime",
+      "exists": true,
+      "size": 393248,
+      "sha256": "8401b4cef723cf7a18df9af8d32a3c71e757219875fa78ff18fb616891732980",
+      "modified_utc": "2026-09-08T11:36:19Z"
+    }
+  ],
+  "outputs": [],
+  "warnings": [],
+  "warning_counts": {
+    "info": 0,
+    "partial": 0,
+    "unsupported": 0,
+    "error": 0
+  }
+}

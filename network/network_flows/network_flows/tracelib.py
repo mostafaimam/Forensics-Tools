@@ -453,14 +453,25 @@ def write_csv(rows, path, columns, ctx: RunContext | None = None, *,
 
 
 def write_json(rows, path, ctx: RunContext | None = None, *,
-               key: str = "records", confidence: str = "", tz: str = "") -> None:
+               key: str = "records", confidence: str = "", tz: str = "",
+               envelope: bool = False) -> None:
+    """Write *rows* as JSON.
+
+    By default a bare list is written (so existing consumers are
+    unaffected) and the run manifest is a ``<path>.manifest.json``
+    sidecar written by :meth:`RunContext.finish`.  Pass ``envelope=True``
+    to instead wrap the document as ``{"manifest": ..., "records": ...}``.
+    Either way, each record gains the provenance fields.
+    """
     recs = list(rows)
     if ctx is not None and ctx.enabled:
         recs = [_row_provenance(r, ctx, confidence, tz) for r in recs]
-        doc = {"manifest": ctx.manifest(), key: recs}
-    else:
-        doc = {key: recs}
-    Path(path).write_text(json.dumps(doc, indent=2), encoding="utf-8")
+        if envelope:
+            Path(path).write_text(
+                json.dumps({"manifest": ctx.manifest(), key: recs}, indent=2),
+                encoding="utf-8")
+            return
+    Path(path).write_text(json.dumps(recs, indent=2), encoding="utf-8")
 
 
 def write_manifest(ctx: RunContext, path) -> None:

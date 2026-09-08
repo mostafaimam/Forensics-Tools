@@ -7,7 +7,7 @@ import json
 import sys
 from pathlib import Path
 
-from memory_pslist import __version__
+from memory_pslist import __version__, tracelib
 from memory_pslist.loader import MemoryImage, MemoryImageError
 from memory_pslist.psscan import scan
 
@@ -53,6 +53,7 @@ def build_parser() -> argparse.ArgumentParser:
                    default="low")
     p.add_argument("--csv", type=Path)
     p.add_argument("--json", type=Path)
+    tracelib.add_arguments(p)
     p.add_argument("-q", "--quiet", action="store_true")
     return p
 
@@ -79,6 +80,15 @@ def main(argv: list[str] | None = None) -> int:
     if not a.image.exists():
         print(f"not found: {a.image}", file=sys.stderr)
         return 2
+
+    ctx = tracelib.context(a, "memory_pslist", __version__)
+    try:
+        ctx.limits.check_paths([str(a.image)])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
+    ctx.add_input(str(a.image))
+
     try:
         img = MemoryImage(a.image)
     except MemoryImageError as e:
@@ -107,16 +117,15 @@ def main(argv: list[str] | None = None) -> int:
         rows.append(_row(p))
 
     if a.csv:
-        with a.csv.open("w", encoding="utf-8-sig", newline="") as fh:
-            w = csv.DictWriter(fh, fieldnames=_COLUMNS, dialect="excel")
-            w.writeheader()
-            for r in rows:
-                w.writerow({k: _san(r.get(k, "")) for k in _COLUMNS})
+        tracelib.write_csv(rows, a.csv, _COLUMNS, ctx,
+                           confidence="heuristic", tz="utc-native")
     if a.json:
-        a.json.write_text(json.dumps(rows, indent=2))
+        tracelib.write_json(rows, a.json, ctx,
+                            confidence="heuristic", tz="utc-native")
     if not a.quiet and not (a.csv or a.json):
         print(_render(rows), end="")
 
+    _mpath = ctx.finish(outputs=[a.csv, a.json])
     exited = sum(1 for r in rows if r["exited"] == "yes")
     print(f"memory_pslist: {len(rows)} process(es), {exited} exited",
           file=sys.stderr)

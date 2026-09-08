@@ -79,26 +79,32 @@ def test_write_csv_injection_guard(tmp_path):
     assert "'=cmd()" in out.read_bytes().decode("utf-8-sig")
 
 
-def test_write_json_wraps_manifest(tmp_path):
+def test_write_json_bare_list_by_default_with_provenance_fields(tmp_path):
     ctx = tracelib.RunContext("t", "1", case_id="C1")
-    f = tmp_path / "in.txt"
-    f.write_text("x")
-    ctx.add_input(str(f))
     out = tmp_path / "o.json"
-    tracelib.write_json([{"a": 1, "source": "in.txt"}], out, ctx)
+    tracelib.write_json([{"a": 1, "source": "in.txt"}], out, ctx,
+                        confidence="high", tz="utc-native")
+    doc = json.loads(out.read_text())
+    assert isinstance(doc, list)                       # bare list, not wrapped
+    assert doc[0]["evidence_source"] == "in.txt"
+    assert doc[0]["parser_confidence"] == "high"
+    assert doc[0]["tz_provenance"] == "utc-native"
+
+
+def test_write_json_envelope_opt_in(tmp_path):
+    ctx = tracelib.RunContext("t", "1", case_id="C1")
+    out = tmp_path / "o.json"
+    tracelib.write_json([{"a": 1}], out, ctx, envelope=True)
     doc = json.loads(out.read_text())
     assert doc["manifest"]["case_id"] == "C1"
-    assert doc["manifest"]["inputs"][0]["sha256"]
-    assert doc["records"][0]["evidence_source"] == "in.txt"
+    assert doc["records"][0]["a"] == 1
 
 
 def test_write_json_no_provenance(tmp_path):
     ctx = tracelib.RunContext("t", "1", enabled=False)
     out = tmp_path / "o.json"
     tracelib.write_json([{"a": 1}], out, ctx)
-    doc = json.loads(out.read_text())
-    assert "manifest" not in doc
-    assert doc["records"] == [{"a": 1}]
+    assert json.loads(out.read_text()) == [{"a": 1}]
 
 
 def test_finish_writes_manifest_sidecar(tmp_path):

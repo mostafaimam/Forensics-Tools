@@ -4,10 +4,10 @@ import argparse
 import sys
 from pathlib import Path
 
-from memory_dlllist import __version__
+from memory_dlllist import __version__, tracelib
 from memory_dlllist.dlllist import scan
 from memory_dlllist.loader import MemoryImage, MemoryImageError
-from memory_dlllist.output import COLUMNS, render, row, write_csv, write_json
+from memory_dlllist.output import COLUMNS, render, row
 
 _ORDER = {"low": 0, "medium": 1, "high": 2}
 
@@ -47,6 +47,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--csv", type=Path)
     p.add_argument("--json", type=Path)
     p.add_argument("-q", "--quiet", action="store_true")
+    tracelib.add_arguments(p)
     return p
 
 
@@ -60,6 +61,14 @@ def main(argv: list[str] | None = None) -> int:
     if not a.image.exists():
         print(f"not found: {a.image}", file=sys.stderr)
         return 2
+
+    ctx = tracelib.context(a, "memory_dlllist", __version__)
+    try:
+        ctx.limits.check_paths([str(a.image)])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
+    ctx.add_input(str(a.image))
     try:
         img = MemoryImage(a.image)
     except MemoryImageError as e:
@@ -96,14 +105,17 @@ def main(argv: list[str] | None = None) -> int:
 
     rows = [row(m) for m in kept]
     if a.csv:
-        write_csv(rows, a.csv)
+        tracelib.write_csv(rows, a.csv, COLUMNS, ctx,
+                           confidence="heuristic", tz="utc-native")
     if a.json:
-        write_json(rows, a.json)
+        tracelib.write_json(rows, a.json, ctx,
+                            confidence="heuristic", tz="utc-native")
     if not a.quiet and not (a.csv or a.json):
         print(render(kept), end="")
 
     flagged = sum(1 for m in kept if m.notable)
     procs = len({m.pid for m in kept if m.pid})
+    _mpath = ctx.finish(outputs=[a.csv, a.json])
     print(f"memory_dlllist: {len(kept)} module(s) across {procs} process(es), "
           f"{flagged} flagged", file=sys.stderr)
     return 0 if kept else 1

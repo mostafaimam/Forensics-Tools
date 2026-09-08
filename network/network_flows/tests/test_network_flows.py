@@ -184,8 +184,9 @@ def test_provenance_manifest_and_columns(tmp_path):
     assert len(m["inputs"][0]["sha256"]) == 64
     assert m["outputs"][0]["sha256"]
     doc = _j.loads(js_p.read_text())
-    assert doc["manifest"]["evidence_id"] == "PCAP-01"
-    assert doc["records"][0]["parser_confidence"] == "medium"
+    assert isinstance(doc, list)
+    assert doc[0]["parser_confidence"] == "medium"
+    assert m["evidence_id"] == "PCAP-01"
 
 
 def test_resource_limit_rejects_big_input(tmp_path):

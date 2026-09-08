@@ -4,10 +4,10 @@ import argparse
 import sys
 from pathlib import Path
 
-from memory_svcscan import __version__
+from memory_svcscan import __version__, tracelib
 from memory_svcscan.analyze import scan
 from memory_svcscan.loader import MemoryImage, MemoryImageError
-from memory_svcscan.output import COLUMNS, render, row, write_csv, write_json
+from memory_svcscan.output import COLUMNS, render, row
 
 _ORDER = {"none": 0, "low": 1, "medium": 2, "high": 3}
 
@@ -47,6 +47,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--csv", type=Path)
     p.add_argument("--json", type=Path)
     p.add_argument("-q", "--quiet", action="store_true")
+    tracelib.add_arguments(p)
     return p
 
 
@@ -60,6 +61,14 @@ def main(argv: list[str] | None = None) -> int:
     if not a.image.exists():
         print(f"not found: {a.image}", file=sys.stderr)
         return 2
+
+    ctx = tracelib.context(a, "memory_svcscan", __version__)
+    try:
+        ctx.limits.check_paths([str(a.image)])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
+    ctx.add_input(str(a.image))
     try:
         img = MemoryImage(a.image)
     except MemoryImageError as e:
@@ -97,14 +106,17 @@ def main(argv: list[str] | None = None) -> int:
         kept.append(r)
 
     if a.csv:
-        write_csv([row(r) for r in kept], a.csv)
+        tracelib.write_csv([row(r) for r in kept], a.csv, COLUMNS,
+                           ctx, confidence="heuristic", tz="utc-native")
     if a.json:
-        write_json([row(r) for r in kept], a.json)
+        tracelib.write_json([row(r) for r in kept], a.json, ctx,
+                            confidence="heuristic", tz="utc-native")
     if not a.quiet and not (a.csv or a.json):
         print(render(kept), end="")
 
     flagged = sum(1 for r in kept if r.notable)
     running = sum(1 for r in kept if r.state == "RUNNING")
+    _mpath = ctx.finish(outputs=[a.csv, a.json])
     print(f"memory_svcscan: {len(kept)} service(s), {running} running, "
           f"{flagged} flagged", file=sys.stderr)
     return 0 if kept else 1

@@ -4,10 +4,10 @@ import argparse
 import sys
 from pathlib import Path
 
-from memory_netscan import __version__
+from memory_netscan import __version__, tracelib
 from memory_netscan.loader import MemoryImage, MemoryImageError
 from memory_netscan.netscan import scan
-from memory_netscan.output import COLUMNS, render, row, write_csv, write_json
+from memory_netscan.output import COLUMNS, render, row
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -47,6 +47,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--csv", type=Path)
     p.add_argument("--json", type=Path)
     p.add_argument("-q", "--quiet", action="store_true")
+    tracelib.add_arguments(p)
     return p
 
 
@@ -60,6 +61,14 @@ def main(argv: list[str] | None = None) -> int:
     if not a.image.exists():
         print(f"not found: {a.image}", file=sys.stderr)
         return 2
+
+    ctx = tracelib.context(a, "memory_netscan", __version__)
+    try:
+        ctx.limits.check_paths([str(a.image)])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
+    ctx.add_input(str(a.image))
     try:
         img = MemoryImage(a.image)
     except MemoryImageError as e:
@@ -96,15 +105,18 @@ def main(argv: list[str] | None = None) -> int:
         rows.append(row(e))
 
     if a.csv:
-        write_csv(rows, a.csv)
+        tracelib.write_csv(rows, a.csv, COLUMNS, ctx,
+                           confidence="heuristic", tz="utc-native")
     if a.json:
-        write_json(rows, a.json)
+        tracelib.write_json(rows, a.json, ctx,
+                            confidence="heuristic", tz="utc-native")
     if not a.quiet and not (a.csv or a.json):
         print(render(rows), end="")
 
     tcp = sum(1 for r in rows if r["proto"] == "TCP")
     udp = len(rows) - tcp
     named = sum(1 for r in rows if r["process"])
+    _mpath = ctx.finish(outputs=[a.csv, a.json])
     print(f"memory_netscan: {len(rows)} endpoint(s) - {tcp} TCP, {udp} UDP, "
           f"{named} with an owning process", file=sys.stderr)
     return 0 if rows else 1

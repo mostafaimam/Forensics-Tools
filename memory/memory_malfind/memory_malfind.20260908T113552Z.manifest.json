@@ -1,0 +1,38 @@
+{
+  "schema": "forensics-tools/run-manifest/1",
+  "tool": "memory_malfind",
+  "tool_version": "0.1.0",
+  "command_line": [
+    "C:\\Users\\Mostafa\\AppData\\Local\\Programs\\Python\\Python314\\Lib\\site-packages\\pytest\\__main__.py",
+    "-q"
+  ],
+  "case_id": "",
+  "examiner": "",
+  "evidence_id": "",
+  "notes": "",
+  "started_utc": "2026-09-08T11:35:52Z",
+  "finished_utc": "2026-09-08T11:35:52Z",
+  "environment": {
+    "host": "DESKTOP-85DLGH4",
+    "user": "Mostafa",
+    "python": "3.14.2",
+    "platform": "Windows-10-10.0.19045-SP0"
+  },
+  "inputs": [
+    {
+      "path": "C:\\Users\\Mostafa\\AppData\\Local\\Temp\\pytest-of-Mostafa\\pytest-341\\test_cli_text_and_exit0\\m.lime",
+      "exists": true,
+      "size": 131104,
+      "sha256": "04670e45dd5b589a5e7cb7ce4c994fa83ac1311e6356cdd62110ae93b0c9e0be",
+      "modified_utc": "2026-09-08T11:35:52Z"
+    }
+  ],
+  "outputs": [],
+  "warnings": [],
+  "warning_counts": {
+    "info": 0,
+    "partial": 0,
+    "unsupported": 0,
+    "error": 0
+  }
+}

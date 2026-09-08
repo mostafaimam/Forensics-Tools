@@ -216,11 +216,12 @@ def test_provenance_manifest_and_columns(tmp_path):
     assert m["inputs"][0]["path"].endswith("c.pcap")
     assert len(m["inputs"][0]["sha256"]) == 64
     assert m["outputs"][0]["sha256"]                       # output hashed
-    # JSON manifest envelope + per-row provenance
+    # JSON: bare list of records, each with provenance fields; manifest sidecar
     doc = json.loads(js_p.read_text())
-    assert doc["manifest"]["evidence_id"] == "EV-3"
-    assert doc["records"][0]["parser_confidence"] == "medium"
-    assert doc["records"][0]["tz_provenance"] == "utc-native"
+    assert isinstance(doc, list)
+    assert doc[0]["parser_confidence"] == "medium"
+    assert doc[0]["tz_provenance"] == "utc-native"
+    assert m["evidence_id"] == "EV-3"
 
 
 def test_no_provenance_flag(tmp_path):
@@ -228,7 +229,7 @@ def test_no_provenance_flag(tmp_path):
     js_p = tmp_path / "n.json"
     main([str(cap), "--json", str(js_p), "-q", "--no-provenance"])
     doc = json.loads(js_p.read_text())
-    assert "manifest" not in doc
+    assert isinstance(doc, list)
     assert not (tmp_path / "n.json.manifest.json").exists()
 
 
