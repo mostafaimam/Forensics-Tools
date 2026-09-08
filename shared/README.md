@@ -130,7 +130,11 @@ def test_fuzz_pcap(tmp_path):
 
 ## Status
 
-`tracelib` is adopted in all six `network/` tools and all nine `browser/`
-tools. Roll-out to `memory/`, `analysis/`, `windows/`, `linux/`, `macos/` and
-the rest is in progress; a tool without it still emits UTC-only,
-injection-safe CSV/JSON — it just does not yet write a manifest.
+`tracelib` is adopted in **47 tools** — every parser and analysis tool in
+`network/`, `browser/`, `memory/`, `windows/`, `linux/`, `macos/`,
+`analysis/` and `recovery/`. The `acquisition_*` tools and `mounting_image`
+are deliberately excluded: they already implement chain-of-custody
+manifests, `--case` / `--examiner` and streaming hashing by design.
+
+`fuzzlib` is wired into `network_pcap`, `network_flows`, `browser_sessions`
+and `browser_cache`.
