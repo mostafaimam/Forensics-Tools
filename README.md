@@ -550,6 +550,18 @@ Every tool writes UTC ISO-8601 **CSV** (UTF-8-BOM, formula-injection-safe) and
 - **GUI where it helps** — GUI-bearing tools ship a stdlib `tkinter` window
   *and* a self-contained HTML view; the CLI always works headless.
 
+### Chain of custody ([`shared/tracelib`](shared/))
+
+Tools that have adopted `tracelib` (all of `network/` and `browser/` so far)
+write a `<output>.manifest.json` sidecar on every run — tool version, exact
+command line, `--case-id` / `--examiner` / `--evidence-id`, start/finish time
+in UTC, host, and the **SHA-256 of every input and output file**. Their CSV
+rows carry `evidence_source` / `parser_confidence` / `tz_provenance` columns
+and their JSON is wrapped as `{"manifest": …, "records": …}`.
+`--max-input-bytes` / `--max-records` / `--wall-seconds` bound a run against
+hostile or oversized evidence. `--no-provenance` opts out.
+[`shared/fuzzlib`](shared/) mutation-fuzzes the binary parsers.
+
 ---
 
 ## Getting started
