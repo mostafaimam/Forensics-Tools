@@ -4,7 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from analysis_index import __version__
+from analysis_index import __version__, tracelib
 from analysis_index.indexer import build
 from analysis_index.output import hit_rows, render, write_csv, write_json
 from analysis_index.query import QueryError, search
@@ -37,6 +37,7 @@ def build_parser(search_only: bool = False) -> argparse.ArgumentParser:
     )
     p.add_argument("--version", action="version",
                    version=f"analysis_index {__version__}")
+    tracelib.add_arguments(p)
     sub = p.add_subparsers(dest="cmd")
 
     if not search_only:
@@ -73,6 +74,14 @@ def build_parser(search_only: bool = False) -> argparse.ArgumentParser:
 
 
 def _cmd_build(a) -> int:
+    ctx = tracelib.context(a, "analysis_index", __version__)
+    try:
+        ctx.limits.check_paths([str(p) for p in a.paths])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
+    for p in a.paths:
+        ctx.add_input(str(p))
     idx = Index(a.index, create=True)
     idx.set_meta("tool", "analysis_index")
     paths = [str(p) for p in a.paths]
@@ -88,6 +97,7 @@ def _cmd_build(a) -> int:
     idx.close()
     if not a.quiet:
         sys.stderr.write("\r")
+    ctx.finish(outputs=[a.index])
     print(f"analysis_index: {res['added']} added, {res['updated']} updated, "
           f"{res['skipped']} unchanged", file=sys.stderr)
     return 0
@@ -146,13 +156,18 @@ def _cmd_search(a) -> int:
         idx.close()
         return 2
     idx.close()
+    ctx = tracelib.context(a, "analysis_index", __version__)
+    ctx.add_input(str(a.index))
     rows = list(hit_rows(hits))
     if a.csv:
-        write_csv(rows, a.csv)
+        tracelib.write_csv(rows, a.csv, list(rows[0].keys()) if rows else [],
+                           ctx, confidence="high", tz="no-timezone")
     if a.json:
-        write_json(rows, a.json)
+        tracelib.write_json(rows, a.json, ctx,
+                            confidence="high", tz="no-timezone")
     if not a.quiet and not (a.csv or a.json):
         print(render(hits, show_snippets=not a.no_snippets), end="")
+    ctx.finish(outputs=[a.csv, a.json])
     print(f"analysis_index: {len(hits)} matching document(s)", file=sys.stderr)
     return 0 if hits else 1
 

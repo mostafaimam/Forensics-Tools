@@ -4,7 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from analysis_view import __version__
+from analysis_view import __version__, tracelib
 from analysis_view.filters import apply_filters, apply_search, apply_sort
 from analysis_view.htmlview import build_html
 from analysis_view.model import Review, Table
@@ -60,6 +60,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--export", type=Path, metavar="FILE",
                    help="export the current view as CSV (or .json)")
     p.add_argument("-q", "--quiet", action="store_true")
+    tracelib.add_arguments(p)
     return p
 
 
@@ -75,6 +76,17 @@ def main(argv: list[str] | None = None) -> int:
     if a.gui:
         from analysis_view.gui import run_gui
         return run_gui([str(p) for p in a.paths], review=a.review)
+
+    ctx = tracelib.context(a, "analysis_view", __version__)
+    try:
+        ctx.limits.check_paths([str(p) for p in a.paths])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
+    for p in a.paths:
+        ctx.add_input(str(p))
+    if a.review and Path(a.review).exists():
+        ctx.add_input(str(a.review))
 
     try:
         table = Table.from_paths([str(p) for p in a.paths], delim=a.delim,
@@ -106,6 +118,7 @@ def main(argv: list[str] | None = None) -> int:
     if not (a.html or a.export) and not a.quiet:
         print(render_table(rows, cols), end="")
 
+    ctx.finish(outputs=[a.html, a.export])
     print(f"analysis_view: {len(table.rows)} rows from {len(table.sources)} "
           f"source(s) -> {len(rows)} after filters", file=sys.stderr)
     return 0 if rows else 1

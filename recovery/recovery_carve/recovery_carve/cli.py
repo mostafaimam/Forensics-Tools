@@ -5,7 +5,7 @@ import sys
 import time
 from pathlib import Path
 
-from recovery_carve import __version__
+from recovery_carve import __version__, tracelib
 from recovery_carve.output import Writer
 from recovery_carve.scanner import ScanOptions, Source, scan
 from recovery_carve.signatures import all_signatures, select
@@ -65,6 +65,7 @@ def build_parser() -> argparse.ArgumentParser:
     tune.add_argument("--manifest-only", action="store_true",
                       help="do not write recovered files, only the manifest")
     tune.add_argument("-q", "--quiet", action="store_true")
+    tracelib.add_arguments(p)
     return p
 
 
@@ -85,6 +86,14 @@ def main(argv: list[str] | None = None) -> int:
     if not src_path.exists():
         print(f"error: source not found: {src_path}", file=sys.stderr)
         return 2
+
+    ctx = tracelib.context(args, "recovery_carve", __version__)
+    try:
+        ctx.limits.check_paths([str(src_path)])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
+    ctx.add_input(str(src_path))
 
     bad = [h for h in args.hashes if h.lower() not in _HASHES]
     if bad:
@@ -133,7 +142,11 @@ def main(argv: list[str] | None = None) -> int:
     print(f"recovery_carve {__version__}: {writer.count} object(s), "
           f"{writer.bytes:,} bytes carved from {src.size:,}-byte source",
           file=sys.stderr)
-    print(f"  manifest: {args.out / 'recovery_carve_manifest.csv'}", file=sys.stderr)
+    _cm = args.out / "recovery_carve_manifest.csv"
+    print(f"  manifest: {_cm}", file=sys.stderr)
+    _rm = ctx.finish(outputs=[_cm if _cm.exists() else None])
+    if _rm:
+        print(f"  run manifest: {_rm}", file=sys.stderr)
     return 0
 
 

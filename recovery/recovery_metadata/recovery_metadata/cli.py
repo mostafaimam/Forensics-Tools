@@ -5,7 +5,7 @@ import logging
 import sys
 from pathlib import Path
 
-from recovery_metadata import __version__
+from recovery_metadata import __version__, tracelib
 from recovery_metadata.ntfs import NotNtfsError, NtfsVolume
 from recovery_metadata.output import extract_tree, render_table, write_listing_csv
 
@@ -66,6 +66,7 @@ def build_parser() -> argparse.ArgumentParser:
     cat = sub.add_parser("cat", parents=[common],
                          help="write one entry's data to stdout")
     cat.add_argument("--entry", type=int, required=True)
+    tracelib.add_arguments(p)
     return p
 
 
@@ -90,6 +91,15 @@ def main(argv: list[str] | None = None) -> int:
     if not args.image.exists():
         log.error("image not found: %s", args.image)
         return 2
+
+    ctx = tracelib.context(args, "recovery_metadata", __version__)
+    try:
+        ctx.limits.check_paths([str(args.image)])
+    except tracelib.LimitExceeded as e:
+        log.error("resource limit: %s", e)
+        return 3
+    ctx.add_input(str(args.image))
+
     try:
         vol = _open(args.image, args.offset)
     except NotNtfsError as e:
@@ -131,6 +141,7 @@ def main(argv: list[str] | None = None) -> int:
             print(render_table(vol, entries, args.max_table))
         deleted = sum(1 for e in entries if e.deleted)
         log.info("%d entries (%d deleted)", len(entries), deleted)
+        ctx.finish(outputs=[getattr(args, "csv", None)])
         return 0
 
     if args.cmd == "extract":

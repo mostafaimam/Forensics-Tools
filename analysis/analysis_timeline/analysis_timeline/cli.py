@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 from analysis_timeline import __version__
+from analysis_timeline import tracelib
 from analysis_timeline.adapters import AdapterConfig, iter_events
 from analysis_timeline.htmlview import write_html
 from analysis_timeline.output import (
@@ -85,6 +86,7 @@ def build_parser() -> argparse.ArgumentParser:
                      help="allow bare Unix epoch seconds / ms in time fields")
     gen.add_argument("--assume-host", metavar="NAME")
     gen.add_argument("--no-recurse", action="store_true")
+    tracelib.add_arguments(p)
     return p
 
 
@@ -134,6 +136,15 @@ def main(argv: list[str] | None = None) -> int:
     if not files:
         print("error: no input files found", file=sys.stderr)
         return 2
+
+    ctx = tracelib.context(args, "analysis_timeline", __version__)
+    try:
+        ctx.limits.check_paths([str(f) for f in files])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
+    for f in files:
+        ctx.add_input(str(f))
 
     for f in files:
         if not f.exists():
@@ -187,6 +198,9 @@ def main(argv: list[str] | None = None) -> int:
     if not args.quiet:
         print(render_table(events, args.max_table))
 
+    for _w in warnings:
+        ctx.warn("partial", "adapter-warning", _w)
+    ctx.finish(outputs=[args.csv, args.jsonl, args.bodyfile, args.html])
     print(f"analysis_timeline {__version__}: {len(events)} events from "
           f"{len(files)} file(s), {len(warnings)} warning(s)", file=sys.stderr)
     for w in warnings[:20]:

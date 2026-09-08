@@ -5,7 +5,7 @@ import logging
 import sys
 from pathlib import Path
 
-from windows_mft import __version__
+from windows_mft import __version__, tracelib
 from windows_mft.ntfs import iter_usn
 from windows_mft.ntfs.mft import open_mft
 from windows_mft.output import (
@@ -81,10 +81,18 @@ def build_parser() -> argparse.ArgumentParser:
     c.add_argument("--stream", default="", help="ADS name (default: unnamed)")
 
     sub.add_parser("gui", help="open the graphical $MFT browser")
+    tracelib.add_arguments(p)
     return p
 
 
 def _cmd_mft(args, log) -> int:
+    ctx = tracelib.context(args, "windows_mft", __version__)
+    try:
+        ctx.limits.check_paths([str(args.source)])
+    except tracelib.LimitExceeded as e:
+        log.error("resource limit: %s", e)
+        return 3
+    ctx.add_input(str(args.source))
     try:
         mft = open_mft(args.source, args.offset)
     except ValueError as e:
@@ -119,10 +127,18 @@ def _cmd_mft(args, log) -> int:
     stomped = sum(1 for e in entries if e.timestomp.any)
     log.info("%d entries (%d deleted, %d with timestamp anomalies)",
              len(entries), deleted, stomped)
+    ctx.finish(outputs=[getattr(args, 'csv', None), getattr(args, 'json', None), getattr(args, 'bodyfile', None), getattr(args, 'out', None)])
     return 0
 
 
 def _cmd_usn(args, log) -> int:
+    ctx = tracelib.context(args, "windows_mft", __version__)
+    try:
+        ctx.limits.check_paths([str(args.source)])
+    except tracelib.LimitExceeded as e:
+        log.error("resource limit: %s", e)
+        return 3
+    ctx.add_input(str(args.source))
     try:
         data = args.source.read_bytes()
     except OSError as e:
@@ -144,10 +160,18 @@ def _cmd_usn(args, log) -> int:
             print(f"{iso_utc(r.timestamp):27} {r.usn:>12} {r.name:40} "
                   f"{'; '.join(r.reason_names())}")
     log.info("%d USN records", len(records))
+    ctx.finish(outputs=[getattr(args, 'csv', None), getattr(args, 'json', None), getattr(args, 'bodyfile', None), getattr(args, 'out', None)])
     return 0
 
 
 def _cmd_cat(args, log) -> int:
+    ctx = tracelib.context(args, "windows_mft", __version__)
+    try:
+        ctx.limits.check_paths([str(args.source)])
+    except tracelib.LimitExceeded as e:
+        log.error("resource limit: %s", e)
+        return 3
+    ctx.add_input(str(args.source))
     try:
         mft = open_mft(args.source, args.offset)
     except (ValueError, OSError) as e:
@@ -162,6 +186,7 @@ def _cmd_cat(args, log) -> int:
         log.error("entry %d not found", args.entry)
         return 2
     sys.stdout.buffer.write(mft.read_stream(target, args.stream))
+    ctx.finish(outputs=[getattr(args, 'csv', None), getattr(args, 'json', None), getattr(args, 'bodyfile', None), getattr(args, 'out', None)])
     return 0
 
 

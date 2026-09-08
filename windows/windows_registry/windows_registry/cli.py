@@ -5,7 +5,7 @@ import re
 import sys
 from pathlib import Path
 
-from windows_registry import __version__
+from windows_registry import __version__, tracelib
 from windows_registry.hive import HiveError, RegistryHive, to_text
 from windows_registry.output import (
     iter_dump_rows,
@@ -78,6 +78,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     g = sub.add_parser("gui", help="open the graphical hive browser")
     g.add_argument("hive", type=Path, nargs="?")
+    tracelib.add_arguments(p)
     return p
 
 
@@ -92,6 +93,13 @@ def _open(path: Path) -> RegistryHive:
 
 
 def _cmd_dump(a, log) -> int:
+    ctx = tracelib.context(a, "windows_registry", __version__)
+    try:
+        ctx.limits.check_paths([str(a.hive)])
+    except tracelib.LimitExceeded as e:
+        log.error("resource limit: %s", e)
+        return 3
+    ctx.add_input(str(a.hive))
     hive = _open(a.hive)
     start = hive.get(a.under) if a.under else hive.root()
     if start is None:
@@ -110,10 +118,18 @@ def _cmd_dump(a, log) -> int:
     deleted = sum(1 for k in keys if k.deleted)
     print(f"windows_registry: {len(keys)} keys ({deleted} recovered), "
           f"{len(rows)} rows", file=sys.stderr)
+    ctx.finish(outputs=[getattr(a, 'csv', None), getattr(a, 'json', None), getattr(a, 'out', None)])
     return 0
 
 
 def _cmd_key(a, log) -> int:
+    ctx = tracelib.context(a, "windows_registry", __version__)
+    try:
+        ctx.limits.check_paths([str(a.hive)])
+    except tracelib.LimitExceeded as e:
+        log.error("resource limit: %s", e)
+        return 3
+    ctx.add_input(str(a.hive))
     hive = _open(a.hive)
     key = hive.get(a.path)
     if key is None:
@@ -124,10 +140,18 @@ def _cmd_key(a, log) -> int:
             print(render_key(hive, k))
     else:
         print(render_key(hive, key))
+    ctx.finish(outputs=[getattr(a, 'csv', None), getattr(a, 'json', None), getattr(a, 'out', None)])
     return 0
 
 
 def _cmd_search(a, log) -> int:
+    ctx = tracelib.context(a, "windows_registry", __version__)
+    try:
+        ctx.limits.check_paths([str(a.hive)])
+    except tracelib.LimitExceeded as e:
+        log.error("resource limit: %s", e)
+        return 3
+    ctx.add_input(str(a.hive))
     hive = _open(a.hive)
     try:
         rx = re.compile(a.pattern, re.IGNORECASE)
@@ -155,10 +179,18 @@ def _cmd_search(a, log) -> int:
         for h in hits[:500]:
             print(f"{h['match']:<11} {h['key_path']}  ::  {h['detail']}")
     print(f"windows_registry: {len(hits)} match(es)", file=sys.stderr)
+    ctx.finish(outputs=[getattr(a, 'csv', None), getattr(a, 'json', None), getattr(a, 'out', None)])
     return 0 if hits else 1
 
 
 def _cmd_plugin(a, log) -> int:
+    ctx = tracelib.context(a, "windows_registry", __version__)
+    try:
+        ctx.limits.check_paths([str(a.hive)])
+    except tracelib.LimitExceeded as e:
+        log.error("resource limit: %s", e)
+        return 3
+    ctx.add_input(str(a.hive))
     if a.plugin_dir:
         try:
             added = load_external(a.plugin_dir)
@@ -201,6 +233,7 @@ def _cmd_plugin(a, log) -> int:
     if a.json:
         write_json([{**{"_plugin": n}, **r} for n, rs in allrows.items()
                     for r in rs], a.json)
+    ctx.finish(outputs=[getattr(a, 'csv', None), getattr(a, 'json', None), getattr(a, 'out', None)])
     return 0
 
 
