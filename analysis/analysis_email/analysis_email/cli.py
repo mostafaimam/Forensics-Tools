@@ -8,7 +8,7 @@ import json
 import sys
 from pathlib import Path
 
-from analysis_email import __version__
+from analysis_email import __version__, tracelib
 from analysis_email.formats import detect, parse_file
 
 _COLUMNS = ["source", "container", "index", "date", "delivered", "from_name",
@@ -69,10 +69,19 @@ def build_parser() -> argparse.ArgumentParser:
     sc.add_argument("-q", "--quiet", action="store_true")
     g = s.add_parser("gui", help="open the graphical viewer")
     g.add_argument("paths", nargs="*", type=str)
+    tracelib.add_arguments(p)
     return p
 
 
 def _cmd_scan(a) -> int:
+    ctx = tracelib.context(a, "analysis_email", __version__)
+    try:
+        ctx.limits.check_paths([str(p) for p in a.paths])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
+    for _p in a.paths:
+        ctx.add_input(str(_p))
     import re
     rx = re.compile(a.grep, re.IGNORECASE) if a.grep else None
     rows, errors, msgs = [], 0, 0
@@ -118,6 +127,8 @@ def _cmd_scan(a) -> int:
           f"{with_att} with attachments"
           + (f", {att_saved} attachment(s) saved" if a.attachments_dir else "")
           + (f", {errors} file error(s)" if errors else ""), file=sys.stderr)
+    ctx.finish(outputs=[a.csv, a.json])
+
     return 1 if flagged else 0
 
 

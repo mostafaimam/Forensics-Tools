@@ -4,7 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from analysis_kff import __version__
+from analysis_kff import __version__, tracelib
 from analysis_kff import importers
 from analysis_kff.output import render_table, row_dict, write_csv, write_json
 from analysis_kff.scan import Summary, scan_hash_list, scan_paths
@@ -72,6 +72,7 @@ def build_parser() -> argparse.ArgumentParser:
     sc.add_argument("--csv", type=Path)
     sc.add_argument("--json", type=Path)
     sc.add_argument("-q", "--quiet", action="store_true")
+    tracelib.add_arguments(p)
     return p
 
 
@@ -156,6 +157,14 @@ def _cmd_lookup(a) -> int:
 
 
 def _cmd_scan(a) -> int:
+    ctx = tracelib.context(a, "analysis_kff", __version__)
+    try:
+        ctx.limits.check_paths([str(p) for p in a.paths])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
+    for _p in a.paths:
+        ctx.add_input(str(_p))
     store = _store(a)
     if store.stats()["hashes"] == 0:
         print("the index is empty - import a hash set first", file=sys.stderr)
@@ -194,6 +203,8 @@ def _cmd_scan(a) -> int:
     parts = ", ".join(f"{k}={v}" for k, v in sorted(summary.counts.items()))
     print(f"analysis_kff: {summary.total} file(s) - {parts}", file=sys.stderr)
     alerts = summary.counts.get("known-bad", 0) + summary.counts.get("notable", 0)
+    ctx.finish(outputs=[a.csv, a.json])
+
     return 1 if alerts else 0
 
 

@@ -4,7 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from analysis_gallery import __version__
+from analysis_gallery import __version__, tracelib
 from analysis_gallery.output import (COLUMNS, render_table, row, write_csv,
                                      write_json)
 from analysis_gallery.report import write_html
@@ -67,10 +67,19 @@ def build_parser() -> argparse.ArgumentParser:
 
     gp = sub.add_parser("gui", help="open the graphical viewer")
     gp.add_argument("paths", nargs="*", type=Path)
+    tracelib.add_arguments(p)
     return p
 
 
 def _cmd_scan(a) -> int:
+    ctx = tracelib.context(a, "analysis_gallery", __version__)
+    try:
+        ctx.limits.check_paths([str(p) for p in a.paths])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
+    for _p in a.paths:
+        ctx.add_input(str(_p))
     for p in a.paths:
         if not p.exists():
             print(f"not found: {p}", file=sys.stderr)
@@ -122,6 +131,8 @@ def _cmd_scan(a) -> int:
     if res.errors:
         msg += f"; {res.errors} error(s)"
     print(msg, file=sys.stderr)
+    ctx.finish(outputs=[a.csv, a.json, getattr(a, 'html', None)])
+
     return 0 if files else 1
 
 

@@ -7,7 +7,7 @@ import json
 import sys
 from pathlib import Path
 
-from analysis_dedupe import __version__
+from analysis_dedupe import __version__, tracelib
 from analysis_dedupe.scan import load_hash_set, scan
 
 _COLUMNS = ["path", "size", "digest", "group", "representative",
@@ -74,10 +74,19 @@ def build_parser() -> argparse.ArgumentParser:
     sc.add_argument("-q", "--quiet", action="store_true")
     g = s.add_parser("gui", help="open the graphical viewer")
     g.add_argument("paths", nargs="*", type=str)
+    tracelib.add_arguments(p)
     return p
 
 
 def _cmd_scan(a) -> int:
+    ctx = tracelib.context(a, "analysis_dedupe", __version__)
+    try:
+        ctx.limits.check_paths([str(p) for p in a.paths])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
+    for _p in a.paths:
+        ctx.add_input(str(_p))
     baseline = None
     if a.against:
         if not a.against.exists():
@@ -128,6 +137,8 @@ def _cmd_scan(a) -> int:
         new = sum(1 for r in res.files if r.status == "new")
         msg += f", {new} not in baseline"
     print(msg, file=sys.stderr)
+    ctx.finish(outputs=[a.csv, a.json])
+
     return 0
 
 

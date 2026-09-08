@@ -8,7 +8,7 @@ import json
 import sys
 from pathlib import Path
 
-from analysis_encryption import __version__
+from analysis_encryption import __version__, tracelib
 from analysis_encryption.detect import CLEAR, analyse
 
 _COLUMNS = ["path", "size", "verdict", "scheme", "detail", "entropy", "evidence"]
@@ -71,6 +71,7 @@ def build_parser() -> argparse.ArgumentParser:
     sc.add_argument("-q", "--quiet", action="store_true")
     g = s.add_parser("gui", help="open the graphical viewer")
     g.add_argument("paths", nargs="*", type=str)
+    tracelib.add_arguments(p)
     return p
 
 
@@ -97,6 +98,15 @@ def main(argv: list[str] | None = None) -> int:
             print(f"not found: {p}", file=sys.stderr)
             return 2
 
+    ctx = tracelib.context(a, "analysis_encryption", __version__)
+    try:
+        ctx.limits.check_paths([str(p) for p in a.paths])
+    except tracelib.LimitExceeded as e:
+        print(f"resource limit: {e}", file=sys.stderr)
+        return 3
+    for p in a.paths:
+        ctx.add_input(str(p))
+
     rows = []
     n = 0
     for f in _iter([str(x) for x in a.paths], not a.no_recurse,
@@ -115,16 +125,15 @@ def main(argv: list[str] | None = None) -> int:
         sys.stderr.write("\r" + " " * 20 + "\r")
 
     if a.csv:
-        with a.csv.open("w", encoding="utf-8-sig", newline="") as fh:
-            w = csv.DictWriter(fh, fieldnames=_COLUMNS, dialect="excel")
-            w.writeheader()
-            for r in rows:
-                w.writerow({k: _san(r.get(k, "")) for k in _COLUMNS})
+        tracelib.write_csv(rows, a.csv, _COLUMNS, ctx,
+                           confidence="high", tz="no-timezone")
     if a.json:
-        a.json.write_text(json.dumps(rows, indent=2))
+        tracelib.write_json(rows, a.json, ctx,
+                            confidence="high", tz="no-timezone")
     if not a.quiet and not (a.csv or a.json):
         print(_render(rows), end="")
 
+    ctx.finish(outputs=[a.csv, a.json])
     by = {}
     for r in rows:
         if r["verdict"] != CLEAR:
