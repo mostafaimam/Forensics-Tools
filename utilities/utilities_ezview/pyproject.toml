@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "utilities_ezview"
+version = "0.1.0"
+description = "Zero-dependency content-sniffing viewer: text/log/csv/html/mhtml/rtf + best-effort docx/xlsx/pptx/doc/xls/pdf text extraction, hex fallback"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "viewer", "text extraction", "docx", "pdf", "rtf", "triage"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/utilities/utilities_ezview"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+utilities_ezview = "utilities_ezview.cli:main"
+[tool.setuptools]
+packages = ["utilities_ezview"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
