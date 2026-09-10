@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "macos_bt"
+version = "0.1.0"
+description = "parse com.apple.Bluetooth.plist: paired-device history with vendor / class-of-device / last-seen timestamps and input-device / covert-mic flags"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "macos", "bluetooth", "paired-devices", "hid"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/macos/macos_bt"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+macos_bt = "macos_bt.cli:main"
+[tool.setuptools]
+packages = ["macos_bt"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
