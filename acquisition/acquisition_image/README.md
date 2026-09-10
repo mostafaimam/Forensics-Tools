@@ -129,8 +129,8 @@ acquisition_image hash /dev/sdb
 - **UTC**, ISO-8601 timestamps in the log and manifest.
 - **Never abort on a bad sector** — zero-fill, log, keep going; the result is
   flagged "review".
-- **Independently verifiable** — the `E01` is plain EWF v1 and opens in
-  `mounting_image`, `libewf` (`ewfverify`), FTK Imager, X-Ways, etc.
+- **Independently verifiable** — the `E01` is plain Expert Witness Format v1
+  and opens in `mounting_image` and in any other tooling that reads EWF.
 
 ---
 

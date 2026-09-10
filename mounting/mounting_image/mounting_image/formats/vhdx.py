@@ -28,8 +28,7 @@ class VHDXImage(Image):
     def __init__(self, path: str | Path):
         raise ImageError(
             "VHDX read support is not implemented yet - convert the image "
-            "first (e.g. 'qemu-img convert -O raw disk.vhdx disk.raw') or "
-            "attach it read-only in Windows Disk Management")
+            "to raw first, or attach it read-only in Windows Disk Management")
 
     @property
     def size(self) -> int:  # pragma: no cover - constructor always raises

@@ -61,7 +61,7 @@ def build_parser() -> argparse.ArgumentParser:
     out.add_argument("--open", action="store_true",
                      help="open the --html file in a browser when done")
     out.add_argument("--bodyfile", metavar="FILE", type=Path,
-                     help="TSK 3.x bodyfile (for mactime)")
+                     help="3.x bodyfile format (pipe-delimited timeline)")
     out.add_argument("-q", "--quiet", action="store_true")
     out.add_argument("--max-table", type=int, default=200,
                      help="rows to print to the console (default 200)")

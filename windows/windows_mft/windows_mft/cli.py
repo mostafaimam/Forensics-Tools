@@ -55,7 +55,7 @@ def build_parser() -> argparse.ArgumentParser:
                         "disk/volume image rather than an extracted $MFT)")
     m.add_argument("--csv", type=Path)
     m.add_argument("--json", type=Path)
-    m.add_argument("--bodyfile", type=Path, help="TSK bodyfile ($SI times)")
+    m.add_argument("--bodyfile", type=Path, help="bodyfile format ($SI times)")
     m.add_argument("--deleted-only", action="store_true")
     m.add_argument("--files-only", action="store_true")
     m.add_argument("--timestomped-only", action="store_true")

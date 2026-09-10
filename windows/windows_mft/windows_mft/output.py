@@ -74,7 +74,7 @@ def write_mft_json(mft: Mft, entries: list[Entry], path: Path) -> None:
 
 
 def write_bodyfile(mft: Mft, entries: list[Entry], path: Path) -> None:
-    """TSK 3.x bodyfile using the $SI timestamps."""
+    """3.x bodyfile format using the $SI timestamps."""
     with path.open("w", encoding="utf-8", newline="\n") as fh:
         for e in entries:
             si = e.si

@@ -76,7 +76,7 @@ converted.
 | `--jsonl FILE` | one JSON object per event (keeps nested `extra`) |
 | `--html FILE` | **self-contained HTML viewer** — see below |
 | `--open` | open the `--html` file in a browser |
-| `--bodyfile FILE` | TSK 3.x bodyfile for `mactime` |
+| `--bodyfile FILE` | 3.x bodyfile format (pipe-delimited timeline input) |
 
 ### Filters (apply to every output)
 

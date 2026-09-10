@@ -40,7 +40,7 @@ def test_mft_bodyfile(tmp_path):
     main(["mft", str(p), "--bodyfile", str(out), "-q"])
     text = out.read_text()
     assert "hello.txt" in text
-    assert text.count("|") >= 10  # TSK bodyfile has 10 pipes per line
+    assert text.count("|") >= 10  # bodyfile format has 10 pipes per line
 
 
 def test_cat_ads(tmp_path, capsysbinary):

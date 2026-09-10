@@ -52,10 +52,10 @@ pip install -e .
 | Format | Support |
 |---|---|
 | raw / dd | ✅ single file and split sets (`.001/.002…`, `.aa/.ab…`) |
-| EWF / EnCase `E01` | ✅ EWF v1 (`EVF`), stored + zlib chunks, single or multi segment; reads case metadata |
+| EWF / Expert Witness `E01` | ✅ EWF v1 (`EVF`), stored + zlib chunks, single or multi segment; reads case metadata |
 | VHD | ✅ fixed and dynamic (`conectix` / `cxsparse`, BAT + block bitmaps) |
 | VMDK | ✅ monolithic & split **sparse** (`KDMV`), **flat** extents via the descriptor; stream-optimized (compressed) is detected and rejected with a message |
-| VHDX | ⚠️ detected only — convert first (`qemu-img convert -O raw`) or attach in Windows |
+| VHDX | ⚠️ detected only — convert it to raw first, or attach it in Windows |
 
 The format is sniffed from the header (and the VHD footer); `--format` forces
 it.
@@ -176,8 +176,8 @@ regions. Nothing is ever opened for writing.
 - **UTC**, ISO-8601 for any timestamps in metadata.
 - **Never crash on bad input.** A malformed table raises a clear `error:`; a
   short read zero-fills.
-- **Off-host.** Pure Python parsing — no `libewf`, no loop devices needed to
-  read.
+- **Off-host.** Pure Python parsing — no external EWF library, no loop devices
+  needed to read.
 
 ---
 
@@ -186,7 +186,7 @@ regions. Nothing is ever opened for writing.
 raw / split / EWF-v1 / VHD / VMDK-sparse / VMDK-flat and MBR / GPT are parsed
 and covered by the test suite, which builds a synthetic image in each format
 and checks a full byte round-trip (the dev box has no real acquired images —
-validation against `libewf` / `qemu-img` output is a to-do). The NBD **server
+validation against independent EWF / VMDK readers is a to-do). The NBD **server
 and client** protocol paths are tested over loopback; the Linux
 `/dev/nbdN` kernel-attach path is not unit-tested (no Linux on the dev box).
 Not yet done: VHDX, EWF v2 (`Ex01`), compressed/stream-optimized VMDK, AFF4,

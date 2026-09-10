@@ -48,7 +48,7 @@ windows_mft mft "$MFT" --timestomped-only --csv timestomped.csv
 | Switch | |
 |---|---|
 | `--csv` / `--json` | full listing |
-| `--bodyfile` | TSK 3.x bodyfile built from the `$SI` timestamps |
+| `--bodyfile` | 3.x bodyfile format, built from the `$SI` timestamps |
 | `--deleted-only` | records whose in-use flag is clear |
 | `--files-only` | skip directories |
 | `--timestomped-only` | only entries with a timestamp anomaly |

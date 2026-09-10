@@ -1,4 +1,4 @@
-"""Streaming EWF (EnCase ``.E01``) writer - EWF version 1."""
+"""Streaming EWF (Expert Witness Format, ``.E01``) writer - EWF version 1."""
 
 from __future__ import annotations
 

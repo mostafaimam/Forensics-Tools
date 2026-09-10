@@ -1,6 +1,6 @@
-"""EWF (Expert Witness Format / EnCase ``.E01``) - read-only.
+"""EWF (Expert Witness Format, ``.E01``) - read-only.
 
-Supports EWF version 1 (``EVF`` signature): the common EnCase 5/6 layout with
+Supports EWF version 1 (``EVF`` signature): the common v1 layout with
 zlib-compressed or stored 32 KiB / 64 KiB chunks, single or multi segment.
 """
 

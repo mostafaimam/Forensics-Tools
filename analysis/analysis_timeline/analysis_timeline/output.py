@@ -30,7 +30,7 @@ def write_jsonl(events: list[Event], path: Path) -> None:
 
 
 def write_bodyfile(events: list[Event], path: Path) -> None:
-    """TSK 3.x bodyfile: pipe-delimited, epoch seconds; type in the name."""
+    """3.x bodyfile format: pipe-delimited, epoch seconds; type in the name."""
     with path.open("w", encoding="utf-8", newline="\n") as fh:
         for e in events:
             epoch = int(e.timestamp.timestamp())
