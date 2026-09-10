@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "linux_sshkeys"
+version = "0.1.0"
+description = "review SSH authorized_keys / host keys / known_hosts / sshd_config: fingerprints, key options, weak keys, CA trust, permissive settings"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "linux", "ssh", "authorized_keys", "sshd_config", "persistence"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/linux/linux_sshkeys"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+linux_sshkeys = "linux_sshkeys.cli:main"
+[tool.setuptools]
+packages = ["linux_sshkeys"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
