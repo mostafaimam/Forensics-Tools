@@ -81,28 +81,28 @@ it will do. The full roadmap is tracked privately.
 | [**windows_mft**](windows/windows_mft/) | ✅ v0.1 | NTFS `$MFT` + `$UsnJrnl:$J` — full timeline, ADS listing, `$SI`/`$FN` timestomp detection; CSV / JSON / bodyfile; `tkinter` `$MFT` browser (`windows_mft gui`) |
 | [**windows_recycle**](windows/windows_recycle/) | ✅ v0.1 | Recycle Bin — Vista+ `$I` / `$R` and legacy `INFO2` / `INFO`; content matching; CSV / JSON |
 | [**windows_prefetch**](windows/windows_prefetch/) | ✅ v0.1 | Prefetch `.pf` v17-31, including the Windows 10/11 `MAM` / XPRESS-Huffman compressed format (pure-Python decompressor) |
-| [**windows_recentfilecache**](windows/windows_recentfilecache/) | 📋 planned | Parse RecentFileCache.bcf |
+| [**windows_recentfilecache**](windows/windows_recentfilecache/) | ✅ v0.1 | `RecentFileCache.bcf` (Win7 pre-Amcache) — length-prefixed UTF-16 executable paths with the file's own mtime as bound; flags writable-path / double-extension / script-type / LOLBin / UNC paths |
 | [**windows_shellbags**](windows/windows_shellbags/) | ✅ v0.1 | Reconstruct the shellbag folder-access tree from `BagMRU` / `Bags` (`UsrClass.dat` / `NTUSER.DAT`) — full paths, last-interacted times, `$MFT` refs, `MRUListEx` order; flags removable / network / archive / other-profile paths · GUI |
 | [**windows_srum**](windows/windows_srum/) | ✅ v0.1 | `SRUDB.dat` → per-app hourly timeline: network bytes sent / received per interface, connected time, CPU cycle time + disk bytes, energy, push notifications; resolves `AppId` / `UserId` via `SruDbIdMapTable` to the exe path + user SID |
-| [**windows_sum**](windows/windows_sum/) | 📋 planned | Parse the Microsoft User Access Logs (SUM) |
+| [**windows_sum**](windows/windows_sum/) | ✅ v0.1 | Microsoft User Access Logging (SUM) — `SystemIdentity.mdb` role-GUID map + `Current.mdb` / `{GUID}.mdb` role databases → one row per (user, client, role) access: authenticated user, client name / decoded IP, first / last seen, totals and the `DayN` columns expanded to a per-day date histogram; flags public-IP access, RDP-from-internet, single-day spikes |
 | [**windows_timeline**](windows/windows_timeline/) | ✅ v0.1 | Windows 10/11 Timeline (`ActivitiesCache.db`) — app / file / clipboard / copy-paste / notification activity with UTC times, resolved app, **decoded clipboard payloads** and `ActivityOperation` (removed-activity) rows |
 | [**windows_sqlmap**](windows/windows_sqlmap/) | 📋 planned | Locate SQLite databases in a target and process them with named maps |
 | [**windows_esedb**](windows/windows_esedb/) | ✅ v0.1 | From-scratch ESE / JET (`.edb`) reader — header, catalog (`MSysObjects`), B-trees, long values, fixed / variable / tagged records (Vista+ extended tagged, 7-bit compression); the engine behind `windows_srum` / `windows_webcache` |
 | [**windows_usn**](windows/windows_usn/) | ✅ v0.1 | Standalone `$UsnJrnl:$J` parser **and carver** — sequential walk + `USN_RECORD` carving from unallocated space, folded into create / rename / delete / data-write operations; `--mft` resolves paths |
-| [**windows_sdb**](windows/windows_sdb/) | 📋 planned | Parse application shim databases (.sdb) · GUI |
-| [**windows_wer**](windows/windows_wer/) | 📋 planned | Parse Windows Error Reporting (.wer) reports |
-| [**windows_bits**](windows/windows_bits/) | 📋 planned | Parse the BITS transfer history (qmgr.db / qmgr*.dat) |
+| [**windows_sdb**](windows/windows_sdb/) | ✅ v0.1 | Application Compatibility shim databases (`.sdb`) — tag-tree parse listing the database (name, GUID, time), shims, patches and every EXE entry with its matching files / shim / patch refs; flags `InjectDll` / `RedirectEXE` / `CorrectFilePaths` / custom-patch persistence and shims aimed at system binaries · GUI |
+| [**windows_wer**](windows/windows_wer/) | ✅ v0.1 | Windows Error Reporting `.wer` reports → one row per crash / hang: faulting application + full path + version, faulting module, exception code / offset, event time, signature; flags faults in binaries / modules under writable paths, LOLBin crashes and BEX / DEP / exploit-shaped codes |
+| [**windows_bits**](windows/windows_bits/) | ✅ v0.1 | BITS transfer history — carves download / upload jobs (URL, local path, scratch file, owner SID, type / state, byte counts, create / modify FILETIMEs) from legacy `qmgr0/1.dat` and the ESE `qmgr.db`; flags raw-IP URLs, executable payloads, system-dir destinations, upload jobs and updater-mimic job names |
 | [**windows_tasks**](windows/windows_tasks/) | ✅ v0.1 | Scheduled Tasks — Tasks XML joined with the `TaskCache\{Tree,Tasks}` registry: triggers (plain language), actions, principal, hidden flag, `DynamicInfo` registered / last-run times; flags LOLBins, writable / UNC action paths, encoded PowerShell, hidden and registry-only tasks |
-| [**windows_wmi**](windows/windows_wmi/) | 📋 planned | Parse the WMI repository for persistence (OBJECTS.DATA / INDEX.BTR) |
-| [**windows_defender**](windows/windows_defender/) | 📋 planned | Parse Microsoft Defender logs, detection history and quarantine |
-| [**windows_pslogging**](windows/windows_pslogging/) | 📋 planned | PowerShell forensics: ScriptBlock, Module logging and transcripts |
+| [**windows_wmi**](windows/windows_wmi/) | ✅ v0.1 | WMI repository persistence — string-level scan of `OBJECTS.DATA` for the `__EventFilter` / `*EventConsumer` / `__FilterToConsumerBinding` triad (WQL query, consumer action, namespace), using `MAPPING*.MAP` to tell live pages from stale; flags LOLBin / encoded / writable-path consumers, in-memory script consumers and non-default namespaces |
+| [**windows_defender**](windows/windows_defender/) | ✅ v0.1 | Microsoft Defender — one detection timeline from MPLog, the Windows Defender Operational log (1116/1117, 1006-1011, 5001/5004/5007/5010 tamper), the RC4-obfuscated Quarantine store (threat, original path, time, hash; `--extract` unwraps `ResourceData`) and `SOFTWARE`-hive exclusions + protection switches; flags whole-drive / writable-path / LOLBin exclusions and RTP tampering |
+| [**windows_pslogging**](windows/windows_pslogging/) | ✅ v0.1 | PowerShell forensics — reassembles Script Block Logging (4104) across its multi-part records, pulls Module logging (4103) + classic 400/500/600 events + `PowerShell_transcript.*`; recursively decodes `-EncodedCommand` / `FromBase64String` / gzip+base64 payloads; flags download cradles, AMSI / ETW bypass, reflective load, reverse shells, credential access, obfuscation |
 | [**windows_usbdevices**](windows/windows_usbdevices/) | ✅ v0.1 | Removable-device history correlated across `SYSTEM` (`USBSTOR` / `USB` / `MountedDevices` + install / arrival / removal FILETIMEs), `SOFTWARE` (friendly volume name) and `setupapi.dev.log` (first-seen) — one row per device |
 | [**windows_webcache**](windows/windows_webcache/) | ✅ v0.1 | `WebCacheV01.dat` (the WinINET store) — history / cookies / cached content / downloads / DOM storage with un-prefixed URLs and modified / accessed / expiry FILETIMEs; flags exe fetches, IP-literal / punycode hosts, paste / tunnel sites |
 | [**windows_thumbcache**](windows/windows_thumbcache/) | ✅ v0.1 | `thumbcache_*.db` + `thumbcache_idx.db` — list every cached thumbnail (id, identifier, format, dimensions, source last-modified) and `--extract` them all as image files: evidence of pictures no longer on disk |
 | [**windows_notifications**](windows/windows_notifications/) | ✅ v0.1 | `wpndatabase.db` — toast / tile / badge / raw notification history joined to the raising application, with arrival / expiry times and the notification text extracted from the payload XML |
 | [**windows_bam**](windows/windows_bam/) | ✅ v0.1 | Background / Desktop Activity Moderator — per-user last-execution time for every program from `SYSTEM\…\bam` / `dam` `UserSettings\<SID>`; flags writable-path / LOLBin / masquerade binaries |
-| [**windows_spooler**](windows/windows_spooler/) | 📋 planned | Parse print-spool artefacts (.spl / .shd) |
-| [**windows_logfile**](windows/windows_logfile/) | 📋 planned | Analyse the NTFS $LogFile transaction log |
+| [**windows_spooler**](windows/windows_spooler/) | ✅ v0.1 | Print-spool artefacts — pairs `.shd` job headers with `.spl` spool data → owner, source machine, document name, printer, driver, submit time (offset table + `SYSTEMTIME` scan) and the `.spl` payload format (EMF / XPS / PostScript / PCL / PDF / raw) with a page count; `--extract` copies payloads out; flags sensitive document names and owner/machine mismatch |
+| [**windows_logfile**](windows/windows_logfile/) | ✅ v0.1 | NTFS `$LogFile` — reads RSTR / RCRD pages (applying the USA), decodes the redo/undo operations and pulls the `FILE_NAME` attribute out of index-entry ops to reconstruct file created / deleted / renamed, MFT record init / free and resident-value updates with parent MFT ref, `$FILE_NAME` timestamps and size; flags create+delete twins, `$FILE_NAME` timestomping, executable deletions, ADS names |
 | [**windows_sigma**](windows/windows_sigma/) | 📋 planned | Lightweight detection-rules engine over parsed event data |
 
 ### `analysis/`
@@ -317,9 +317,11 @@ flowchart TD
     D --> E["windows_prefetch ✅ · windows_shimcache ✅ · windows_amcache ✅ — execution evidence"]
     E --> BAM["windows_bam ✅ — per-user last-run · windows_usbdevices ✅ — USB history · windows_srum ✅ — per-app network bytes / hour"]
     BAM --> TS["windows_tasks ✅ — Tasks XML + TaskCache → triggers, actions, last-run · windows_shellbags ✅ — folders browsed"]
-    TS --> F["windows_lnk ✅ · windows_jumplist ✅ · windows_recycle ✅ · windows_timeline ✅ · windows_thumbcache ✅ — opened files, activity, pictures"]
-    F --> G["windows_evtx ✅ — logon, service install, 4688, PowerShell 4104 · windows_webcache ✅ · windows_notifications ✅"]
-    G --> H["memory/* — pslist ✅ · netscan ✅ · malfind ✅ · dlllist ✅ · cmdline ✅ · svcscan ✅ · strings ✅ · in-memory hives ⏳ · hashdump ⏳"]
+    TS --> WMI["windows_wmi ✅ — __EventFilter/__Consumer/__Binding triad · windows_sdb ✅ — InjectDll / RedirectEXE / custom-patch shims · windows_bits ✅ — download / upload jobs"]
+    WMI --> F["windows_lnk ✅ · windows_jumplist ✅ · windows_recycle ✅ · windows_timeline ✅ · windows_thumbcache ✅ · windows_recentfilecache ✅ · windows_spooler ✅ — opened files, activity, pictures, print jobs"]
+    F --> G["windows_evtx ✅ — logon, service install, 4688 · windows_pslogging ✅ — reassembled + decoded 4104/4103/transcripts · windows_defender ✅ — MPLog + detections + quarantine + exclusions · windows_wer ✅ — crash = execution evidence · windows_webcache ✅"]
+    G --> LF["windows_logfile ✅ — $LogFile redo/undo → create / delete / rename / timestomp · windows_sum ✅ — server-role access by user + client IP"]
+    LF --> H["memory/* — pslist ✅ · netscan ✅ · malfind ✅ · dlllist ✅ · cmdline ✅ · svcscan ✅ · strings ✅ · in-memory hives ⏳ · hashdump ⏳"]
     H --> I["analysis_timeline ✅ — merge every output into one sorted UTC timeline"]
     I --> J["analysis_view ✅ (filter · tag · annotate) -> analysis_report ✅ · analysis_gallery ✅"]
 ```
@@ -385,15 +387,39 @@ flowchart TD
    timestamps); `windows_recycle` (deleted file's original path, size,
    deletion time, and the recoverable `$R` content).
 
-7. **Event logs.** `windows_evtx` normalises `.evtx` to CSV / JSON with
-   filters — logon / logoff (4624 / 4625 / 4634), service install (7045),
-   process creation (4688), PowerShell script block (4104), RDP.
+7. **Persistence & tradecraft.** `windows_tasks` (Scheduled Tasks),
+   `windows_wmi` (permanent WMI event subscriptions — the fileless triad),
+   `windows_sdb` (shim-database `InjectDll` / `RedirectEXE` / custom
+   patches), `windows_bits` (jobs that pulled tooling in or pushed data
+   out). `windows_defender` merges MPLog, the Operational log, the
+   Quarantine store and the exclusion list into one timeline — an
+   attacker-added exclusion is often the first move.
+
+   ```bash
+   windows_wmi C:/Windows/System32/wbem/Repository --notable-only --csv wmi.csv
+   windows_defender "C:/ProgramData/Microsoft/Windows Defender" --min-severity high
+   windows_bits C:/ProgramData/Microsoft/Network/Downloader --notable-only
+   ```
+
+8. **Event logs & scripting.** `windows_evtx` normalises `.evtx` to CSV /
+   JSON with filters — logon / logoff (4624 / 4625 / 4634), service install
+   (7045), process creation (4688), RDP. `windows_pslogging` reassembles
+   Script Block Logging (4104) across its fragments and decodes the encoded
+   payloads; `windows_wer` treats every `.wer` crash report as execution
+   evidence that outlives the binary.
 
    ```bash
    windows_evtx Security.evtx --event-id 4624,4625,4688 --csv logons.csv
+   windows_pslogging E:/Windows/System32/winevt/Logs --min-severity high --csv ps.csv
    ```
 
-8. **Memory** — if RAM was captured: `memory_pslist` ✅ (pool-tag process
+9. **Fine-grained file activity.** `windows_logfile` decodes the `$LogFile`
+   redo/undo stream into create / delete / rename / timestomp events —
+   finer-grained than `$UsnJrnl` and often catching files that were created
+   and deleted inside one log window. On a server, `windows_sum` shows
+   which accounts used which roles, from which client IPs.
+
+10. **Memory** — if RAM was captured: `memory_pslist` ✅ (pool-tag process
    scan), `memory_netscan` ✅ (connections + sockets), `memory_malfind` ✅
    (injected / RWX code), `memory_dlllist` ✅ (loaded modules + load-path
    anomalies), `memory_cmdline` ✅ (command lines + LOLBins),
@@ -410,7 +436,7 @@ flowchart TD
    memory_svcscan MEMORY.DMP --notable-only --csv services.csv
    ```
 
-9. **Correlate, review & report.** Feed every CSV / JSON to
+11. **Correlate, review & report.** Feed every CSV / JSON to
    `analysis_timeline` for one sorted UTC view; then `analysis_view` to
    filter it down, **tag the rows that matter, note why, and mark the rest
    reviewed** (saved to a sidecar), and `analysis_report` to package the
