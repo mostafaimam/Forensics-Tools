@@ -82,7 +82,7 @@ it will do. The full roadmap is tracked privately.
 | [**windows_recycle**](windows/windows_recycle/) | ✅ v0.1 | Recycle Bin — Vista+ `$I` / `$R` and legacy `INFO2` / `INFO`; content matching; CSV / JSON |
 | [**windows_prefetch**](windows/windows_prefetch/) | ✅ v0.1 | Prefetch `.pf` v17-31, including the Windows 10/11 `MAM` / XPRESS-Huffman compressed format (pure-Python decompressor) |
 | [**windows_recentfilecache**](windows/windows_recentfilecache/) | 📋 planned | Parse RecentFileCache.bcf |
-| [**windows_shellbags**](windows/windows_shellbags/) | 📋 planned | Reconstruct the ShellBags folder-access tree · GUI |
+| [**windows_shellbags**](windows/windows_shellbags/) | ✅ v0.1 | Reconstruct the shellbag folder-access tree from `BagMRU` / `Bags` (`UsrClass.dat` / `NTUSER.DAT`) — full paths, last-interacted times, `$MFT` refs, `MRUListEx` order; flags removable / network / archive / other-profile paths · GUI |
 | [**windows_srum**](windows/windows_srum/) | 📋 planned | Parse SRUDB.dat (System Resource Usage Monitor) |
 | [**windows_sum**](windows/windows_sum/) | 📋 planned | Parse the Microsoft User Access Logs (SUM) |
 | [**windows_timeline**](windows/windows_timeline/) | 📋 planned | Parse the Windows 10/11 Timeline (ActivitiesCache.db) |
@@ -92,7 +92,7 @@ it will do. The full roadmap is tracked privately.
 | [**windows_sdb**](windows/windows_sdb/) | 📋 planned | Parse application shim databases (.sdb) · GUI |
 | [**windows_wer**](windows/windows_wer/) | 📋 planned | Parse Windows Error Reporting (.wer) reports |
 | [**windows_bits**](windows/windows_bits/) | 📋 planned | Parse the BITS transfer history (qmgr.db / qmgr*.dat) |
-| [**windows_tasks**](windows/windows_tasks/) | 📋 planned | Parse Scheduled Tasks (Tasks XML + TaskCache registry) |
+| [**windows_tasks**](windows/windows_tasks/) | ✅ v0.1 | Scheduled Tasks — Tasks XML joined with the `TaskCache\{Tree,Tasks}` registry: triggers (plain language), actions, principal, hidden flag, `DynamicInfo` registered / last-run times; flags LOLBins, writable / UNC action paths, encoded PowerShell, hidden and registry-only tasks |
 | [**windows_wmi**](windows/windows_wmi/) | 📋 planned | Parse the WMI repository for persistence (OBJECTS.DATA / INDEX.BTR) |
 | [**windows_defender**](windows/windows_defender/) | 📋 planned | Parse Microsoft Defender logs, detection history and quarantine |
 | [**windows_pslogging**](windows/windows_pslogging/) | 📋 planned | PowerShell forensics: ScriptBlock, Module logging and transcripts |
@@ -131,14 +131,14 @@ it will do. The full roadmap is tracked privately.
 | [**linux_cron**](linux/linux_cron/) | ✅ v0.1 | Scheduled-execution inventory — crontabs, `cron.d`, run-parts, anacron, `at` jobs, systemd timers → normalised rows with plain-language schedules + suspicious-entry flags |
 | [**linux_syslog**](linux/linux_syslog/) | ✅ v0.1 | `syslog` / `messages` / `auth.log` / `secure` (+ rotated / `.gz`), BSD + RFC 5424 → record timeline or **structured security events** (SSH, sudo, su, PAM, session, cron, account) |
 | [**linux_bashhist**](linux/linux_bashhist/) | ✅ v0.1 | Shell / REPL history for all users (bash, zsh, fish, sh, python, mysql, psql, sqlite, node, redis) → merged timeline, tampering markers, attacker-command flags |
-| [**linux_journal**](linux/linux_journal/) | 📋 planned | Read the systemd journal (.journal) binary format |
-| [**linux_audit**](linux/linux_audit/) | 📋 planned | Normalise auditd audit.log records |
-| [**linux_units**](linux/linux_units/) | 📋 planned | Inventory systemd unit files and review persistence |
-| [**linux_packages**](linux/linux_packages/) | 📋 planned | Reconstruct package install / upgrade / remove history |
-| [**linux_sshkeys**](linux/linux_sshkeys/) | 📋 planned | Review SSH keys, known hosts and sshd configuration |
-| [**linux_persistence**](linux/linux_persistence/) | 📋 planned | One sweep for every userland persistence vector on Linux |
-| [**linux_containers**](linux/linux_containers/) | 📋 planned | Parse Docker / containerd / Podman on-disk state |
-| [**linux_networkmgr**](linux/linux_networkmgr/) | 📋 planned | Parse NetworkManager profiles, wpa_supplicant and network config |
+| [**linux_journal**](linux/linux_journal/) | ✅ v0.1 | From-scratch reader for the systemd journal (`.journal`) binary format — linear arena walk, `FIELD=value` resolution, realtime (UTC) + monotonic + boot id, one merged timeline, XZ data objects; flags priority / coredump / cradle / SSH-sudo auth-fail / segfault |
+| [**linux_audit**](linux/linux_audit/) | ✅ v0.1 | Normalise `auditd` `audit.log` — reassemble records by `msg=audit()` id into one event (syscall + outcome, reconstructed `EXECVE`, `PROCTITLE`, paths, uid/auid, `USER_*` / `AVC`), decode hex + `SOCKADDR`; flags privilege / auth / account / rule-tampering / SELinux events |
+| [**linux_units**](linux/linux_units/) | ✅ v0.1 | Inventory systemd unit files — merge drop-ins, resolve enable state from the `.wants` / `.requires` symlinks, list `ExecStart` / `Type` / `User` / restart policy; flags writable `ExecStart`, inline cradles, encoded payloads, tight respawners, enabled-without-`[Install]` |
+| [**linux_packages**](linux/linux_packages/) | ✅ v0.1 | Package install / upgrade / remove timeline from `dpkg.log`, apt `history.log`, the dnf / yum text logs and the dnf `history.sqlite`; flags build toolchains, recon / tunnel / anti-forensic tooling, downgrades, manual `.deb`s, download-pipe installs |
+| [**linux_sshkeys**](linux/linux_sshkeys/) | ✅ v0.1 | Review `authorized_keys` (system + per-user), host keys + private-key format / encryption, `known_hosts`, and `sshd_config` (+ `sshd_config.d` / `Match`); fingerprints every key; flags wildcard `from=`, forced `command=`, weak keys, CA trust, permissive settings |
+| [**linux_persistence**](linux/linux_persistence/) | ✅ v0.1 | One sweep for every userland persistence vector — shell rc / `profile.d` / `environment`, `ld.so.preload`, `rc.local`, `update-motd.d`, xinetd, PAM, modprobe, udev, sudoers, systemd generators → one finding list with `info`/`low`/`medium`/`high` verdicts |
+| [**linux_containers**](linux/linux_containers/) | ✅ v0.1 | Reconstruct Docker / Podman / containerd containers from on-disk state — engine, image, command, mounts, ports, created / started / finished, and the full security posture; flags privileged, mounted runtime socket, host namespaces, dangerous caps, secret env, cradle entrypoints |
+| [**linux_networkmgr**](linux/linux_networkmgr/) | ✅ v0.1 | Saved network config + joined networks — NetworkManager keyfiles, `wpa_supplicant`, systemd-networkd, a best-effort netplan read, `/etc/hosts`, `resolv.conf`; secret values never printed; flags plaintext Wi-Fi / VPN secrets, open-Wi-Fi autoconnect, spoofed MAC, proxies, `hosts` overrides |
 
 ### `macos/`
 
@@ -255,10 +255,12 @@ it will do. The full roadmap is tracked privately.
 
 `memory_handles` / `memory_hashdump` (reporting only) ·
 `recovery_metadata` FAT / ext4 / APFS support ·
-`linux_journal` (systemd binary journal) · `linux_audit` ·
 `macos_quarantine` / `macos_knowledgec` (build on `macos_plist` + SQLite) ·
 `browser_shortcuts` / `browser_localstorage` / `browser_favicons`.
 
+The **`linux/`** category is now complete for v0.1 (`linux_utmp` · `cron` ·
+`syslog` · `bashhist` · `journal` · `audit` · `units` · `packages` ·
+`sshkeys` · `persistence` · `containers` · `networkmgr`).
 The **`network/`** category is complete for v0.1 (`network_pcap` · `http` ·
 `dns` · `flows` · `logs` · `arp`); **`browser/`** now covers history,
 downloads, cookies, extensions, autofill, logins, bookmarks, sessions and
@@ -304,7 +306,8 @@ flowchart TD
     C --> RC["recovery_metadata ✅ / recovery_carve ✅ — deleted + unallocated files"]
     C --> D["windows_reglog ✅ → windows_registry ✅ — replay .LOG1/.LOG2, then ~50 plugins per hive"]
     D --> E["windows_prefetch ✅ · windows_shimcache ✅ · windows_amcache ✅ — execution evidence"]
-    E --> F["windows_lnk ✅ · windows_jumplist ✅ · windows_recycle ✅ — opened files, source host, deletions"]
+    E --> TS["windows_tasks ✅ — Tasks XML + TaskCache → triggers, actions, last-run · windows_shellbags ✅ — folders browsed"]
+    TS --> F["windows_lnk ✅ · windows_jumplist ✅ · windows_recycle ✅ — opened files, source host, deletions"]
     F --> G["windows_evtx ✅ — logon, service install, 4688, PowerShell 4104"]
     G --> H["memory/* — pslist ✅ · netscan ✅ · malfind ✅ · dlllist ✅ · cmdline ✅ · svcscan ✅ · strings ✅ · in-memory hives ⏳ · hashdump ⏳"]
     H --> I["analysis_timeline ✅ — merge every output into one sorted UTC timeline"]
@@ -420,9 +423,11 @@ flowchart TD
     B --> C["recovery_metadata (ext) ⏳ · recovery_carve ✅ — deleted + unallocated files"]
     C --> D["linux_utmp ✅ — wtmp / btmp / lastlog → login sessions, failed logins"]
     D --> E["linux_syslog ✅ — syslog / auth.log (+ .gz) → SSH, sudo, su, PAM, session events"]
-    E --> F["linux_journal ⏳ — systemd binary journal"]
-    F --> G["linux_cron ✅ — crontabs, cron.d, run-parts, anacron, at, timers (--notable-only)"]
-    G --> H["linux_bashhist ✅ — all users / all shells → attacker commands, tampering markers"]
+    E --> F["linux_journal ✅ — systemd binary journal (.journal) → fields, boots, one timeline"]
+    F --> AU["linux_audit ✅ — auditd events · linux_units ✅ / linux_persistence ✅ — persistence sweep"]
+    AU --> G["linux_cron ✅ — crontabs, cron.d, run-parts, anacron, at, timers (--notable-only)"]
+    G --> PK["linux_packages ✅ — dpkg/apt/dnf history · linux_containers ✅ · linux_sshkeys ✅ · linux_networkmgr ✅"]
+    PK --> H["linux_bashhist ✅ — all users / all shells → attacker commands, tampering markers"]
     H --> I["memory/* + memory_linux ⏳"]
     I --> J["analysis_timeline ✅ — merged UTC timeline"]
 ```
@@ -446,8 +451,8 @@ flowchart TD
 
 5. **System logs.** `linux_syslog --events` turns `auth.log` / `secure` /
    `syslog` (and `.gz` rotations) into structured SSH / sudo / su / PAM /
-   session / cron / account events. The systemd binary journal
-   (`linux_journal`) is ⏳.
+   session / cron / account events; `linux_journal` reads the systemd binary
+   journal off the image, and `linux_audit` reassembles the `auditd` records.
 
    ```bash
    linux_syslog /mnt/evidence/var/log --root --events \
