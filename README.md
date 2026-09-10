@@ -4,6 +4,10 @@ An open-source, cross-platform suite of DFIR command-line tools — written in
 Python (3.11+, standard library only) and built to run on Windows, Linux and
 macOS.
 
+These tools are meant to help anyone working in digital forensics and incident
+response. If you have a question, spot a problem, or want to suggest an
+enhancement, please reach out — see [Questions & contributions](#questions--contributions).
+
 
 Each tool is self-contained, each with its own tests and
 documentation. Tools are organised into categories.
@@ -556,8 +560,9 @@ Tools that have adopted `tracelib` (all of `network/` and `browser/` so far)
 write a `<output>.manifest.json` sidecar on every run — tool version, exact
 command line, `--case-id` / `--examiner` / `--evidence-id`, start/finish time
 in UTC, host, and the **SHA-256 of every input and output file**. Their CSV
-rows carry `evidence_source` / `parser_confidence` / `tz_provenance` columns
-and their JSON is wrapped as `{"manifest": …, "records": …}`.
+rows carry `evidence_source` / `parser_confidence` / `tz_provenance` columns,
+and each JSON record carries the same provenance fields (the manifest is the
+sidecar).
 `--max-input-bytes` / `--max-records` / `--wall-seconds` bound a run against
 hostile or oversized evidence. `--no-provenance` opts out.
 [`shared/fuzzlib`](shared/) mutation-fuzzes the binary parsers.
@@ -579,6 +584,20 @@ python -m windows_prefetch --help
 ```
 
 See each tool's own `README.md` for full usage and internals.
+
+## Questions & contributions
+
+This project is for the DFIR community — practitioners, responders, students
+and researchers. If it helps your work, or if something is missing or wrong,
+please get in touch:
+
+- **Questions & bug reports** — open an [issue](https://github.com/mostafaimam/Forensics-Tools/issues).
+- **Enhancements & new tool ideas** — open an issue describing the artefact or
+  capability, or send a pull request.
+- Or reach the maintainer directly on GitHub ([@mostafaimam](https://github.com/mostafaimam)).
+
+Feedback from real casework is especially welcome — it drives what gets built
+next.
 
 ## License
 
