@@ -1,41 +1,81 @@
 # windows_notifications
 
-> **Status — planned.** This directory is a specification stub; the tool is
-> not implemented yet. The design below is the contract it will be built to and
-> may be refined during development.
+**The toast / tile notification history.** `windows_notifications` reads
+`wpndatabase.db` — the SQLite store under
+`…\AppData\Local\Microsoft\Windows\Notifications\` — and joins the
+`Notification` table to `NotificationHandler` so every notification is
+attributed to an **application** (its AUMID or executable id).
 
-**Parse the notification history (wpndatabase.db / appdb.dat).**
+Per notification: the app, the **type** (`toast` / `tile` / `badge` /
+`raw`), the **arrival** and **expiry** times (FILETIME → UTC), the tag /
+group, and the **notification text** extracted from the toast / tile
+payload XML (`<text>` / `<title>` / `<subtitle>` nodes).
 
-Reads `wpndatabase.db` (SQLite) and legacy `appdb.dat` — the Windows toast /
-notification store — recovering notification text, payload XML, originating app
-(AUMID), arrival and expiry times: often the only record of a message, email or
-alert content.
+The evidence file is copied with its `-wal` / `-shm` side files before it
+is opened; the original is untouched.
 
-## Planned scope
+![windows_notifications GUI](docs/screenshot.png)
 
-- Decode the `Notification` / `NotificationHandler` tables and payload XML
-- Resolve AUMID → application; extract toast title / body / attribution
-- Recover deleted rows from freelist / WAL
-- Per-notification timeline
+## Usage
 
-## Inputs
+```
+windows_notifications wpndatabase.db --csv notif.csv
+windows_notifications E:\                          (mounted image root)
+windows_notifications wpndatabase.db --type raw --json raw.json
+windows_notifications wpndatabase.db --app powershell --grep 'http'
+windows_notifications wpndatabase.db --notable-only --min-severity high
+windows_notifications wpndatabase.db --gui
+```
 
-`%LOCALAPPDATA%\Microsoft\Windows\Notifications\wpndatabase.db`.
+| flag | effect |
+|------|--------|
+| `--type NAME` | `toast` / `tile` / `badge` / `raw` |
+| `--app REGEX` | match the app id |
+| `--grep REGEX` | match the notification text |
+| `--since` / `--until` `YYYY-MM-DD` | UTC date window (on arrival) |
+| `--notable-only` / `--min-severity` | filter by the flags raised |
+| `--csv PATH` / `--json PATH` | write the table instead of the text report |
 
-## Outputs
+## Why it matters
 
-- Human-readable summary on stdout
-- `--csv PATH` — UTF-8 with BOM, spreadsheet-injection-safe
-- `--json PATH` — structured records
+Notifications are a running commentary on what the machine was doing: a
+download finished, a chat message arrived, a sign-in code was delivered, an
+app wanted attention — each with a timestamp and the exact text shown to
+the user. `raw` notifications carry an opaque binary payload straight to an
+app, which is a delivery channel a handful of implants have used. And a
+toast **raised by `powershell.exe` or a binary in `\Temp`** is not
+something a normal program does.
 
-All timestamps UTC (ISO-8601). Exit code is non-zero when nothing is found or
-(where applicable) when a flagged item is present.
+## Flags
 
-## Related tools
+| flag | meaning |
+|------|---------|
+| `notification raised by a script / LOLBin app` | the handler's app id is `powershell.exe`, `mshta.exe`, a `.ps1` / `.hta` / `.js`, … |
+| `notification app id is a user-writable path` | the handler id is a path under `\AppData`, `\Temp`, `\ProgramData`, `\Public`, `\Downloads` |
+| `raw notification` | `Type = raw` — an opaque payload, not a visible toast |
+| `notification text contains a URL` / `an IP address` | a link / literal address in the shown text |
+| `notification text looks like an authentication code / credential prompt` | "verification code", "one-time", "OTP", "login code", "password" in the text |
 
-`windows_timeline`, `analysis_timeline`.
+## Limitations (v0.1)
 
----
+- The `NotificationData` table (per-notification key/value data used by
+  adaptive toasts) and `WNSPushChannel` (the push channel URIs / expiry)
+  are not surfaced yet.
+- `raw` payloads are noted but not decoded — they are app-specific.
+- Tile / badge payloads are handled the same way as toasts; badge
+  notifications usually carry only a glyph or number.
+- The `Type` column has been an integer and, on some builds, a text string
+  (`'toast'`) — both are handled.
 
-Part of **Forensics Tools** — Python 3.11+, standard library only,
-cross-platform, read-only. See the [top-level README](../../README.md).
+## Tests
+
+```
+cd windows/windows_notifications && python -m pytest -q
+```
+
+`tests/_synth.py` builds a `wpndatabase.db` with a `NotificationHandler`
+table (Explorer, `powershell.exe`, a `\Temp\agent.exe`, a Skype AUMID) and
+four `Notification` rows — a download toast, a `powershell` toast with a
+`http://185.10.20.30/…` link, a `raw` beacon notification, and a "login
+code" toast — and the tests check the payload-text extraction, the handler
+join, the FILETIME conversion, every flag and the CLI.
