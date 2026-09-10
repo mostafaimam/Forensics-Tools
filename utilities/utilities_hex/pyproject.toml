@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "utilities_hex"
+version = "0.1.0"
+description = "Hex viewer + cursor-driven data interpreter (ints 8-64 LE/BE, float, GUID, RGB, every common timestamp encoding) + hex/text/regex search; embeddable tkinter widget"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "hex", "viewer", "data interpreter", "timestamps", "search"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/utilities/utilities_hex"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+utilities_hex = "utilities_hex.cli:main"
+[tool.setuptools]
+packages = ["utilities_hex"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
