@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "windows_usbdevices"
+version = "0.1.0"
+description = "reconstruct removable-device history from SYSTEM / SOFTWARE hives + setupapi.dev.log: USBSTOR devices, serials, drive letters, install / arrival / removal times"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "windows", "usb", "usbstor", "removable", "mounteddevices", "registry"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/windows/windows_usbdevices"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+windows_usbdevices = "windows_usbdevices.cli:main"
+[tool.setuptools]
+packages = ["windows_usbdevices", "windows_usbdevices.hive"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]

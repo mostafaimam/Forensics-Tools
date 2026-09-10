@@ -1,41 +1,79 @@
 # windows_usbdevices
 
-> **Status — planned.** This directory is a specification stub; the tool is
-> not implemented yet. The design below is the contract it will be built to and
-> may be refined during development.
+**Removable-device history, correlated across the hives.**
+`windows_usbdevices` pulls USB mass-storage history from the `SYSTEM` and
+`SOFTWARE` hives (and `setupapi.dev.log` when present) and joins it into one
+row per device:
 
-**Reconstruct removable-device history.**
+| source | what it contributes |
+|--------|---------------------|
+| `SYSTEM\…\Enum\USBSTOR` | vendor / product / revision, the **serial** (`&0` synthetic-serial suffix noted), the friendly name, and the per-device **install / first-install / last-arrival / last-removal** FILETIMEs from `Properties\{83da6326-…}\0064-0067` |
+| `SYSTEM\…\Enum\USB` | the **VID / PID** and the container id |
+| `SYSTEM\MountedDevices` | the **drive letter(s) / volume GUID** the device was mounted as (matched on the `USBSTOR#` string) |
+| `SOFTWARE\…\Windows Portable Devices\Devices` | the friendly **volume name** (e.g. `KINGSTON (E:)`) |
+| `Windows\INF\setupapi.dev.log` | the **first-seen** timestamp from the `Device Install` blocks |
 
-Correlates every USB / removable-storage artefact — `USBSTOR`, `USB`, `SCSI`,
-`MountedDevices`, `WPDBUSENUM`, `EMDMgmt`, `setupapi.dev.log` — into one row per
-device: make / model, serial, first / last connect, removal time, assigned drive
-letter, volume GUID, and the user who used it.
+![windows_usbdevices GUI](docs/screenshot.png)
 
-## Planned scope
+## Usage
 
-- Join device serial → volume GUID → drive letter → user → timestamps
-- First-install time from setupapi; last-removal from the registry
-- Distinguish unique devices vs. re-enumerations
-- CSV / JSON; feeds `analysis_timeline` / `analysis_report`
+```
+windows_usbdevices E:\                          (mounted image root)
+windows_usbdevices SYSTEM --csv usb.csv
+windows_usbdevices E:\ --known-good 'Kingston,SanDisk,Corp-Issue'
+windows_usbdevices E:\ --since 2026-03-01 --notable-only
+windows_usbdevices E:\ --grep 'DataTraveler' --json k.json
+```
 
-## Inputs
+| flag | effect |
+|------|--------|
+| `--known-good LIST` | comma-separated vendor / serial / name substrings; any device not matching is flagged **high** |
+| `--grep REGEX` | match vendor / product / serial / friendly name |
+| `--since` / `--until` `YYYY-MM-DD` | window on the first-connected time |
+| `--notable-only` / `--min-severity` | filter by the flags raised |
+| `--csv PATH` / `--json PATH` | write the table instead of the text report |
 
-SYSTEM / SOFTWARE / NTUSER hives and `C:\Windows\INF\setupapi.dev.log`.
+## Why it matters
 
-## Outputs
+"Was a USB drive plugged in, which one, and when" is a standard question and
+the answer is spread across four registry locations and a log file. Pulling
+them together gives you the serial (which ties a device to other machines),
+the drive letter it took (to line up against `$MFT` / `LNK` / jump-list
+paths), and the first-plugged / last-removed times — enough to place a
+specific stick on the host during the window of interest.
 
-- Human-readable summary on stdout
-- `--csv PATH` — UTF-8 with BOM, spreadsheet-injection-safe
-- `--json PATH` — structured records
+## Flags
 
-All timestamps UTC (ISO-8601). Exit code is non-zero when nothing is found or
-(where applicable) when a flagged item is present.
+| flag | meaning |
+|------|---------|
+| `device reports no unique serial` | the instance id ends `&0` — Windows synthesised a serial, so the device cannot be uniquely tracked and it may be a cheap / counterfeit controller |
+| `connected only once` | first-install and last-arrival are the same minute |
+| `connected outside business hours` | a connect time before 07:00, after 20:00, or on a weekend |
+| `device installed but never mounted` | present in `Enum\USBSTOR` but no entry in `MountedDevices` |
+| `device is not on the --known-good list` | (only with `--known-good`) an unexpected device |
 
-## Related tools
+## Limitations (v0.1)
 
-`windows_registry`, `windows_shellbags`, `analysis_timeline`.
+- `EMDMgmt` (ReadyBoost — carries volume serial + last write time) and the
+  `WpdBusEnumRoot` `USBPRINT` / `MTP` device classes are not read yet.
+- SIDs are not tied to devices — `NTUSER.DAT\…\MountPoints2` (per-user
+  mount history) is a separate lookup; this tool works from the machine
+  hives.
+- The `<volN>` disk-signature → drive-letter mapping in `MountedDevices`
+  for *fixed* disks is not resolved (only the USB matches).
+- FILETIME properties `0064`-`0067` exist from Windows 8 onward; on Windows 7
+  only the `USBSTOR` key's own last-written time is available (not read
+  here).
 
----
+## Tests
 
-Part of **Forensics Tools** — Python 3.11+, standard library only,
-cross-platform, read-only. See the [top-level README](../../README.md).
+```
+cd windows/windows_usbdevices && python -m pytest -q
+```
+
+`tests/_synth.py` hand-builds a `SYSTEM` hive (a Kingston stick with a
+synthetic `&0` serial mounted as `E:`, and a SanDisk stick connected once
+at 23:40 with a real serial), a `SOFTWARE` hive with the Windows Portable
+Devices friendly name, and a `setupapi.dev.log`. The tests check the
+registry parse, the `setupapi` first-seen extraction, the full
+correlation, every flag, `--known-good` and the CLI.
