@@ -1,41 +1,86 @@
 # macos_tcc
 
-> **Status — planned.** This directory is a specification stub; the tool is
-> not implemented yet. The design below is the contract it will be built to and
-> may be refined during development.
+**Who was granted Camera, Screen Recording, Full Disk Access, Automation…**
+`macos_tcc` reads the Transparency, Consent and Control databases:
 
-**Parse the TCC.db privacy-permission database.**
+- `/Library/Application Support/com.apple.TCC/TCC.db` — the **system**
+  store (Full Disk Access, Accessibility, Screen Recording, Input
+  Monitoring, Developer Tools, …);
+- `~/Library/Application Support/com.apple.TCC/TCC.db` — the **per-user**
+  store (Camera, Microphone, Contacts, Calendar, Photos, Automation, …).
 
-Reads the system and per-user `TCC.db` (Transparency, Consent and Control) —
-which applications were granted or denied access to Camera, Microphone, Full
-Disk Access, Accessibility, Automation, etc. — with the decision, prompt count,
-and last-modified time.
+One row per grant: the scope, the **service in plain language**
+(`kTCCServiceScreenCapture` → *Screen Recording*), the client (bundle id or
+absolute path), the decision (`allowed` / `denied` / `limited`), the auth
+reason, the **indirect object** for Automation grants (the app being
+controlled), the `last_modified` time (Unix → UTC), and whether the grant
+came from a configuration profile / MDM.
 
-## Planned scope
+The schema has changed a lot across macOS versions — the modern
+`auth_value` layout and the older `allowed` layout are both handled.
 
-- Decode the `access` table across schema versions; service-name mapping
-- Resolve client bundle id / path; indirect (Automation) target apps
-- Flag Full Disk Access / Accessibility grants to non-Apple / user binaries
-- CSV / JSON
+![macos_tcc GUI](docs/screenshot.png)
 
-## Inputs
+## Usage
 
-`/Library/Application Support/com.apple.TCC/TCC.db` and the per-user copy.
+```
+macos_tcc TCC.db --csv tcc.csv
+macos_tcc /Volumes/Macintosh\ HD                (finds every TCC.db)
+macos_tcc TCC.db --service Accessibility --decision allowed
+macos_tcc TCC.db --client Terminal
+macos_tcc TCC.db --notable-only --min-severity high
+```
 
-## Outputs
+| flag | effect |
+|------|--------|
+| `--service SUBSTR` | match the service name |
+| `--client SUBSTR` | match the client bundle id / path |
+| `--decision {allowed,denied,limited}` | filter by outcome |
+| `--scope {system,user}` | one store |
+| `--notable-only` / `--min-severity` | filter by the flags raised |
+| `--csv PATH` / `--json PATH` | write the table instead of the text report |
 
-- Human-readable summary on stdout
-- `--csv PATH` — UTF-8 with BOM, spreadsheet-injection-safe
-- `--json PATH` — structured records
+## Why it matters
 
-All timestamps UTC (ISO-8601). Exit code is non-zero when nothing is found or
-(where applicable) when a flagged item is present.
+TCC is macOS's answer to "which app can spy on the user". An attacker who
+gets **Accessibility** can drive the whole UI; **Screen Recording** or
+**Input Monitoring** is a screen/keylogger; **Full Disk Access** reads
+everyone's mail and messages; **Automation over System Events** is
+scriptable control of the machine. Seeing any of those granted to
+`Terminal`, `osascript`, `Python` or an ad-hoc binary in a home directory —
+rather than to a signed app in `/Applications` — is a direct finding, and
+the `last_modified` time says when it happened.
 
-## Related tools
+## Flags
 
-`macos_plist`, `macos_launchd`.
+| flag | meaning |
+|------|---------|
+| `high-impact permission (X) granted to a command-line / scripting tool` | Accessibility / Screen Recording / Input Monitoring / Full Disk Access / Automation / Developer Tools given to `Terminal`, `iTerm`, `osascript`, `python`, `ruby`, `node`, `curl`, … |
+| `high-impact permission (X) granted to a binary in a user-writable path` | the client is an absolute path under `/tmp`, `/var/folders`, a home directory, `/Users/Shared` |
+| `input-monitoring / keystroke-capture permission granted` | `kTCCServiceListenEvent` = allowed |
+| `Automation control over com.apple.systemevents / finder` | scriptable system control via Apple Events |
+| `client is an absolute path outside /Applications` | likely unsigned / ad-hoc |
+| `high-impact permission pushed by a configuration profile / MDM` | `auth_reason` = MDM policy |
 
----
+## Limitations (v0.1)
 
-Part of **Forensics Tools** — Python 3.11+, standard library only,
-cross-platform, read-only. See the [top-level README](../../README.md).
+- The `csreq` code-signing-requirement blob is not decoded — the tool
+  can't tell you *which* signed identity a bundle-id grant is bound to.
+- `TCC.db` also lives in Time Machine snapshots and, historically, at
+  `~/Library/Application Support/com.apple.TCC/TCC.db` with a `MDMOverrides`
+  companion plist — the plist is not read.
+- Denied entries are shown (they are still evidence that an app *asked*),
+  but "not present" ≠ "denied".
+
+## Tests
+
+```
+cd macos/macos_tcc && python -m pytest -q
+```
+
+`tests/_synth.py` builds a modern-schema system `TCC.db` (Full Disk Access
+to a signed app, Accessibility to `/usr/local/bin/helper`, Screen Recording
+to `Terminal`, Input Monitoring to `~/.local/bin/kbd`, denied Developer
+Tools), a user `TCC.db` (Camera / Mic / an Automation-over-System-Events
+grant to `Terminal`), and an old-schema `TCC.db`, and the tests check both
+schemas, every flag, the Automation indirect-object join and the CLI.
