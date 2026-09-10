@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "macos_netusage"
+version = "0.1.0"
+description = "parse netusage.sqlite: per-process network bytes in / out by interface class (Wi-Fi / WWAN / wired) with first / last seen - the macOS SRUM-network equivalent"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "macos", "netusage", "networkd", "network", "exfiltration"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/macos/macos_netusage"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+macos_netusage = "macos_netusage.cli:main"
+[tool.setuptools]
+packages = ["macos_netusage"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
