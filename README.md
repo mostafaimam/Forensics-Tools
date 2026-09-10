@@ -65,7 +65,7 @@ it will do. The full roadmap is tracked privately.
 |---|---|---|
 | [**recovery_carve**](recovery/recovery_carve/) | ✅ v0.1 | Signature carving — recover files by magic bytes + structural validators, no file system needed |
 | [**recovery_metadata**](recovery/recovery_metadata/) | ✅ v0.1 | Metadata recovery — walk the NTFS `$MFT`, list allocated + deleted entries with paths and `MACB` times, extract content (incl. deleted files), `cat` one entry by number |
-| [**recovery_fs**](recovery/recovery_fs/) | 📋 planned | Generic read-only file-system walker (NTFS / FAT / exFAT / ext / HFS+ / APFS) |
+| [**recovery_fs**](recovery/recovery_fs/) | ✅ v0.1 | One read-only file-system walker — **NTFS** (vendored `recovery_metadata` engine), **FAT12/16/32** (LFN, `0xE5` deleted, cluster chains) and **exFAT** (entry sets, `NoFatChain`, bitmap allocation); ext / HFS+ / APFS detected only. Detects the FS at `--offset` or the first MBR/GPT partition; `list` (allocated + deleted), `extract` by glob / inode, `cat`, 3.x `bodyfile` · GUI |
 
 ### `windows/`
 
@@ -118,10 +118,10 @@ it will do. The full roadmap is tracked privately.
 | [**analysis_index**](analysis/analysis_index/) | ✅ v0.1 | Full-text index + search over a collection — text / markup / OOXML / email / string-carving extraction; **boolean / phrase / `NEAR` / prefix / regex** queries with snippets; SQLite, no FTS extension |
 | [**analysis_gallery**](analysis/analysis_gallery/) | ✅ v0.1 | Picture + video gallery — find media by content signature, extract **EXIF / QuickTime metadata + GPS**, group visually near-identical images by **perceptual hash**, build a self-contained **HTML contact sheet**; in-tree JPEG / PNG / GIF / BMP decoders |
 | [**analysis_view**](analysis/analysis_view/) | ✅ v0.1 | Review any table (CSV / TSV / JSON / **XLSX**) — merge sources, per-column filters, sort, conditional row colouring, and **tags + a notes column + a reviewed flag** saved to a sidecar; exports a self-contained interactive **HTML review page**. Where the reconstruction gets annotated |
-| [**analysis_dpapi**](analysis/analysis_dpapi/) | 📋 planned | Decrypt Windows DPAPI blobs with supplied secrets (reporting for IR) |
-| [**analysis_antiforensics**](analysis/analysis_antiforensics/) | 📋 planned | Correlate anti-forensic and tampering indicators into one report |
-| [**analysis_fuzzyhash**](analysis/analysis_fuzzyhash/) | 📋 planned | Similarity hashing and clustering (CTPH + locality hashes) |
-| [**analysis_enrich**](analysis/analysis_enrich/) | 📋 planned | Post-process a timeline bundle: IOC match, ATT&CK tags, geo, known-file |
+| [**analysis_dpapi**](analysis/analysis_dpapi/) | ✅ v0.1 | Decrypt Windows DPAPI **master keys** (Win7+ SHA-512 / AES-256 scheme, HMAC-verified so a wrong secret is rejected) and **data blobs** (session-key derivation + entropy + signature check + type guess) given a supplied password + SID or SHA-1 hash; `scan` a Protect dir + blob folder. Bundled pure-Python AES. IR-scoped, no brute forcing |
+| [**analysis_antiforensics**](analysis/analysis_antiforensics/) | ✅ v0.1 | Correlate the other tools' CSV / JSON into one findings list: event-log clearing (1102 / 104) + record-sequence gaps, `$SI`-vs-`$FN` timestomping, wiping-tool execution, log / history / journal clearing commands, disabled Prefetch / SysMain / Defender, `$UsnJrnl` truncation, deletion bursts, timeline gaps — with evidence + severity + a self-contained HTML report |
+| [**analysis_fuzzyhash**](analysis/analysis_fuzzyhash/) | ✅ v0.1 | CTPH (ssdeep-style piecewise hash), a TLSH-style byte-trigram locality digest, and PE imphash + Rich-header hash; `scan` clusters a file set (union-find at `--threshold`) so near-duplicates and variant families group; `hash` / `compare` subcommands |
+| [**analysis_enrich**](analysis/analysis_enrich/) | ✅ v0.1 | Append columns to an `analysis_timeline` bundle without touching rows: IOC feed matches (plain list / CSV / STIX-lite), MITRE ATT&CK technique ids from a bundled ~30-entry map keyed by the suite's patterns, a coarse RIR region for public IPs, and good/bad hash labels from `--known-csv` |
 
 ### `linux/`
 
@@ -218,11 +218,11 @@ it will do. The full roadmap is tracked privately.
 
 | Tool | Status | Purpose |
 |---|---|---|
-| [**utilities_strings**](utilities/utilities_strings/) | 📋 planned | String extraction with a built-in forensic regex library |
-| [**utilities_hash**](utilities/utilities_hash/) | 📋 planned | Hash a file set / tree / image's files into a manifest |
-| [**utilities_ole**](utilities/utilities_ole/) | 📋 planned | OLE2 / compound-file and Office metadata extraction |
-| [**utilities_hex**](utilities/utilities_hex/) | 📋 planned | Hex viewer and data interpreter · GUI |
-| [**utilities_ezview**](utilities/utilities_ezview/) | 📋 planned | Zero-dependency viewer for common document and text formats · GUI |
+| [**utilities_strings**](utilities/utilities_strings/) | ✅ v0.1 | ASCII + UTF-16 LE/BE string runs (byte offsets) from any file / image / device, chunked with an overlap window; classifies each against ~35 built-in patterns (URLs, emails, IPs, paths, registry, tokens, wallet addresses, Luhn-checked cards, SSNs, IBANs, mimikatz / Cobalt Strike markers, …); `--category` / `--pattern` / `--grep` / `--start` / `--end` filters |
+| [**utilities_hash**](utilities/utilities_hash/) | ✅ v0.1 | Hash a tree / file list / mounted image in one streaming pass (MD5 / SHA-1 / SHA-256 / SHA-512 / SHA3-256 / BLAKE2b) → CSV / JSON / `*sum` manifest with paths relative to each root; `--verify` diffs a fresh scan (CHANGED / MOVED / ADDED / REMOVED) and exits non-zero on any difference |
+| [**utilities_ole**](utilities/utilities_ole/) | ✅ v0.1 | OLE2 (MS-CFB) + OOXML reader: stream tree, SummaryInformation / DocumentSummaryInformation + OOXML core/app/custom properties, **VBA macro source** (MS-OVBA decompression) in both container types, embedded objects, external relationship targets; flags weaponised-macro constructs, remote / UNC templates, author vs last-saver mismatch. Ships the `OleFile` library the other tools import |
+| [**utilities_hex**](utilities/utilities_hex/) | ✅ v0.1 | Hex viewer + data interpreter: pages any file / image / device, hex / text / UTF-16 / regex search (overlap window), and interprets the bytes at an offset as signed/unsigned ints (8-64, LE+BE), float/double, GUID, RGB/RGBA and every common timestamp encoding (Unix s/ms/µs, FILETIME, WebKit, DOS, OLE, Cocoa, HFS+); ships `interpret()` + a `tkinter` widget for the other GUIs to embed · GUI |
+| [**utilities_ezview**](utilities/utilities_ezview/) | ✅ v0.1 | Content-sniffing viewer: text / logs (encoding detection incl. no-BOM UTF-16), CSV / TSV, HTML / MHTML (tag-stripped), RTF, and best-effort text from docx / xlsx / pptx (OOXML), doc / xls (printable runs) and pdf (Flate stream text operators); unrenderable files fall back to the hex view · GUI |
 
 ### `cloud/`
 
@@ -323,7 +323,8 @@ flowchart TD
     G --> LF["windows_logfile ✅ — $LogFile redo/undo → create / delete / rename / timestomp · windows_sum ✅ — server-role access by user + client IP"]
     LF --> H["memory/* — pslist ✅ · netscan ✅ · malfind ✅ · dlllist ✅ · cmdline ✅ · svcscan ✅ · strings ✅ · in-memory hives ⏳ · hashdump ⏳"]
     H --> I["analysis_timeline ✅ — merge every output into one sorted UTC timeline"]
-    I --> J["analysis_view ✅ (filter · tag · annotate) -> analysis_report ✅ · analysis_gallery ✅"]
+    I --> EN["analysis_enrich ✅ — IOC / ATT&CK / geo / known-file columns · analysis_antiforensics ✅ — evidence-destruction indicators · analysis_fuzzyhash ✅ — cluster variant families"]
+    EN --> J["analysis_view ✅ (filter · tag · annotate) -> analysis_report ✅ · analysis_gallery ✅"]
 ```
 
 1. **Acquire.** On a live host, `acquisition_collect` with the Windows target
@@ -436,16 +437,20 @@ flowchart TD
    memory_svcscan MEMORY.DMP --notable-only --csv services.csv
    ```
 
-11. **Correlate, review & report.** Feed every CSV / JSON to
-   `analysis_timeline` for one sorted UTC view; then `analysis_view` to
-   filter it down, **tag the rows that matter, note why, and mark the rest
-   reviewed** (saved to a sidecar), and `analysis_report` to package the
-   result.
+11. **Correlate, enrich, review & report.** Feed every CSV / JSON to
+   `analysis_timeline` for one sorted UTC view; `analysis_enrich` to add
+   IOC / ATT&CK / geo / known-file columns; `analysis_antiforensics` to
+   check for evidence destruction; then `analysis_view` to filter it down,
+   **tag the rows that matter, note why, and mark the rest reviewed**
+   (saved to a sidecar), and `analysis_report` to package the result.
 
    ```bash
    analysis_timeline mft.csv sys_*.csv user_*.csv logons.csv \
        --from 2026-08-01 --to 2026-08-07 --html case01_timeline.html
-   analysis_view timeline.csv --rule 'severity~high=#fdd' \
+   analysis_enrich case01_timeline.csv --feed iocs.txt --known-csv kff.csv \
+       -o case01_enriched.csv
+   analysis_antiforensics ./case01_outputs --html case01_antiforensics.html
+   analysis_view case01_enriched.csv --rule 'attack~T10=#fdd' \
        --review case01.review.json --html case01_review.html
    ```
 
