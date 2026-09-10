@@ -1,40 +1,76 @@
 # macos_quarantine
 
-> **Status — planned.** This directory is a specification stub; the tool is
-> not implemented yet. The design below is the contract it will be built to and
-> may be refined during development.
+**"Downloaded from the internet" — the provenance store.**
+`macos_quarantine` reads `com.apple.LaunchServices.QuarantineEventsV2` (a
+SQLite database in `~/Library/Preferences/`). It is the record Gatekeeper
+uses to decide whether to show the *"are you sure you want to open this?"*
+prompt, and it keeps one row per file that was downloaded.
 
-**Parse LaunchServices quarantine events (downloads).**
+Per event: the timestamp (Mac absolute time → UTC), the **agent** that
+downloaded the file (bundle id + name — `com.apple.Safari` / `Safari`,
+`com.google.Chrome` / `Chrome`, `com.apple.Terminal` / `Terminal`, …), the
+**data URL** (the file), the **origin URL** (the page it came from), the
+sender name / address (for email attachments), and the event type.
 
-Reads `com.apple.LaunchServices.QuarantineEventsV2` (SQLite) — the 'downloaded
-from the internet' provenance store — listing each quarantined file: originating
-URL, referrer, the agent that downloaded it, and the timestamp.
+![macos_quarantine GUI](docs/screenshot.png)
 
-## Planned scope
+## Usage
 
-- Decode the events table; Cocoa timestamp conversion
-- Join to on-disk files via the `com.apple.quarantine` extended attribute
-- Flag executables / disk images / scripts from the internet
-- Timeline + JSON
+```
+macos_quarantine QuarantineEventsV2 --csv q.csv
+macos_quarantine /Volumes/Macintosh\ HD          (a mounted macOS volume)
+macos_quarantine QuarantineEventsV2 --agent 'Terminal|curl' --json cli.json
+macos_quarantine QuarantineEventsV2 --grep '\.dmg|\.pkg' --since 2026-03-01
+macos_quarantine QuarantineEventsV2 --notable-only --min-severity high
+```
 
-## Inputs
+| flag | effect |
+|------|--------|
+| `--agent REGEX` | match the agent name / bundle id |
+| `--grep REGEX` | match the data / origin URL |
+| `--since` / `--until` `YYYY-MM-DD` | UTC date window |
+| `--notable-only` / `--min-severity` | filter by the flags raised |
+| `--csv PATH` / `--json PATH` | write the table instead of the text report |
 
-`~/Library/Preferences/com.apple.LaunchServices.QuarantineEventsV2`.
+## Why it matters
 
-## Outputs
+This is the macOS equivalent of `:Zone.Identifier` on Windows: it answers
+"where did this file come from, and which app pulled it down". A `.dmg`,
+`.pkg`, `.command` or `.mobileconfig` in the list — especially one fetched
+by `Terminal`, `curl`, `osascript` or `Python` rather than a browser — is a
+strong lead, and the origin URL ties the download back to the page (or the
+phishing email) that delivered it.
 
-- Human-readable summary on stdout
-- `--csv PATH` — UTF-8 with BOM, spreadsheet-injection-safe
-- `--json PATH` — structured records
+## Flags
 
-All timestamps UTC (ISO-8601). Exit code is non-zero when nothing is found or
-(where applicable) when a flagged item is present.
+| flag | meaning |
+|------|---------|
+| `executable / installer / script fetched from the internet` | `.dmg`, `.pkg`, `.app`, `.command`, `.sh`, `.py`, `.jar`, `.mobileconfig`, `.terminal`, `.workflow`, … |
+| `archive downloaded (may contain an executable)` | `.zip` / `.7z` / `.rar` / `.tar.gz` |
+| `download from an IP-literal / punycode host` | `http://185.10.20.30/…`, `xn--…` |
+| `downloaded by a command-line / scripting agent` | the agent is `Terminal`, `curl`, `wget`, `python`, `osascript`, `ruby`, … |
+| `download from a paste / file-sharing / tunnel site` | pastebin, mega, transfer.sh, ngrok, trycloudflare, `*.onion`, dynamic-DNS |
+| `dangerous file arrived as an email attachment` | a `.pkg` / `.dmg` / script with event type "email attachment" |
 
-## Related tools
+## Limitations (v0.1)
 
-`macos_fsevents`, `browser_downloads`, `analysis_timeline`.
+- The tool reads the database only; it does not walk the file system to
+  join events to the `com.apple.quarantine` extended attribute on the
+  actual files (that requires a live macOS `xattr` read or an image that
+  preserves xattrs).
+- On very old macOS the store was `LSQuarantineEvent` inside
+  `com.apple.LaunchServices.QuarantineEvents` (v1) — only V2 is read.
+- Per-user: point the tool at each user's `Library/Preferences` (the
+  mounted-volume mode finds them all with `rglob`).
 
----
+## Tests
 
-Part of **Forensics Tools** — Python 3.11+, standard library only,
-cross-platform, read-only. See the [top-level README](../../README.md).
+```
+cd macos/macos_quarantine && python -m pytest -q
+```
+
+`tests/_synth.py` builds a `QuarantineEventsV2` with five events — a Safari
+PDF, a Chrome `.dmg`, a `Terminal`-fetched `.command` from an IP host, a
+`.pkg` email attachment, and a `transfer.sh` `.zip` — and the tests check
+the parse, the Mac-time conversion, every flag and the CLI (including
+mounted-volume discovery).
