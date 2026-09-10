@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "utilities_hash"
+version = "0.1.0"
+description = "Hash a directory tree / file list / mounted image into a CSV / JSON / sum-format manifest in one streaming pass; --verify a tree against a prior manifest"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "hash", "manifest", "integrity", "md5", "sha256", "verify"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/utilities/utilities_hash"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+utilities_hash = "utilities_hash.cli:main"
+[tool.setuptools]
+packages = ["utilities_hash"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
