@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "recovery_fs"
+version = "0.1.0"
+description = "One read-only file-system walker (NTFS / FAT12/16/32 / exFAT; ext / HFS+ / APFS detected): list + deleted, extract, cat, bodyfile"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "filesystem", "ntfs", "fat", "exfat", "recovery", "timeline"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/recovery/recovery_fs"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+recovery_fs = "recovery_fs.cli:main"
+[tool.setuptools]
+packages = ["recovery_fs", "recovery_fs.ntfs"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
