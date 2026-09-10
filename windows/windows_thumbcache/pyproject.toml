@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "windows_thumbcache"
+version = "0.1.0"
+description = "parse thumbcache_*.db / thumbcache_idx.db: list and extract Explorer thumbnails with dimensions, format and the index last-modified time"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "windows", "thumbcache", "thumbnails", "explorer", "pictures"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/windows/windows_thumbcache"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+windows_thumbcache = "windows_thumbcache.cli:main"
+[tool.setuptools]
+packages = ["windows_thumbcache"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
