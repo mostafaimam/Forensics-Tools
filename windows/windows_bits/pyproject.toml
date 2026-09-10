@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "windows_bits"
+version = "0.1.0"
+description = "BITS transfer-history forensics: carve download / upload jobs (URL, local path, owner SID, state, byte counts, timestamps) from qmgr0/1.dat and the ESE qmgr.db"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "windows", "bits", "qmgr", "download", "exfiltration"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/windows/windows_bits"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+windows_bits = "windows_bits.cli:main"
+[tool.setuptools]
+packages = ["windows_bits", "windows_bits.esedb"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
