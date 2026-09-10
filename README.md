@@ -146,18 +146,18 @@ it will do. The full roadmap is tracked privately.
 |---|---|---|
 | [**macos_plist**](macos/macos_plist/) | ✅ v0.1 | Binary + XML property lists → CSV / JSON; **unwraps `NSKeyedArchiver`**; Apple timestamp conversion |
 | [**macos_unifiedlog**](macos/macos_unifiedlog/) | 📋 planned | Parse the macOS unified log (.tracev3) |
-| [**macos_fsevents**](macos/macos_fsevents/) | 📋 planned | Parse /.fseventsd file-system change records |
-| [**macos_knowledgec**](macos/macos_knowledgec/) | 📋 planned | Parse knowledgeC.db / CoreDuet app-usage and device state |
-| [**macos_quarantine**](macos/macos_quarantine/) | 📋 planned | Parse LaunchServices quarantine events (downloads) |
+| [**macos_fsevents**](macos/macos_fsevents/) | ✅ v0.1 | Parse the gzip `/.fseventsd` change log (DLS1/2/3 pages) → per-path Created / Removed / Renamed / Modified records with decoded flags + node ids; flags deletion of `TCC.db` / shell history / LaunchAgents / `/var/log` |
+| [**macos_knowledgec**](macos/macos_knowledgec/) | ✅ v0.1 | `knowledgeC.db` (CoreDuet) — `/app/usage` · `/app/inFocus` · `/app/webUsage` · `/safari/history` · `/display/isBacklit` · `/app/intents` timeline with durations, resolved app, device id, all UTC |
+| [**macos_quarantine**](macos/macos_quarantine/) | ✅ v0.1 | `com.apple.LaunchServices.QuarantineEventsV2` — download provenance: agent, data URL, origin URL, sender, timestamp; flags `.dmg`/`.pkg`/script fetches, IP-literal hosts, downloads by `Terminal` / `curl` |
 | [**macos_spotlight**](macos/macos_spotlight/) | 📋 planned | Parse the Spotlight metadata store (.spotlight-V100 store.db) |
-| [**macos_launchd**](macos/macos_launchd/) | 📋 planned | Review LaunchAgents / LaunchDaemons persistence |
-| [**macos_installhistory**](macos/macos_installhistory/) | 📋 planned | Parse InstallHistory.plist and /var/db/receipts |
-| [**macos_tcc**](macos/macos_tcc/) | 📋 planned | Parse the TCC.db privacy-permission database |
-| [**macos_dslocal**](macos/macos_dslocal/) | 📋 planned | Parse local account records from /var/db/dslocal |
+| [**macos_launchd**](macos/macos_launchd/) | ✅ v0.1 | Review every `launchd` job plist — resolved program / argv, run-as, triggers in plain language, `Disabled`; flags writable-path programs, cradles, `DYLD_INSERT_LIBRARIES`, label / filename mismatch, `com.apple.*` masquerades |
+| [**macos_installhistory**](macos/macos_installhistory/) | ✅ v0.1 | `InstallHistory.plist` + `/var/db/receipts` correlated — install events and per-package receipts with the installing process; flags installs by `bash` / `curl`, `.pkg`s from `~/Downloads`, config profiles |
+| [**macos_tcc**](macos/macos_tcc/) | ✅ v0.1 | `TCC.db` (system + per-user) — who was granted Camera / Mic / Accessibility / Screen Recording / Full Disk Access / Automation, with `last_modified`; flags high-impact grants to CLI / scripting tools; **no cracking** |
+| [**macos_dslocal**](macos/macos_dslocal/) | ✅ v0.1 | `/var/db/dslocal` local accounts — uid / shell / home / hint / auth mechanisms / PBKDF2 iterations, `accountPolicyData` timestamps, group membership; flags passwordless / hidden-interactive / uid-0 accounts; **no hash output** |
 | [**macos_coreanalytics**](macos/macos_coreanalytics/) | 📋 planned | Parse CoreAnalytics (.core_analytics) app-usage aggregates |
-| [**macos_powerlog**](macos/macos_powerlog/) | 📋 planned | Parse the macOS PowerLog (CurrentPowerlog.PLSQL) |
-| [**macos_netusage**](macos/macos_netusage/) | 📋 planned | Parse netusage.sqlite per-process network usage |
-| [**macos_bt**](macos/macos_bt/) | 📋 planned | Parse Bluetooth paired-device history |
+| [**macos_powerlog**](macos/macos_powerlog/) | ✅ v0.1 | `CurrentPowerlog.PLSQL` — normalises the `PL*Agent*` tables into an app-usage / process / **camera / microphone** / **location (lat-lon)** / battery timeline; `--list-tables` / `--table` for the raw ~200 |
+| [**macos_netusage**](macos/macos_netusage/) | ✅ v0.1 | `netusage.sqlite` — per-process network bytes in / out by interface class (Wi-Fi / WWAN / wired) with first / last seen; the macOS SRUM-network equivalent; flags large / upload-heavy egress by LOLBins |
+| [**macos_bt**](macos/macos_bt/) | ✅ v0.1 | `com.apple.Bluetooth.plist` — paired-device history: name, vendor, class-of-device decoded, last-seen times; flags paired **input devices** (keystroke injection) and audio-input devices |
 | [**macos_screentime**](macos/macos_screentime/) | 📋 planned | Parse Screen Time app-usage data (RMAdminStore / knowledgeC) |
 
 ### `browser/`
@@ -255,7 +255,7 @@ it will do. The full roadmap is tracked privately.
 
 `memory_handles` / `memory_hashdump` (reporting only) ·
 `recovery_metadata` FAT / ext4 / APFS support ·
-`macos_quarantine` / `macos_knowledgec` (build on `macos_plist` + SQLite) ·
+`macos_unifiedlog` (`.tracev3`) · `macos_spotlight` · `macos_coreanalytics` ·
 `browser_shortcuts` / `browser_localstorage` / `browser_favicons`.
 
 The **`linux/`** category is now complete for v0.1 (`linux_utmp` · `cron` ·
@@ -265,6 +265,10 @@ A big **`windows/`** artefact push landed the ESE stack (`windows_esedb`
 → `windows_srum` · `windows_webcache`), `windows_usn`, `windows_bam`,
 `windows_usbdevices`, `windows_timeline`, `windows_thumbcache` and
 `windows_notifications`; `mounting_partitions` maps disk layouts.
+The **`macos/`** category filled out: `macos_quarantine` · `tcc` ·
+`launchd` · `installhistory` · `knowledgec` · `fsevents` · `dslocal` ·
+`powerlog` · `bt` · `netusage` (only the `.tracev3` unified log and the
+Spotlight store are still to come).
 The **`network/`** category is complete for v0.1 (`network_pcap` · `http` ·
 `dns` · `flows` · `logs` · `arp`); **`browser/`** now covers history,
 downloads, cookies, extensions, autofill, logins, bookmarks, sessions and
@@ -502,9 +506,11 @@ flowchart TD
     A["acquisition_collect ✅ — /Library, ~/Library, /var/log, /private/etc, plists"] --> B["mounting_image ✅ — HFS+ slice today; APFS container mapping ⏳"]
     B --> C["recovery_carve ✅ — unallocated; APFS / HFS+ metadata timeline ⏳"]
     C --> D["macos_plist ✅ — LaunchAgents/Daemons, loginwindow, recent items, NSKeyedArchiver state"]
-    D --> E["macos_launchd ⏳ · macos_tcc ⏳ · macos_quarantine ⏳ — persistence, permissions, downloads"]
-    E --> F["macos_unifiedlog ⏳ · macos_fsevents ⏳ · macos_knowledgec ⏳ — activity"]
-    F --> G["memory/* + memory_macos ⏳"]
+    D --> DS["macos_dslocal ✅ — local accounts · macos_installhistory ✅ — what was installed, by what"]
+    DS --> E["macos_launchd ✅ — launchd persistence · macos_tcc ✅ — Camera/Mic/FDA grants · macos_quarantine ✅ — downloads"]
+    E --> F["macos_fsevents ✅ — file-system changes · macos_knowledgec ✅ — app/web usage · macos_powerlog ✅ — camera/mic/GPS · macos_unifiedlog ⏳"]
+    F --> NB["macos_netusage ✅ — per-process network bytes · macos_bt ✅ — paired devices"]
+    NB --> G["memory/* + memory_macos ⏳"]
     G --> H["analysis_timeline ✅ — merged UTC timeline"]
 ```
 
@@ -527,16 +533,23 @@ flowchart TD
    macos_plist /mnt/evidence/Users/*/Library/Preferences/com.apple.recentitems.plist
    ```
 
-5. **Persistence & permissions.** Review the LaunchAgents / Daemons plists
-   from step 4 for `ProgramArguments`, `RunAtLoad`, `StartInterval`; login
-   items. Dedicated wrappers — `macos_launchd`, `macos_tcc` (privacy DB),
-   `macos_quarantine` (`LSQuarantineEvent` downloads) — are ⏳.
-6. **Logs & activity** (⏳) — `macos_unifiedlog` (`.tracev3`),
-   `macos_fsevents` (file-system change log), `macos_knowledgec` /
-   `macos_spotlight`. Interim: `macos_plist` on `InstallHistory.plist` and
-   `/var/db/receipts`.
-7. **Memory** (⏳) — `memory_macos`.
-8. **Correlate.**
+5. **Accounts & installs.** `macos_dslocal` reads `/var/db/dslocal` for
+   every local user (uid / shell / hint / auth mechanism / `accountPolicyData`
+   timestamps / admin membership); `macos_installhistory` correlates
+   `InstallHistory.plist` with `/var/db/receipts` and flags installs run by
+   `bash` / `curl`.
+6. **Persistence & permissions.** `macos_launchd` reviews every job plist
+   (resolved program, triggers in plain language, `DYLD_` injection, label
+   masquerades); `macos_tcc` lists the Camera / Mic / Accessibility / Screen
+   Recording / Full Disk Access grants; `macos_quarantine` gives the
+   download provenance (`LSQuarantineEvent`).
+7. **Logs & activity.** `macos_fsevents` parses the `/.fseventsd` change log;
+   `macos_knowledgec` gives the app / web-usage timeline with durations;
+   `macos_powerlog` adds camera / microphone activation and GPS fixes;
+   `macos_netusage` attributes network bytes to a process; `macos_bt` lists
+   paired Bluetooth devices. `macos_unifiedlog` (`.tracev3`) is ⏳.
+8. **Memory** (⏳) — `memory_macos`.
+9. **Correlate.**
 
    ```bash
    analysis_timeline launchdaemons.csv loginwindow.json --html macos_timeline.html
