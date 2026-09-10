@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "windows_timeline"
+version = "0.1.0"
+description = "parse the Windows 10/11 Timeline (ActivitiesCache.db): app / file / clipboard / copy-paste activity with UTC times, decoded clipboard payloads and ActivityOperation rows"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "windows", "timeline", "activitiescache", "cdp", "clipboard"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/windows/windows_timeline"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+windows_timeline = "windows_timeline.cli:main"
+[tool.setuptools]
+packages = ["windows_timeline"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
