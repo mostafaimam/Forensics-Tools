@@ -1,39 +1,79 @@
 # windows_recentfilecache
 
-> **Status — planned.** This directory is a specification stub; the tool is
-> not implemented yet. The design below is the contract it will be built to and
-> may be refined during development.
+**The Windows 7 program-execution list, before Amcache existed.**
+`windows_recentfilecache` parses
+`C:\Windows\AppCompat\Programs\RecentFileCache.bcf` — a 20-byte header
+followed by a flat list of length-prefixed UTF-16 paths. Each path is an
+executable the Program Compatibility Assistant recorded running (or newly
+appearing) in roughly the 24 hours before the last program-inventory
+sweep.
 
-**Parse RecentFileCache.bcf.**
+![windows_recentfilecache GUI](docs/screenshot.png)
 
-Reads `RecentFileCache.bcf` (the pre-Amcache program-execution artefact on
-Windows 7) and lists the executables it recorded, with the file reference and
-recovered path.
+## What you get
 
-## Planned scope
+One row per entry: `index`, `name`, full `path`, and `file_mtime` (the
+`.bcf` file's own modification time — the artefact has **no internal
+timestamps**, so this is the only temporal bound available).
 
-- Parse the BCF header and the length-prefixed UTF-16 path records
-- One row per executable: path, derived name
-- Cross-reference with `windows_amcache` / `windows_shimcache` output
+## Why it matters
 
-## Inputs
+On a Windows 7 host `RecentFileCache.bcf` is often the single best
+"what ran recently" artefact — it predates and was replaced by
+`Amcache.hve`. An executable that appears here ran on this machine; the
+file's MFT timestamps put a ceiling on when. Pair it with `windows_amcache`
+and `windows_shimcache` on the same host for corroboration.
 
-`C:\Windows\AppCompat\Programs\RecentFileCache.bcf`.
+## Usage
 
-## Outputs
+```
+windows_recentfilecache RecentFileCache.bcf --csv rfc.csv
+windows_recentfilecache C:/Windows/AppCompat/Programs --notable-only
+windows_recentfilecache E:\ --min-severity high --json rfc.json
+windows_recentfilecache RecentFileCache.bcf --grep '\\Temp\\'
+```
 
-- Human-readable summary on stdout
-- `--csv PATH` — UTF-8 with BOM, spreadsheet-injection-safe
-- `--json PATH` — structured records
+| flag | effect |
+|------|--------|
+| `--grep REGEX` | match the path / name |
+| `--notable-only` / `--min-severity low\|medium\|high` | filter by the flags raised |
+| `--csv PATH` / `--json PATH` | write the table instead of the text report |
+| `--max-input-bytes` / `--max-records` / `--wall-seconds` | resource limits |
 
-All timestamps UTC (ISO-8601). Exit code is non-zero when nothing is found or
-(where applicable) when a flagged item is present.
+## Flags
 
-## Related tools
+| flag | triggers on |
+|------|-------------|
+| `executable in a user-writable directory` | path under `\AppData`, `\Temp`, `\ProgramData`, `\Users\Public`, `\Downloads`, `\Windows\Temp`, `$Recycle.Bin` |
+| `double extension (masquerading)` | `invoice.pdf.exe`, `photo.jpg.scr`, … |
+| `script / non-PE executable type` | `.scr`, `.pif`, `.hta`, `.js`, `.vbs`, `.ps1`, `.bat`, … |
+| `living-off-the-land binary` | `powershell`, `rundll32`, `regsvr32`, `mshta`, `certutil`, `bitsadmin`, `wmic`, … |
+| `path is a UNC share or the recycle bin` | path starts `\\` or `X:\$Recycle.Bin` |
+| `randomised / very short executable name` | 8+ hex characters, or a 1–3 letter name |
 
-`windows_amcache`, `windows_shimcache`, `windows_prefetch`.
+`severity` is the highest among a row's flags.
 
----
+## Limitations (v0.1)
 
-Part of **Forensics Tools** — Python 3.11+, standard library only,
-cross-platform, read-only. See the [top-level README](../../README.md).
+- The `.bcf` format has no timestamps and no metadata beyond the paths;
+  the tool cannot tell you *when* within the ~24 h window an entry was
+  added.
+- The header signature is checked against the known values; an unexpected
+  signature is reported but parsing still proceeds.
+- Parsing stops at the first entry whose length prefix is implausible and
+  reports the trailing byte count (a truncated or carved file).
+- This artefact only exists on Windows 7 / Server 2008 R2; on newer
+  systems use `windows_amcache`.
+
+## Tests
+
+`tests/_synth.py` builds a `RecentFileCache.bcf` with six entries — two
+benign system binaries and four suspicious ones (`\Temp\update.exe`, an
+`invoice.pdf.exe` double extension, an `.scr` in `\AppData\Roaming`, and
+`rundll32.exe`). The tests cover header detection, the length-prefixed
+string parse, index numbering, trailing-byte accounting, every flag family
+and the CLI filters with a CSV BOM + formula-injection check.
+
+```
+cd windows/windows_recentfilecache && python -m pytest -q
+```

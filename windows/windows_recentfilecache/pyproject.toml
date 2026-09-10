@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "windows_recentfilecache"
+version = "0.1.0"
+description = "Parse RecentFileCache.bcf (the Windows 7 pre-Amcache program-execution artefact): length-prefixed UTF-16 executable paths, with writable-path / double-extension / LOLBin flags"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "windows", "recentfilecache", "bcf", "amcache", "execution-evidence"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/windows/windows_recentfilecache"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+windows_recentfilecache = "windows_recentfilecache.cli:main"
+[tool.setuptools]
+packages = ["windows_recentfilecache"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
