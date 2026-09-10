@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "windows_spooler"
+version = "0.1.0"
+description = "Print-spool artefact forensics: pair .shd job headers with .spl spool data (owner, machine, document, printer, driver, submit time, payload format + page count)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "windows", "spooler", "print", "shd", "spl", "emf", "xps"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/windows/windows_spooler"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+windows_spooler = "windows_spooler.cli:main"
+[tool.setuptools]
+packages = ["windows_spooler"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
