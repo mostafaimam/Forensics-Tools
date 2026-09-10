@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "analysis_enrich"
+version = "0.1.0"
+description = "Enrich an analysis_timeline bundle with IOC feed matches, MITRE ATT&CK technique tags, coarse IP geo and known-good/bad hashes (appends columns)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "timeline", "enrichment", "ioc", "mitre attack", "threat intel"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/analysis/analysis_enrich"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+analysis_enrich = "analysis_enrich.cli:main"
+[tool.setuptools]
+packages = ["analysis_enrich"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
