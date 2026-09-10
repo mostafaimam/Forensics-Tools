@@ -88,7 +88,8 @@ class Table:
         self.lv_fdp = lv_fdp
 
 
-def _data_definition(fixed, variable, tagged) -> bytes:
+def _data_definition(fixed, variable, tagged, null_ids=None) -> bytes:
+    null_ids = null_ids or set()
     fixed = sorted(fixed)
     variable = sorted(variable)
     tagged = sorted(tagged)
@@ -98,7 +99,7 @@ def _data_definition(fixed, variable, tagged) -> bytes:
     fixed_blob = b"".join(v for _, v in fixed)
     nbitmap = (last_fixed + 7) // 8
     bitmap = bytearray(nbitmap)
-    present = {cid for cid, _ in fixed}
+    present = {cid for cid, _ in fixed} - set(null_ids)
     for cid in range(1, last_fixed + 1):
         if cid not in present:
             bitmap[(cid - 1) // 8] |= 1 << ((cid - 1) % 8)
@@ -138,20 +139,38 @@ def _data_definition(fixed, variable, tagged) -> bytes:
 
 
 def _row_record(columns, values: dict) -> bytes:
-    fixed, variable, tagged = [], [], []
+    fixed_cols = sorted((c for c in columns if c.is_fixed),
+                        key=lambda c: c.id)
+    present_fixed = {c.id for c in fixed_cols
+                     if c.name in values and values[c.name] is not None}
+    last_fixed = max(present_fixed) if present_fixed else 0
+
+    # ESE keeps every fixed column's slot up to last_fixed - absent ones are
+    # zero-filled and flagged in the null bitmap.
+    fixed = []
+    null_ids = set()
+    for c in fixed_cols:
+        if c.id > last_fixed:
+            break
+        if c.id in present_fixed:
+            fixed.append((c.id, _enc(c.coltype, values[c.name]).ljust(
+                c.size, b"\x00")[:c.size]))
+        else:
+            fixed.append((c.id, b"\x00" * c.size))
+            null_ids.add(c.id)
+
+    variable, tagged = [], []
     for c in columns:
         if c.name not in values or values[c.name] is None:
             continue
         raw = _enc(c.coltype, values[c.name])
         if not raw:
             continue
-        if c.is_fixed:
-            fixed.append((c.id, raw))
-        elif c.is_variable:
+        if c.is_variable:
             variable.append((c.id, raw))
-        else:
+        elif c.is_tagged:
             tagged.append((c.id, raw))
-    return _data_definition(fixed, variable, tagged)
+    return _data_definition(fixed, variable, tagged, null_ids)
 
 
 def _page(number, flags, father, tag_datas) -> bytes:
