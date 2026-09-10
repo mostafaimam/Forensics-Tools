@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "macos_knowledgec"
+version = "0.1.0"
+description = "parse knowledgeC.db (CoreDuet): app usage / focus / web usage / screen / lock / Siri intents timeline with durations, from a UTC ZOBJECT stream"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "macos", "knowledgec", "coreduet", "screentime", "app-usage"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/macos/macos_knowledgec"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+macos_knowledgec = "macos_knowledgec.cli:main"
+[tool.setuptools]
+packages = ["macos_knowledgec"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
