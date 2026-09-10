@@ -1,40 +1,82 @@
 # macos_fsevents
 
-> **Status — planned.** This directory is a specification stub; the tool is
-> not implemented yet. The design below is the contract it will be built to and
-> may be refined during development.
+**Every file created, deleted, renamed or modified — for weeks.**
+`macos_fsevents` reads the gzip-compressed binary logs under `/.fseventsd`
+(or `/System/Volumes/Data/.fseventsd` on APFS) — the record macOS keeps of
+file-system activity across the whole volume.
 
-**Parse /.fseventsd file-system change records.**
+Each log file starts with a `DLS1` / `DLS2` / `DLS3` page magic and holds
+records of `<path> <event-id> <flags> [<node-id>]`. This tool decodes the
+pages, decompresses multi-member gzip, de-duplicates records across
+overlapping logs, and decodes the change flags:
 
-Decodes the gzipped FSEvents logs into a file-system change timeline: path,
-change flags (created / removed / renamed / modified / xattr), and event id
-ordering — evidence of file activity even after the files are gone.
+`Created` · `Removed` · `Renamed` · `Modified` · `FolderCreated` ·
+`FolderRemoved` · `InodeMetaMod` · `XattrModified` · `XattrRemoved` ·
+`HardLink` · `SymbolicLink` · `PermissionChange` · `FinderInfoMod` ·
+`Mount` · `Unmount` · `LastHardLinkRemoved` · …
 
-## Planned scope
+**There is no per-record timestamp** — the event id is a monotonic counter,
+so records are ordered by event id and the approximate time is the source
+log file's mtime (`approx_time`).
 
-- Gzip member iteration; DLS1 / DLS2 record formats
-- Change-flag decoding; event-id monotonic ordering
-- Approximate timestamps by correlating event ids with other artefacts
-- Bodyfile + JSON
+![macos_fsevents GUI](docs/screenshot.png)
 
-## Inputs
+## Usage
 
-`/.fseventsd/*` (per volume), or carved fseventsd records.
+```
+macos_fsevents /Volumes/Macintosh\ HD --csv fsevents.csv
+macos_fsevents 0000000001a2b3c4 --json one_log.json
+macos_fsevents /mnt/mac --grep '/\.fseventsd/|TCC\.db' --notable-only
+macos_fsevents /mnt/mac --flag Removed --grep '/Users/victim/'
+```
 
-## Outputs
+| flag | effect |
+|------|--------|
+| `--flag NAME` | only records carrying this change flag (repeatable) |
+| `--grep REGEX` | match the path |
+| `--no-dedupe` | keep duplicate records across overlapping logs |
+| `--notable-only` / `--min-severity` | filter by the flags raised |
+| `--csv PATH` / `--json PATH` | write the table instead of the text report |
 
-- Human-readable summary on stdout
-- `--csv PATH` — UTF-8 with BOM, spreadsheet-injection-safe
-- `--json PATH` — structured records
+## Why it matters
 
-All timestamps UTC (ISO-8601). Exit code is non-zero when nothing is found or
-(where applicable) when a flagged item is present.
+FSEvents is macOS's answer to the NTFS `$UsnJrnl`: it survives the file it
+describes, so a payload dropped in `/private/tmp`, run, and deleted leaves a
+`FolderCreated` → `Created` → `Removed` trail here even though nothing is
+left on disk. It is also one of the few places that records an attacker
+**deleting** `TCC.db`, `.zsh_history` or the quarantine store — and, being
+per-volume, it catches activity on an external drive that was plugged in.
 
-## Related tools
+## Flags
 
-`macos_unifiedlog`, `recovery_fs`, `analysis_timeline`.
+| flag | meaning |
+|------|---------|
+| `a security / logging artefact was removed / renamed / touched` | the path is `TCC.db`, the quarantine store, `.bash_history` / `.zsh_history`, `knowledgeC.db`, `XProtect`, `/var/log`, `/var/audit`, `/var/db/diagnostics`, a `LaunchAgents`/`LaunchDaemons` plist, `.ssh/authorized_keys`, `/etc/sudoers`, or `.fseventsd` itself |
+| `file created / removed in a user-writable / temp path` | `/private/tmp`, `/tmp`, `~/Downloads`, `~/Library/Caches`, `~/.Trash`, `/Users/Shared` |
+| `volume mount / unmount event` | a disk was attached or detached |
 
----
+## Limitations (v0.1)
 
-Part of **Forensics Tools** — Python 3.11+, standard library only,
-cross-platform, read-only. See the [top-level README](../../README.md).
+- **No timestamps.** The `approx_time` column is the log file's mtime — use
+  it as a coarse bracket, and cross-reference the event id ordering with
+  `$MFT`-style artefacts (`macos_installhistory`, `knowledgeC.db`) for
+  precise timing.
+- Event ids are per-volume and reset on some reformats; the
+  `fseventsd-uuid` file (not parsed) identifies the volume epoch.
+- The `EndOfTransaction` marker groups records into a single filesystem
+  operation; this version lists records individually.
+- Records whose path was purged (the volume ran out of log space) are gone
+  — FSEvents is a ring, like `$UsnJrnl`.
+
+## Tests
+
+```
+cd macos/macos_fsevents && python -m pytest -q
+```
+
+`tests/_synth.py` builds a `.fseventsd` directory with three gzip logs — a
+`DLS2` log (a Pages doc created + modified, a `.dmg` download, a
+`/private/tmp/.x/payload` create), a second `DLS2` log (the payload +
+folder removed, `.zsh_history` removed, `TCC.db` renamed, a USB mount) and
+a `DLS1` log — and the tests check the binary parser (v1 and v2), the
+collection + de-dup, the flag decoding, every heuristic flag and the CLI.
