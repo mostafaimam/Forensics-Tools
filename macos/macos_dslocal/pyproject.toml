@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "macos_dslocal"
+version = "0.1.0"
+description = "parse /var/db/dslocal local accounts: uid / shell / home / hint / auth mechanisms / PBKDF2 iterations / accountPolicyData timestamps, group membership, no cracking"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "macos", "dslocal", "accounts", "directoryservices", "users"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/macos/macos_dslocal"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+macos_dslocal = "macos_dslocal.cli:main"
+[tool.setuptools]
+packages = ["macos_dslocal"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
