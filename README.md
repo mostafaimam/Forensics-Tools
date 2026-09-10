@@ -53,7 +53,7 @@ it will do. The full roadmap is tracked privately.
 |---|---|---|
 | [**mounting_image**](mounting/mounting_image/) | ✅ v0.1 | Read-only access to raw / split / **E01** / **VHD** / **VMDK** images — container + MBR/GPT inspection, raw export, **built-in NBD server + client** (no `nbd-client`), **`mount` as a real read-only drive** (Windows drive letter, macOS volume, Linux mount); CLI + `tkinter` GUI |
 | [**mounting_vsc**](mounting/mounting_vsc/) | 📋 planned | Enumerate and mount every Volume Shadow Copy on a volume · GUI |
-| [**mounting_partitions**](mounting/mounting_partitions/) | 📋 planned | Map the partition layout of a disk image (no mounting) |
+| [**mounting_partitions**](mounting/mounting_partitions/) | ✅ v0.1 | Map the MBR / GPT partition layout of a raw / EWF / VHD / VMDK image and identify the filesystem in each slice (NTFS / FAT / ext / XFS / Btrfs / APFS / HFS+ / LVM2 / LUKS / BitLocker / swap); gaps + overlaps; no mounting |
 | [**mounting_bitlocker**](mounting/mounting_bitlocker/) | 📋 planned | Unlock a BitLocker volume with a supplied key |
 | [**mounting_luks**](mounting/mounting_luks/) | 📋 planned | Unlock a LUKS1 / LUKS2 volume with a passphrase or keyfile |
 | [**mounting_veracrypt**](mounting/mounting_veracrypt/) | 📋 planned | Unlock a TrueCrypt / VeraCrypt container or partition with a password |
@@ -83,12 +83,12 @@ it will do. The full roadmap is tracked privately.
 | [**windows_prefetch**](windows/windows_prefetch/) | ✅ v0.1 | Prefetch `.pf` v17-31, including the Windows 10/11 `MAM` / XPRESS-Huffman compressed format (pure-Python decompressor) |
 | [**windows_recentfilecache**](windows/windows_recentfilecache/) | 📋 planned | Parse RecentFileCache.bcf |
 | [**windows_shellbags**](windows/windows_shellbags/) | ✅ v0.1 | Reconstruct the shellbag folder-access tree from `BagMRU` / `Bags` (`UsrClass.dat` / `NTUSER.DAT`) — full paths, last-interacted times, `$MFT` refs, `MRUListEx` order; flags removable / network / archive / other-profile paths · GUI |
-| [**windows_srum**](windows/windows_srum/) | 📋 planned | Parse SRUDB.dat (System Resource Usage Monitor) |
+| [**windows_srum**](windows/windows_srum/) | ✅ v0.1 | `SRUDB.dat` → per-app hourly timeline: network bytes sent / received per interface, connected time, CPU cycle time + disk bytes, energy, push notifications; resolves `AppId` / `UserId` via `SruDbIdMapTable` to the exe path + user SID |
 | [**windows_sum**](windows/windows_sum/) | 📋 planned | Parse the Microsoft User Access Logs (SUM) |
-| [**windows_timeline**](windows/windows_timeline/) | 📋 planned | Parse the Windows 10/11 Timeline (ActivitiesCache.db) |
+| [**windows_timeline**](windows/windows_timeline/) | ✅ v0.1 | Windows 10/11 Timeline (`ActivitiesCache.db`) — app / file / clipboard / copy-paste / notification activity with UTC times, resolved app, **decoded clipboard payloads** and `ActivityOperation` (removed-activity) rows |
 | [**windows_sqlmap**](windows/windows_sqlmap/) | 📋 planned | Locate SQLite databases in a target and process them with named maps |
-| [**windows_esedb**](windows/windows_esedb/) | 📋 planned | Generic ESE / JET (.edb) database reader |
-| [**windows_usn**](windows/windows_usn/) | 📋 planned | Standalone $UsnJrnl:$J parser / carver |
+| [**windows_esedb**](windows/windows_esedb/) | ✅ v0.1 | From-scratch ESE / JET (`.edb`) reader — header, catalog (`MSysObjects`), B-trees, long values, fixed / variable / tagged records (Vista+ extended tagged, 7-bit compression); the engine behind `windows_srum` / `windows_webcache` |
+| [**windows_usn**](windows/windows_usn/) | ✅ v0.1 | Standalone `$UsnJrnl:$J` parser **and carver** — sequential walk + `USN_RECORD` carving from unallocated space, folded into create / rename / delete / data-write operations; `--mft` resolves paths |
 | [**windows_sdb**](windows/windows_sdb/) | 📋 planned | Parse application shim databases (.sdb) · GUI |
 | [**windows_wer**](windows/windows_wer/) | 📋 planned | Parse Windows Error Reporting (.wer) reports |
 | [**windows_bits**](windows/windows_bits/) | 📋 planned | Parse the BITS transfer history (qmgr.db / qmgr*.dat) |
@@ -96,11 +96,11 @@ it will do. The full roadmap is tracked privately.
 | [**windows_wmi**](windows/windows_wmi/) | 📋 planned | Parse the WMI repository for persistence (OBJECTS.DATA / INDEX.BTR) |
 | [**windows_defender**](windows/windows_defender/) | 📋 planned | Parse Microsoft Defender logs, detection history and quarantine |
 | [**windows_pslogging**](windows/windows_pslogging/) | 📋 planned | PowerShell forensics: ScriptBlock, Module logging and transcripts |
-| [**windows_usbdevices**](windows/windows_usbdevices/) | 📋 planned | Reconstruct removable-device history |
-| [**windows_webcache**](windows/windows_webcache/) | 📋 planned | Parse WebCacheV01.dat (WinINET history / cookies / cache) |
-| [**windows_thumbcache**](windows/windows_thumbcache/) | 📋 planned | Extract thumbnails from thumbcache_*.db and map them to paths |
-| [**windows_notifications**](windows/windows_notifications/) | 📋 planned | Parse the notification history (wpndatabase.db / appdb.dat) |
-| [**windows_bam**](windows/windows_bam/) | 📋 planned | Parse Background Activity Moderator / DAM last-execution data |
+| [**windows_usbdevices**](windows/windows_usbdevices/) | ✅ v0.1 | Removable-device history correlated across `SYSTEM` (`USBSTOR` / `USB` / `MountedDevices` + install / arrival / removal FILETIMEs), `SOFTWARE` (friendly volume name) and `setupapi.dev.log` (first-seen) — one row per device |
+| [**windows_webcache**](windows/windows_webcache/) | ✅ v0.1 | `WebCacheV01.dat` (the WinINET store) — history / cookies / cached content / downloads / DOM storage with un-prefixed URLs and modified / accessed / expiry FILETIMEs; flags exe fetches, IP-literal / punycode hosts, paste / tunnel sites |
+| [**windows_thumbcache**](windows/windows_thumbcache/) | ✅ v0.1 | `thumbcache_*.db` + `thumbcache_idx.db` — list every cached thumbnail (id, identifier, format, dimensions, source last-modified) and `--extract` them all as image files: evidence of pictures no longer on disk |
+| [**windows_notifications**](windows/windows_notifications/) | ✅ v0.1 | `wpndatabase.db` — toast / tile / badge / raw notification history joined to the raising application, with arrival / expiry times and the notification text extracted from the payload XML |
+| [**windows_bam**](windows/windows_bam/) | ✅ v0.1 | Background / Desktop Activity Moderator — per-user last-execution time for every program from `SYSTEM\…\bam` / `dam` `UserSettings\<SID>`; flags writable-path / LOLBin / masquerade binaries |
 | [**windows_spooler**](windows/windows_spooler/) | 📋 planned | Parse print-spool artefacts (.spl / .shd) |
 | [**windows_logfile**](windows/windows_logfile/) | 📋 planned | Analyse the NTFS $LogFile transaction log |
 | [**windows_sigma**](windows/windows_sigma/) | 📋 planned | Lightweight detection-rules engine over parsed event data |
@@ -261,6 +261,10 @@ it will do. The full roadmap is tracked privately.
 The **`linux/`** category is now complete for v0.1 (`linux_utmp` · `cron` ·
 `syslog` · `bashhist` · `journal` · `audit` · `units` · `packages` ·
 `sshkeys` · `persistence` · `containers` · `networkmgr`).
+A big **`windows/`** artefact push landed the ESE stack (`windows_esedb`
+→ `windows_srum` · `windows_webcache`), `windows_usn`, `windows_bam`,
+`windows_usbdevices`, `windows_timeline`, `windows_thumbcache` and
+`windows_notifications`; `mounting_partitions` maps disk layouts.
 The **`network/`** category is complete for v0.1 (`network_pcap` · `http` ·
 `dns` · `flows` · `logs` · `arp`); **`browser/`** now covers history,
 downloads, cookies, extensions, autofill, logins, bookmarks, sessions and
@@ -302,13 +306,15 @@ flowchart LR
 ```mermaid
 flowchart TD
     A["acquisition_collect ✅ — triage: hives, EVTX, $MFT, prefetch, jump lists"] --> B["mounting_image ✅ — identify partitions, extract / NBD-serve the volume"]
-    B --> C["windows_mft ✅ — $MFT + $UsnJrnl:$J → MACB timeline, ADS, timestomp (backbone)"]
+    B --> MP["mounting_partitions ✅ — MBR/GPT + per-slice filesystem, gaps"]
+    MP --> C["windows_mft ✅ — $MFT + $UsnJrnl:$J → MACB timeline, ADS, timestomp (backbone) · windows_usn ✅ — carve the journal from unallocated"]
     C --> RC["recovery_metadata ✅ / recovery_carve ✅ — deleted + unallocated files"]
     C --> D["windows_reglog ✅ → windows_registry ✅ — replay .LOG1/.LOG2, then ~50 plugins per hive"]
     D --> E["windows_prefetch ✅ · windows_shimcache ✅ · windows_amcache ✅ — execution evidence"]
-    E --> TS["windows_tasks ✅ — Tasks XML + TaskCache → triggers, actions, last-run · windows_shellbags ✅ — folders browsed"]
-    TS --> F["windows_lnk ✅ · windows_jumplist ✅ · windows_recycle ✅ — opened files, source host, deletions"]
-    F --> G["windows_evtx ✅ — logon, service install, 4688, PowerShell 4104"]
+    E --> BAM["windows_bam ✅ — per-user last-run · windows_usbdevices ✅ — USB history · windows_srum ✅ — per-app network bytes / hour"]
+    BAM --> TS["windows_tasks ✅ — Tasks XML + TaskCache → triggers, actions, last-run · windows_shellbags ✅ — folders browsed"]
+    TS --> F["windows_lnk ✅ · windows_jumplist ✅ · windows_recycle ✅ · windows_timeline ✅ · windows_thumbcache ✅ — opened files, activity, pictures"]
+    F --> G["windows_evtx ✅ — logon, service install, 4688, PowerShell 4104 · windows_webcache ✅ · windows_notifications ✅"]
     G --> H["memory/* — pslist ✅ · netscan ✅ · malfind ✅ · dlllist ✅ · cmdline ✅ · svcscan ✅ · strings ✅ · in-memory hives ⏳ · hashdump ⏳"]
     H --> I["analysis_timeline ✅ — merge every output into one sorted UTC timeline"]
     I --> J["analysis_view ✅ (filter · tag · annotate) -> analysis_report ✅ · analysis_gallery ✅"]
