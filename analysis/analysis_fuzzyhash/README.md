@@ -1,41 +1,82 @@
 # analysis_fuzzyhash
 
-> **Status — planned.** This directory is a specification stub; the tool is
-> not implemented yet. The design below is the contract it will be built to and
-> may be refined during development.
+**Group the files that exact hashing keeps apart.**
 
-**Similarity hashing and clustering (CTPH + locality hashes).**
+`analysis_fuzzyhash` computes three similarity digests over a file set and
+clusters them, so near-duplicates and variant families land together even
+when every SHA-256 differs.
 
-Computes context-triggered piecewise hashes (ssdeep-style) and a TLSH-style
-locality hash for a file set, plus `imphash` / rich-header hashes for PEs, and
-clusters similar documents and binaries — finding near-duplicates and variant
-families that exact hashing misses.
+![analysis_fuzzyhash GUI](docs/screenshot.png)
 
-## Planned scope
+## The digests
 
-- Bundled CTPH and TLSH-style implementations (no external libs)
-- PE import hash and rich-header hash
-- Pairwise similarity scoring; threshold-based clustering with cluster reports
-- `--against` a baseline; feeds `analysis_dedupe` / `analysis_gallery`
+| digest | what it is | compared by |
+|--------|-----------|-------------|
+| **CTPH** | context-triggered piecewise hash — the ssdeep construction: a rolling window picks reset points, each piece is FNV-hashed to one base64 character, at two block sizes | normalised edit distance → 0-100 |
+| **locality** | a byte-trigram histogram (Pearson-bucketed) folded to per-bucket "vs. mean" bits — a TLSH-style whole-file digest that, unlike CTPH, tolerates size differences | L1 distance → 0-100 |
+| **imphash** | MD5 of a PE's ordered `dll.function` import list | equality |
+| **rich_hash** | MD5 of the decoded PE Rich header (toolchain fingerprint) | equality |
 
-## Inputs
+## Usage
 
-A directory tree, a file list, or a mounted image.
+```
+analysis_fuzzyhash scan /samples --threshold 70 --csv fh.csv
+analysis_fuzzyhash scan /new --against baseline.txt --clustered-only
+analysis_fuzzyhash hash suspicious.exe
+analysis_fuzzyhash compare a.bin b.bin
+analysis_fuzzyhash scan /cases/exports gui
+```
 
-## Outputs
+**scan** — hashes the tree, scores every pair, and unions pairs at or above
+`--threshold` into clusters (union-find). Each cluster reports its members
+and a representative (largest file). `--against FILE` scores each file
+against a list of baseline CTPH digests. `--clustered-only` drops the
+singletons.
 
-- Human-readable summary on stdout
-- `--csv PATH` — UTF-8 with BOM, spreadsheet-injection-safe
-- `--json PATH` — structured records
+**hash** — print all digests for one or more files.
+**compare** — score two files (CTPH + locality + imphash) 0-100.
 
-All timestamps UTC (ISO-8601). Exit code is non-zero when nothing is found or
-(where applicable) when a flagged item is present.
+| flag | effect |
+|------|--------|
+| `--threshold N` | min score to cluster (default 70 — the practical CTPH floor is ~50 for same-length digests, so 70+ is meaningful) |
+| `--no-recurse` / `--exclude GLOB` | walk control |
+| `--against FILE` | baseline CTPH digests, one `blocksize:h1:h2` per line |
+| `--csv PATH` / `--json PATH` | `path,size,sha256,ctph,locality,imphash,rich_hash,is_pe,cluster,representative,best_match,best_score` |
 
-## Related tools
+## Why it matters
 
-`analysis_dedupe`, `analysis_gallery`, `analysis_kff`.
+An actor's toolkit is the same loader / dropper / beacon rebuilt with a
+new C2, a new key, a padded resource — every hash different, the code 95%
+identical. Fuzzy hashing recovers the family. `imphash` groups PE samples
+built from the same source even when the bytes are repacked; the Rich
+header groups by the exact compiler/linker build. Feed the clusters to
+`analysis_dedupe` (drop the near-dupes from review) or triage one member
+per cluster instead of all of them.
 
----
+## Limitations (v0.1)
 
-Part of **Forensics Tools** — Python 3.11+, standard library only,
-cross-platform, read-only. See the [top-level README](../../README.md).
+- CTPH follows the ssdeep design but is an independent implementation; its
+  scores are close to, not identical with, `ssdeep`'s, and the two digest
+  strings are **not** interchangeable with real ssdeep output.
+- The locality digest is TLSH-*style*, not TLSH — 128 buckets, a coarser
+  bucketing, no libtlsh compatibility. It is noisy for text-like data, so
+  it only *rescues* a pair (score ≥ 80) that CTPH could not relate; it
+  never lowers a CTPH score.
+- High-entropy input (already-compressed, encrypted, or packed files)
+  fuzzy-hashes poorly by nature — such files tend not to cluster, and that
+  is expected, not a bug.
+- imphash / Rich-header parsing handles the common PE32 / PE32+ layout;
+  unusual or deliberately malformed headers may yield no imphash.
+- Files above 64 MiB are skipped (recorded with an `error`).
+
+## Tests
+
+`tests/test_analysis_fuzzyhash.py` checks CTPH identity / small-edit /
+unrelated ordering, the locality digest's discrimination, a hand-built
+PE's import list + imphash stability, a three-member variant cluster that
+excludes an unrelated file, and the `scan` / `compare` CLI with
+CSV(BOM) / JSON.
+
+```
+cd analysis/analysis_fuzzyhash && python -m pytest -q
+```
