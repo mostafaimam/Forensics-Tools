@@ -1,0 +1,21 @@
+title: New Service Installed
+id: 8f6a1e10-0001-4a1a-9c1a-000000000004
+status: stable
+level: low
+description: A new service was installed (event 7045 / 4697).
+logsource:
+    product: windows
+    category: system
+detection:
+    selection:
+        EventID:
+            - 7045
+            - 4697
+    condition: selection
+fields:
+    - ServiceName
+    - ImagePath
+    - AccountName
+tags:
+    - attack.persistence
+    - attack.t1543.003

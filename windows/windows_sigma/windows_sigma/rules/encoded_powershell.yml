@@ -1,0 +1,27 @@
+title: Encoded or Download-Cradle PowerShell Command
+id: 8f6a1e10-0001-4a1a-9c1a-000000000001
+status: stable
+level: high
+description: PowerShell script block with an -EncodedCommand style payload or a common download-cradle construct.
+logsource:
+    product: windows
+    service: powershell
+detection:
+    selection:
+        ScriptBlockText|contains:
+            - '-enc'
+            - 'FromBase64String'
+            - 'DownloadString'
+            - 'DownloadFile'
+            - 'IEX ('
+            - 'Invoke-Expression'
+    condition: selection
+fields:
+    - ScriptBlockText
+    - User
+    - Computer
+tags:
+    - attack.execution
+    - attack.t1059.001
+    - attack.defense_evasion
+    - attack.t1027

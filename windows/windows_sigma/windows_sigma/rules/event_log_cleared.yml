@@ -1,0 +1,20 @@
+title: Windows Event Log Cleared
+id: 8f6a1e10-0001-4a1a-9c1a-000000000002
+status: stable
+level: high
+description: The Security or System event log was cleared (event 1102 or 104).
+logsource:
+    product: windows
+    category: log-cleared
+detection:
+    selection:
+        EventID:
+            - 1102
+            - 104
+    condition: selection
+fields:
+    - EventID
+    - SubjectUserName
+tags:
+    - attack.defense_evasion
+    - attack.t1070.001

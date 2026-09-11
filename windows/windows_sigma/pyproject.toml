@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "windows_sigma"
+version = "0.1.0"
+description = "Lightweight Sigma-style detection-rules engine: hand-rolled YAML reader, selection + condition (and/or/not/1-of/all-of) grammar, field modifiers, bundled starter ruleset over windows_evtx / windows_pslogging output"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "windows", "sigma", "detection rules", "threat hunting", "evtx"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/windows/windows_sigma"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+windows_sigma = "windows_sigma.cli:main"
+[tool.setuptools]
+packages = ["windows_sigma"]
+[tool.setuptools.package-data]
+windows_sigma = ["rules/*.yml"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
