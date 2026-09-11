@@ -54,8 +54,8 @@ it will do. The full roadmap is tracked privately.
 | [**mounting_image**](mounting/mounting_image/) | ✅ v0.1 | Read-only access to raw / split / **E01** / **VHD** / **VMDK** images — container + MBR/GPT inspection, raw export, **built-in NBD server + client** (no `nbd-client`), **`mount` as a real read-only drive** (Windows drive letter, macOS volume, Linux mount); CLI + `tkinter` GUI |
 | [**mounting_vsc**](mounting/mounting_vsc/) | 📋 planned | Enumerate and mount every Volume Shadow Copy on a volume · GUI |
 | [**mounting_partitions**](mounting/mounting_partitions/) | ✅ v0.1 | Map the MBR / GPT partition layout of a raw / EWF / VHD / VMDK image and identify the filesystem in each slice (NTFS / FAT / ext / XFS / Btrfs / APFS / HFS+ / LVM2 / LUKS / BitLocker / swap); gaps + overlaps; no mounting |
-| [**mounting_bitlocker**](mounting/mounting_bitlocker/) | 📋 planned | Unlock a BitLocker volume with a supplied key |
-| [**mounting_luks**](mounting/mounting_luks/) | 📋 planned | Unlock a LUKS1 / LUKS2 volume with a passphrase or keyfile |
+| [**mounting_bitlocker**](mounting/mounting_bitlocker/) | ✅ v0.1 | Unlock a BitLocker volume with a supplied 48-digit recovery password (key-stretch + AES-CCM VMK/FVEK unwrap), then decrypt sectors with AES-XTS / AES-CBC; bundled AES, nothing brute forced |
+| [**mounting_luks**](mounting/mounting_luks/) | ✅ v0.1 | Unlock a LUKS1 volume with a supplied passphrase (PBKDF2 key-slot + AES-CBC-ESSIV + anti-forensic key-material recovery, master-key digest verification), then decrypt sectors; `cbc-essiv:<hash>` cipher mode; LUKS2 detected, not unlockable |
 | [**mounting_veracrypt**](mounting/mounting_veracrypt/) | 📋 planned | Unlock a TrueCrypt / VeraCrypt container or partition with a password |
 | [**mounting_fvde**](mounting/mounting_fvde/) | 📋 planned | Unlock an APFS / CoreStorage FileVault volume with a password or recovery key |
 
@@ -86,7 +86,7 @@ it will do. The full roadmap is tracked privately.
 | [**windows_srum**](windows/windows_srum/) | ✅ v0.1 | `SRUDB.dat` → per-app hourly timeline: network bytes sent / received per interface, connected time, CPU cycle time + disk bytes, energy, push notifications; resolves `AppId` / `UserId` via `SruDbIdMapTable` to the exe path + user SID |
 | [**windows_sum**](windows/windows_sum/) | ✅ v0.1 | Microsoft User Access Logging (SUM) — `SystemIdentity.mdb` role-GUID map + `Current.mdb` / `{GUID}.mdb` role databases → one row per (user, client, role) access: authenticated user, client name / decoded IP, first / last seen, totals and the `DayN` columns expanded to a per-day date histogram; flags public-IP access, RDP-from-internet, single-day spikes |
 | [**windows_timeline**](windows/windows_timeline/) | ✅ v0.1 | Windows 10/11 Timeline (`ActivitiesCache.db`) — app / file / clipboard / copy-paste / notification activity with UTC times, resolved app, **decoded clipboard payloads** and `ActivityOperation` (removed-activity) rows |
-| [**windows_sqlmap**](windows/windows_sqlmap/) | 📋 planned | Locate SQLite databases in a target and process them with named maps |
+| [**windows_sqlmap**](windows/windows_sqlmap/) | ✅ v0.1 | Find every SQLite database in a target by header magic (not extension), match each against declarative named-map JSON profiles (tables required, SQL, columns, time format) into normalised rows; unmatched databases still listed with full table/row-count schema · GUI |
 | [**windows_esedb**](windows/windows_esedb/) | ✅ v0.1 | From-scratch ESE / JET (`.edb`) reader — header, catalog (`MSysObjects`), B-trees, long values, fixed / variable / tagged records (Vista+ extended tagged, 7-bit compression); the engine behind `windows_srum` / `windows_webcache` |
 | [**windows_usn**](windows/windows_usn/) | ✅ v0.1 | Standalone `$UsnJrnl:$J` parser **and carver** — sequential walk + `USN_RECORD` carving from unallocated space, folded into create / rename / delete / data-write operations; `--mft` resolves paths |
 | [**windows_sdb**](windows/windows_sdb/) | ✅ v0.1 | Application Compatibility shim databases (`.sdb`) — tag-tree parse listing the database (name, GUID, time), shims, patches and every EXE entry with its matching files / shim / patch refs; flags `InjectDll` / `RedirectEXE` / `CorrectFilePaths` / custom-patch persistence and shims aimed at system binaries · GUI |
@@ -103,7 +103,7 @@ it will do. The full roadmap is tracked privately.
 | [**windows_bam**](windows/windows_bam/) | ✅ v0.1 | Background / Desktop Activity Moderator — per-user last-execution time for every program from `SYSTEM\…\bam` / `dam` `UserSettings\<SID>`; flags writable-path / LOLBin / masquerade binaries |
 | [**windows_spooler**](windows/windows_spooler/) | ✅ v0.1 | Print-spool artefacts — pairs `.shd` job headers with `.spl` spool data → owner, source machine, document name, printer, driver, submit time (offset table + `SYSTEMTIME` scan) and the `.spl` payload format (EMF / XPS / PostScript / PCL / PDF / raw) with a page count; `--extract` copies payloads out; flags sensitive document names and owner/machine mismatch |
 | [**windows_logfile**](windows/windows_logfile/) | ✅ v0.1 | NTFS `$LogFile` — reads RSTR / RCRD pages (applying the USA), decodes the redo/undo operations and pulls the `FILE_NAME` attribute out of index-entry ops to reconstruct file created / deleted / renamed, MFT record init / free and resident-value updates with parent MFT ref, `$FILE_NAME` timestamps and size; flags create+delete twins, `$FILE_NAME` timestomping, executable deletions, ADS names |
-| [**windows_sigma**](windows/windows_sigma/) | 📋 planned | Lightweight detection-rules engine over parsed event data |
+| [**windows_sigma**](windows/windows_sigma/) | ✅ v0.1 | Self-contained Sigma-style detection-rules engine — hand-rolled YAML reader, evaluates rules against `windows_evtx` / `windows_pslogging` normalised CSV/JSON into a prioritised hit list |
 
 ### `analysis/`
 
@@ -149,16 +149,16 @@ it will do. The full roadmap is tracked privately.
 | [**macos_fsevents**](macos/macos_fsevents/) | ✅ v0.1 | Parse the gzip `/.fseventsd` change log (DLS1/2/3 pages) → per-path Created / Removed / Renamed / Modified records with decoded flags + node ids; flags deletion of `TCC.db` / shell history / LaunchAgents / `/var/log` |
 | [**macos_knowledgec**](macos/macos_knowledgec/) | ✅ v0.1 | `knowledgeC.db` (CoreDuet) — `/app/usage` · `/app/inFocus` · `/app/webUsage` · `/safari/history` · `/display/isBacklit` · `/app/intents` timeline with durations, resolved app, device id, all UTC |
 | [**macos_quarantine**](macos/macos_quarantine/) | ✅ v0.1 | `com.apple.LaunchServices.QuarantineEventsV2` — download provenance: agent, data URL, origin URL, sender, timestamp; flags `.dmg`/`.pkg`/script fetches, IP-literal hosts, downloads by `Terminal` / `curl` |
-| [**macos_spotlight**](macos/macos_spotlight/) | 📋 planned | Parse the Spotlight metadata store (.spotlight-V100 store.db) |
+| [**macos_spotlight**](macos/macos_spotlight/) | ✅ v0.1 | Classified string carving from the Spotlight metadata store (`.spotlight-V100/Store-V2/**/store.db`) — `kMDItem*` attribute names, UTIs, `kMDItemWhereFroms` download URLs, bundle identifiers, paths; the undocumented block/record format is not decoded · GUI |
 | [**macos_launchd**](macos/macos_launchd/) | ✅ v0.1 | Review every `launchd` job plist — resolved program / argv, run-as, triggers in plain language, `Disabled`; flags writable-path programs, cradles, `DYLD_INSERT_LIBRARIES`, label / filename mismatch, `com.apple.*` masquerades |
 | [**macos_installhistory**](macos/macos_installhistory/) | ✅ v0.1 | `InstallHistory.plist` + `/var/db/receipts` correlated — install events and per-package receipts with the installing process; flags installs by `bash` / `curl`, `.pkg`s from `~/Downloads`, config profiles |
 | [**macos_tcc**](macos/macos_tcc/) | ✅ v0.1 | `TCC.db` (system + per-user) — who was granted Camera / Mic / Accessibility / Screen Recording / Full Disk Access / Automation, with `last_modified`; flags high-impact grants to CLI / scripting tools; **no cracking** |
 | [**macos_dslocal**](macos/macos_dslocal/) | ✅ v0.1 | `/var/db/dslocal` local accounts — uid / shell / home / hint / auth mechanisms / PBKDF2 iterations, `accountPolicyData` timestamps, group membership; flags passwordless / hidden-interactive / uid-0 accounts; **no hash output** |
-| [**macos_coreanalytics**](macos/macos_coreanalytics/) | 📋 planned | Parse CoreAnalytics (.core_analytics) app-usage aggregates |
+| [**macos_coreanalytics**](macos/macos_coreanalytics/) | ✅ v0.1 | `.core_analytics` diagnostics bundles (`/Library/Logs/DiagnosticReports/Analytics-*`) — per-day app launch / foreground / active-time aggregates spanning weeks per file; schema-tolerant plist reader · GUI |
 | [**macos_powerlog**](macos/macos_powerlog/) | ✅ v0.1 | `CurrentPowerlog.PLSQL` — normalises the `PL*Agent*` tables into an app-usage / process / **camera / microphone** / **location (lat-lon)** / battery timeline; `--list-tables` / `--table` for the raw ~200 |
 | [**macos_netusage**](macos/macos_netusage/) | ✅ v0.1 | `netusage.sqlite` — per-process network bytes in / out by interface class (Wi-Fi / WWAN / wired) with first / last seen; the macOS SRUM-network equivalent; flags large / upload-heavy egress by LOLBins |
 | [**macos_bt**](macos/macos_bt/) | ✅ v0.1 | `com.apple.Bluetooth.plist` — paired-device history: name, vendor, class-of-device decoded, last-seen times; flags paired **input devices** (keystroke injection) and audio-input devices |
-| [**macos_screentime**](macos/macos_screentime/) | 📋 planned | Parse Screen Time app-usage data (RMAdminStore / knowledgeC) |
+| [**macos_screentime**](macos/macos_screentime/) | ✅ v0.1 | `RMAdminStore-Local.sqlite` (Screen Time's Core Data store) — per-app / per-category daily usage totals by device, including usage synced in from the user's other Apple devices; schema read generically, no hard-coded Core Data entity IDs · GUI |
 
 ### `browser/`
 
@@ -200,11 +200,11 @@ it will do. The full roadmap is tracked privately.
 | [**memory_dlllist**](memory/memory_dlllist/) | ✅ v0.1 | Loaded modules per process — pool-tag scan for image VADs, recovers each module's full path via `_MMVAD → Subsection → ControlArea → FileObject`, flags **user-writable load paths**, mislocated system DLLs, and executable image regions with **no backing file** (manual maps) |
 | [**memory_cmdline**](memory/memory_cmdline/) | ✅ v0.1 | Process command lines — walks `_EPROCESS → PEB → RTL_USER_PROCESS_PARAMETERS` for the full command line, image path, working directory, window title and environment; flags **LOLBins** (`powershell -enc`, `certutil -urlcache`, `regsvr32 /i:http`, …) and argv[0] masquerading |
 | [**memory_svcscan**](memory/memory_svcscan/) | ✅ v0.1 | Windows services — scans `services.exe` memory for `_SERVICE_RECORD` (`sErv`) structures to rebuild the service list **without the registry** (finds services deleted from `HKLM\…\Services`); name, display name, type, state, PID, binary path; flags user-writable / LOLBin / driver-from-temp binaries |
-| [**memory_handles**](memory/memory_handles/) | 📋 planned | List open handles per process and the kernel object table |
-| [**memory_registry**](memory/memory_registry/) | 📋 planned | Locate registry hives in memory and read keys only present in RAM |
+| [**memory_handles**](memory/memory_handles/) | ✅ v0.1 | Per-process open file handles — structurally-validated `_HANDLE_TABLE` walk (object-table offset and pointer-shift both auto-detected across Windows-version drift) reusing `memory_filescan`'s `_FILE_OBJECT` shape check; v0.1 recovers file handles only (Key/Process/Thread typing deferred) |
+| [**memory_registry**](memory/memory_registry/) | ✅ v0.1 | Locate registry hives resident in memory — scans for the `regf` base-block magic directly in physical memory, decodes dirty flag, last-written FILETIME and hive filename; v0.1 is a hive inventory, not full hive-body reconstruction |
 | [**memory_hashdump**](memory/memory_hashdump/) | 📋 planned | Extract local NT password hashes from a memory image (reporting only) |
 | [**memory_lsasecrets**](memory/memory_lsasecrets/) | 📋 planned | Extract LSA secrets and cached domain credentials (reporting only) |
-| [**memory_filescan**](memory/memory_filescan/) | 📋 planned | Scan for _FILE_OBJECT structures in a memory image |
+| [**memory_filescan**](memory/memory_filescan/) | ✅ v0.1 | Pool-tag scan for `_FILE_OBJECT` structures — recovers open/cached file paths (including from **exited processes**) via kernel-DTB paged-pool resolution, no per-process attribution needed |
 | [**memory_dumpfiles**](memory/memory_dumpfiles/) | 📋 planned | Reconstruct file contents from the memory cache manager |
 | [**memory_consoles**](memory/memory_consoles/) | 📋 planned | Reconstruct console / conhost screen and command history buffers |
 | [**memory_timers**](memory/memory_timers/) | 📋 planned | Enumerate kernel timers (KTIMER) from a memory image |
@@ -253,9 +253,10 @@ it will do. The full roadmap is tracked privately.
 
 ### next up
 
-`memory_handles` / `memory_hashdump` (reporting only) ·
+`memory_hashdump` / `memory_lsasecrets` (reporting only) ·
 `recovery_metadata` FAT / ext4 / APFS support ·
-`macos_unifiedlog` (`.tracev3`) · `macos_spotlight` · `macos_coreanalytics` ·
+`macos_unifiedlog` (`.tracev3`) ·
+`mounting_veracrypt` / `mounting_fvde` ·
 `browser_shortcuts` / `browser_localstorage` / `browser_favicons`.
 
 The **`linux/`** category is now complete for v0.1 (`linux_utmp` · `cron` ·
@@ -267,8 +268,11 @@ A big **`windows/`** artefact push landed the ESE stack (`windows_esedb`
 `windows_notifications`; `mounting_partitions` maps disk layouts.
 The **`macos/`** category filled out: `macos_quarantine` · `tcc` ·
 `launchd` · `installhistory` · `knowledgec` · `fsevents` · `dslocal` ·
-`powerlog` · `bt` · `netusage` (only the `.tracev3` unified log and the
-Spotlight store are still to come).
+`powerlog` · `bt` · `netusage` · `coreanalytics` · `screentime` ·
+`spotlight` (only the `.tracev3` unified log is still to come).
+**`mounting/`** now covers BitLocker and LUKS1 unlock-with-supplied-key
+(`mounting_bitlocker` / `mounting_luks`), alongside image access and
+partition mapping — VeraCrypt / FileVault2 unlock still to come.
 The **`network/`** category is complete for v0.1 (`network_pcap` · `http` ·
 `dns` · `flows` · `logs` · `arp`); **`browser/`** now covers history,
 downloads, cookies, extensions, autofill, logins, bookmarks, sessions and
@@ -425,8 +429,10 @@ flowchart TD
    (injected / RWX code), `memory_dlllist` ✅ (loaded modules + load-path
    anomalies), `memory_cmdline` ✅ (command lines + LOLBins),
    `memory_svcscan` ✅ (services, incl. ones missing from the registry),
-   `memory_strings` ✅ (address-tagged IOCs); `memory_registry` (hives live
-   in RAM) and `memory_hashdump` are ⏳.
+   `memory_strings` ✅ (address-tagged IOCs), `memory_filescan` ✅
+   (`_FILE_OBJECT` scan, incl. exited processes), `memory_handles` ✅
+   (per-process open file handles), `memory_registry` ✅ (hives resident
+   in RAM); `memory_hashdump` and `memory_lsasecrets` are ⏳.
 
    ```bash
    memory_pslist  MEMORY.DMP --terminated-only --csv procs.csv
