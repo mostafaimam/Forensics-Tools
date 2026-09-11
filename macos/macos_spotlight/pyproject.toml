@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "macos_spotlight"
+version = "0.1.0"
+description = "Carve Spotlight metadata store artifacts (store.db / .spotlight-V100): kMDItem* attribute names, UTIs, download-provenance URLs, bundle identifiers and paths, via classified string carving rather than undocumented record decoding"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "macos", "spotlight", "store.db", "metadata", "kmditem"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/macos/macos_spotlight"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+macos_spotlight = "macos_spotlight.cli:main"
+[tool.setuptools]
+packages = ["macos_spotlight"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
