@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "mobile_iosbackup"
+version = "0.1.0"
+description = "Read a modern (iOS 10+) local iTunes/Finder iOS backup: Manifest.db file inventory with real domain/relativePath, size, mode and timestamps, joined against the hashed on-disk storage layout; --extract-dir reconstructs the real folder tree. Encrypted backups detected, not decrypted (v0.1)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "mobile", "ios", "itunes", "backup", "manifest.db"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/mobile/mobile_iosbackup"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+mobile_iosbackup = "mobile_iosbackup.cli:main"
+[tool.setuptools]
+packages = ["mobile_iosbackup"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
