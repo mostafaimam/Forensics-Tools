@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "cloud_m365ual"
+version = "0.1.0"
+description = "Normalise the Microsoft 365 Unified Audit Log (CSV or JSON export, optionally gzip-compressed) into one activity row per event across Exchange, SharePoint/OneDrive, Entra ID and Teams; flags mail-forwarding rules, app consent, role grants, mailbox-permission changes, and mass downloads"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "cloud", "microsoft-365", "unified-audit-log", "purview", "exchange", "sharepoint"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/cloud/cloud_m365ual"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+cloud_m365ual = "cloud_m365ual.cli:main"
+[tool.setuptools]
+packages = ["cloud_m365ual"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
