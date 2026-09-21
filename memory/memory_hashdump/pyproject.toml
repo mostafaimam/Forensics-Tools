@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "memory_hashdump"
+version = "0.1.0"
+description = "Extract local NT/LM password hashes from a SYSTEM + SAM hive pair: SYSTEM boot-key derivation, legacy RC4/RID-DES and modern AES SAM decryption schemes. Reporting only - hashes are not cracked into passwords"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "windows", "sam", "bootkey", "nthash", "registry"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/memory/memory_hashdump"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+memory_hashdump = "memory_hashdump.cli:main"
+[tool.setuptools]
+packages = ["memory_hashdump", "memory_hashdump.hive"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
