@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "memory_yara"
+version = "0.1.0"
+description = "Scan a memory image with YARA-style rules - a bundled, from-scratch matcher for a practical subset of the YARA rule language (text/hex/regex strings, boolean and counting conditions); no yara-python, no network access"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "memory-forensics", "yara", "malware", "ioc"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/memory/memory_yara"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+memory_yara = "memory_yara.cli:main"
+[tool.setuptools]
+packages = ["memory_yara"]
+include-package-data = true
+[tool.setuptools.package-data]
+memory_yara = ["rules/*.yar"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
