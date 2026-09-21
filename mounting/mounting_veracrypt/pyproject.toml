@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "mounting_veracrypt"
+version = "0.1.0"
+description = "Unlock a VeraCrypt/TrueCrypt volume with a supplied password: PBKDF2 header-key derivation, AES-XTS header decryption and CRC/magic validation, master-key extraction, sector decryption; bundled AES, no brute forcing"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "veracrypt", "truecrypt", "aes-xts", "decryption"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/mounting/mounting_veracrypt"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+mounting_veracrypt = "mounting_veracrypt.cli:main"
+[tool.setuptools]
+packages = ["mounting_veracrypt"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
