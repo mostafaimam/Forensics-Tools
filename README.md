@@ -56,7 +56,7 @@ it will do. The full roadmap is tracked privately.
 | [**mounting_partitions**](mounting/mounting_partitions/) | ✅ v0.1 | Map the MBR / GPT partition layout of a raw / EWF / VHD / VMDK image and identify the filesystem in each slice (NTFS / FAT / ext / XFS / Btrfs / APFS / HFS+ / LVM2 / LUKS / BitLocker / swap); gaps + overlaps; no mounting |
 | [**mounting_bitlocker**](mounting/mounting_bitlocker/) | ✅ v0.1 | Unlock a BitLocker volume with a supplied 48-digit recovery password (key-stretch + AES-CCM VMK/FVEK unwrap), then decrypt sectors with AES-XTS / AES-CBC; bundled AES, nothing brute forced |
 | [**mounting_luks**](mounting/mounting_luks/) | ✅ v0.1 | Unlock a LUKS1 volume with a supplied passphrase (PBKDF2 key-slot + AES-CBC-ESSIV + anti-forensic key-material recovery, master-key digest verification), then decrypt sectors; `cbc-essiv:<hash>` cipher mode; LUKS2 detected, not unlockable |
-| [**mounting_veracrypt**](mounting/mounting_veracrypt/) | 📋 planned | Unlock a TrueCrypt / VeraCrypt container or partition with a password |
+| [**mounting_veracrypt**](mounting/mounting_veracrypt/) | ✅ v0.1 | Unlock a VeraCrypt/TrueCrypt volume with a supplied password (PBKDF2 header-key + AES-XTS header decrypt/CRC validation, master-key extraction), then decrypt sectors; single-cipher AES-256-XTS volumes only, no PIM/keyfiles |
 | [**mounting_fvde**](mounting/mounting_fvde/) | 📋 planned | Unlock an APFS / CoreStorage FileVault volume with a password or recovery key |
 
 ### `recovery/`
@@ -173,9 +173,9 @@ it will do. The full roadmap is tracked privately.
 | [**browser_logins**](browser/browser_logins/) | ✅ v0.1 | **Saved-login metadata only** from Chromium `Login Data` and Firefox `logins.json` (+ `key4.db`) — origin, realm, username, created / last-used / password-changed times, use count, never-save list; the encrypted password is never decrypted or emitted; flags `http://` origins, bare-IP / non-FQDN hosts, primary-password-protected stores; per-host credential counts |
 | [**browser_sessions**](browser/browser_sessions/) | ✅ v0.1 | **Tabs / windows open at last close** — Chromium SNSS command stream (`Session_*` / `Last Session`, from-scratch `base::Pickle` reader) and Firefox `sessionstore.jsonlz4` (**bundled `mozLz4` + LZ4 block decoder**, no `lz4` package); per-tab window / position / pinned / current URL+title / history depth / last-accessed / recently-closed; flags restored form data, sign-in pages, `file://` and raw-IP tabs |
 | [**browser_bookmarks**](browser/browser_bookmarks/) | ✅ v0.1 | **Bookmark tree with added / modified times** from Chromium `Bookmarks` JSON (diffed against `Bookmarks.bak` to surface deleted entries) and Firefox `moz_bookmarks`; full folder path per entry; flags bookmarklets (`javascript:`), `file://` / `ftp://` targets, raw-IP hosts, browser-internal pages and `.bak`-only survivors |
-| [**browser_shortcuts**](browser/browser_shortcuts/) | 📋 planned | Omnibox typed-text → URL shortcuts and site-engagement data |
-| [**browser_localstorage**](browser/browser_localstorage/) | 📋 planned | Per-origin Local Storage and IndexedDB key/value data |
-| [**browser_favicons**](browser/browser_favicons/) | 📋 planned | Favicons DB — sites visited even after history was cleared |
+| [**browser_shortcuts**](browser/browser_shortcuts/) | ✅ v0.1 | Chromium `Shortcuts` (typed text → URL, hit counts), `Top Sites` (frequency tiles) and `Network Action Predictor` (typed-prefix hit/miss) — omnibox intent that survives a history clear |
+| [**browser_localstorage**](browser/browser_localstorage/) | ✅ v0.1 | From-scratch LevelDB reader (WAL log + SSTable + pure-Python Snappy) for Local Storage / IndexedDB — recovers every key/value ever written, including overwritten/deleted entries |
+| [**browser_favicons**](browser/browser_favicons/) | ✅ v0.1 | Chromium `Favicons` / Firefox `favicons.sqlite` icon-to-page-URL map — `--history` cross-reference flags pages cleared from history but still cached; `--extract-dir` for the icon images |
 
 ### `network/`
 
@@ -202,8 +202,8 @@ it will do. The full roadmap is tracked privately.
 | [**memory_svcscan**](memory/memory_svcscan/) | ✅ v0.1 | Windows services — scans `services.exe` memory for `_SERVICE_RECORD` (`sErv`) structures to rebuild the service list **without the registry** (finds services deleted from `HKLM\…\Services`); name, display name, type, state, PID, binary path; flags user-writable / LOLBin / driver-from-temp binaries |
 | [**memory_handles**](memory/memory_handles/) | ✅ v0.1 | Per-process open file handles — structurally-validated `_HANDLE_TABLE` walk (object-table offset and pointer-shift both auto-detected across Windows-version drift) reusing `memory_filescan`'s `_FILE_OBJECT` shape check; v0.1 recovers file handles only (Key/Process/Thread typing deferred) |
 | [**memory_registry**](memory/memory_registry/) | ✅ v0.1 | Locate registry hives resident in memory — scans for the `regf` base-block magic directly in physical memory, decodes dirty flag, last-written FILETIME and hive filename; v0.1 is a hive inventory, not full hive-body reconstruction |
-| [**memory_hashdump**](memory/memory_hashdump/) | 📋 planned | Extract local NT password hashes from a memory image (reporting only) |
-| [**memory_lsasecrets**](memory/memory_lsasecrets/) | 📋 planned | Extract LSA secrets and cached domain credentials (reporting only) |
+| [**memory_hashdump**](memory/memory_hashdump/) | ✅ v0.1 | Extract local NT/LM hashes from a SYSTEM+SAM hive pair — SYSTEM boot-key derivation, legacy RC4/RID-DES and modern AES SAM schemes; from-scratch DES verified against the FIPS 46-3 test vector. Reporting only |
+| [**memory_lsasecrets**](memory/memory_lsasecrets/) | ✅ v0.1 | Decrypt LSA secrets (service-account passwords, DPAPI machine key) from a SYSTEM+SECURITY hive pair via the SYSTEM boot key → LSA key → per-secret AES-CBC chain. Reporting only |
 | [**memory_filescan**](memory/memory_filescan/) | ✅ v0.1 | Pool-tag scan for `_FILE_OBJECT` structures — recovers open/cached file paths (including from **exited processes**) via kernel-DTB paged-pool resolution, no per-process attribution needed |
 | [**memory_dumpfiles**](memory/memory_dumpfiles/) | 📋 planned | Reconstruct file contents from the memory cache manager |
 | [**memory_consoles**](memory/memory_consoles/) | 📋 planned | Reconstruct console / conhost screen and command history buffers |
@@ -232,16 +232,16 @@ it will do. The full roadmap is tracked privately.
 | [**cloud_dropbox**](cloud/cloud_dropbox/) | 📋 planned | Parse Dropbox sync databases |
 | [**cloud_gdrive**](cloud/cloud_gdrive/) | 📋 planned | Parse Google Drive / Backup & Sync metadata |
 | [**cloud_box**](cloud/cloud_box/) | 📋 planned | Parse the Box Drive metadata database |
-| [**cloud_m365ual**](cloud/cloud_m365ual/) | 📋 planned | Normalise the Microsoft 365 Unified Audit Log |
-| [**cloud_azuread**](cloud/cloud_azuread/) | 📋 planned | Parse Entra ID (Azure AD) sign-in and audit logs |
-| [**cloud_cloudtrail**](cloud/cloud_cloudtrail/) | 📋 planned | Normalise AWS CloudTrail logs into events and summaries |
+| [**cloud_m365ual**](cloud/cloud_m365ual/) | ✅ v0.1 | Normalise the Microsoft 365 Unified Audit Log (CSV/JSON, nested `AuditData`) across Exchange/SharePoint/Entra ID/Teams; flags mail-forwarding rules, app consent, role grants, mass downloads |
+| [**cloud_azuread**](cloud/cloud_azuread/) | ✅ v0.1 | Normalise Entra ID sign-in + directory-audit log JSON exports into one timeline; flags legacy auth, risky sign-ins, CA failures, new-country, sensitive audit activities |
+| [**cloud_cloudtrail**](cloud/cloud_cloudtrail/) | ✅ v0.1 | Normalise AWS CloudTrail `.json`/`.json.gz` into one row per API call; flags IAM changes, ConsoleLogin without MFA, secrets access, public-ACL changes, root usage, Delete* bursts |
 | [**cloud_gws**](cloud/cloud_gws/) | 📋 planned | Parse Google Workspace admin / login / Drive audit activity |
 
 ### `mobile/`
 
 | Tool | Status | Purpose |
 |---|---|---|
-| [**mobile_iosbackup**](mobile/mobile_iosbackup/) | 📋 planned | Read iTunes / Finder iOS backups |
+| [**mobile_iosbackup**](mobile/mobile_iosbackup/) | ✅ v0.1 | Read a modern (iOS 10+) local iTunes/Finder backup's Manifest.db, joined against its hashed on-disk storage; `--extract-dir` reconstructs the real domain/relativePath folder tree. Unencrypted backups only |
 | [**mobile_android**](mobile/mobile_android/) | 📋 planned | Read adb backups and logical Android copies |
 | [**mobile_appcommon**](mobile/mobile_appcommon/) | 📋 planned | Shared SQLite / plist / protobuf helpers for mobile-extraction parsers |
 
@@ -253,11 +253,15 @@ it will do. The full roadmap is tracked privately.
 
 ### next up
 
-`memory_hashdump` / `memory_lsasecrets` (reporting only) ·
 `recovery_metadata` FAT / ext4 / APFS support ·
-`macos_unifiedlog` (`.tracev3`) ·
-`mounting_veracrypt` / `mounting_fvde` ·
-`browser_shortcuts` / `browser_localstorage` / `browser_favicons`.
+`macos_unifiedlog` (`.tracev3`), `mounting_vsc`, `mounting_fvde` — all
+three genuinely undocumented, community-reverse-engineered-only formats
+(unlike BitLocker/LUKS/VeraCrypt, where the *crypto* is standardized
+even where the container is uncertain), deferred rather than guessed at ·
+the remaining `memory/` kernel-structure tools (dumpfiles, consoles,
+timers, callbacks, ssdt, linux, macos, yara) ·
+`cloud_onedrive` / `dropbox` / `gdrive` / `box` / `gws` ·
+`mobile_android` / `mobile_appcommon` · `app_chat`.
 
 The **`linux/`** category is now complete for v0.1 (`linux_utmp` · `cron` ·
 `syslog` · `bashhist` · `journal` · `audit` · `units` · `packages` ·
@@ -270,13 +274,24 @@ The **`macos/`** category filled out: `macos_quarantine` · `tcc` ·
 `launchd` · `installhistory` · `knowledgec` · `fsevents` · `dslocal` ·
 `powerlog` · `bt` · `netusage` · `coreanalytics` · `screentime` ·
 `spotlight` (only the `.tracev3` unified log is still to come).
-**`mounting/`** now covers BitLocker and LUKS1 unlock-with-supplied-key
-(`mounting_bitlocker` / `mounting_luks`), alongside image access and
-partition mapping — VeraCrypt / FileVault2 unlock still to come.
-The **`network/`** category is complete for v0.1 (`network_pcap` · `http` ·
-`dns` · `flows` · `logs` · `arp`); **`browser/`** now covers history,
-downloads, cookies, extensions, autofill, logins, bookmarks, sessions and
-cache (LevelDB-backed `shortcuts` / `localstorage` / `favicons` still to come).
+**`mounting/`** now covers BitLocker, LUKS1 and VeraCrypt/TrueCrypt
+unlock-with-supplied-key (`mounting_bitlocker` / `mounting_luks` /
+`mounting_veracrypt`), alongside image access and partition mapping —
+only Volume Shadow Copy mounting and FileVault2/APFS unlock (both
+undocumented-format-limited, deferred like `.tracev3`) remain.
+The **`network/`** and **`browser/`** categories are both complete for
+v0.1 — `network_pcap` · `http` · `dns` · `flows` · `logs` · `arp`;
+`browser_history` · `cookies` · `extensions` · `downloads` · `cache` ·
+`autofill` · `logins` · `sessions` · `bookmarks` · `shortcuts` ·
+`localstorage` (a from-scratch LevelDB reader) · `favicons`.
+The **`cloud/`** and **`mobile/`** categories got their first tools:
+`cloud_cloudtrail` / `cloud_azuread` / `cloud_m365ual` (audit-log
+normalisers — no undocumented-format risk, these are all publicly
+specified schemas) and `mobile_iosbackup` (reconstructs a real file
+tree from an unencrypted local iOS backup's hashed on-disk storage).
+Also new: `memory_hashdump` / `memory_lsasecrets` (SYSTEM boot-key
+-derived SAM hash and LSA secret decryption, reporting only, given
+hive files rather than a raw memory image).
 
 ---
 
@@ -432,7 +447,10 @@ flowchart TD
    `memory_strings` ✅ (address-tagged IOCs), `memory_filescan` ✅
    (`_FILE_OBJECT` scan, incl. exited processes), `memory_handles` ✅
    (per-process open file handles), `memory_registry` ✅ (hives resident
-   in RAM); `memory_hashdump` and `memory_lsasecrets` are ⏳.
+   in RAM). Given a SYSTEM+SAM/SECURITY hive pair (extracted separately,
+   not from the raw image itself): `memory_hashdump` ✅ (local NT/LM
+   hashes) and `memory_lsasecrets` ✅ (service-account passwords, DPAPI
+   machine key) — both reporting only, no cracking.
 
    ```bash
    memory_pslist  MEMORY.DMP --terminated-only --csv procs.csv
