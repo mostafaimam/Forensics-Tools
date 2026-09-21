@@ -1,41 +1,73 @@
 # mobile_android
 
-> **Status — planned.** This directory is a specification stub; the tool is
-> not implemented yet. The design below is the contract it will be built to and
-> may be refined during development.
+**Read an `adb backup` archive without needing `adb` on the analysis
+machine.**
 
-**Read adb backups and logical Android copies.**
+An `.ab` file is a small ASCII header (magic, format version,
+compression flag, encryption algorithm) followed by a payload that's
+optionally zlib-compressed and, underneath that, always a plain POSIX
+tar stream of the backed-up app data. `mobile_android` parses the
+header, decompresses if needed, and reads the tar payload with the
+standard library's own `tarfile` module — no hand-rolled tar reader,
+no `adb` binary required.
 
-Handles `adb backup` archives (`.ab` → tar, with the optional password /
-compression) and logical-copy directory trees: discovers app `databases/`, and
-parses `accounts.db`, the call log and SMS (`mmssms.db` / `calllog.db`),
-`usagestats`, and bug reports.
+## Usage
 
-## Planned scope
+```
+mobile_android backup.ab
+mobile_android backup.ab --package com.example.app --csv files.csv
+mobile_android backup.ab --extract-dir ./extracted
+mobile_android --gui
+```
 
-- `.ab` header handling (none / AES / deflate) → tar extraction
-- Recursive app-database discovery; per-app map application
-- usagestats XML / protobuf decode; contacts / calls / SMS normalisation
-- Per-artefact CSV / JSON + combined timeline
+![mobile_android GUI showing five entries from a synthetic adb backup: an app manifest, a file, a database, shared preferences, and a shared-storage photo](docs/screenshot.png)
 
-## Inputs
+| flag | effect |
+|------|--------|
+| `--package TEXT` | substring filter on package name |
+| `--category {f,db,sp,r,a,manifest,shared,other}` | filter by entry category |
+| `--extract-dir DIR` | extract matching files, preserving the real `apps/<package>/...` tree |
+| `--csv` / `--json` | UTF-8-with-BOM, formula-injection-safe output |
 
-An `.ab` file or a logical extraction directory.
+Each entry's `category` reflects where it sits in the backup's own
+layout: `f` (app files directory), `db` (SQLite databases), `sp`
+(shared preferences XML), `r` / `a` (root-relative / APK-and-OBB data,
+rarer), `manifest` (the app's own `_manifest` entry), and `shared`
+(external/shared storage, if included in the backup).
 
-## Outputs
+## Why it matters
 
-- Human-readable summary on stdout
-- `--csv PATH` — UTF-8 with BOM, spreadsheet-injection-safe
-- `--json PATH` — structured records
+`adb backup` is a fast, no-root way to pull an app's private data off a
+device that's still accessible (USB debugging enabled, screen
+unlocked) — often faster to acquire than a full physical extraction.
+Reading the `.ab` directly means the analysis doesn't depend on having
+`adb` installed or a device connected at review time.
 
-All timestamps UTC (ISO-8601). Exit code is non-zero when nothing is found or
-(where applicable) when a flagged item is present.
+## Limitations (v0.1)
 
-## Related tools
+- **Unencrypted backups only** (`encryption: none` in the header — the
+  common case for a backup taken with no password entered on the
+  device's backup-confirmation prompt). An encrypted backup's key
+  -wrapping blob (PBKDF2-derived AES-256-CBC unwrap plus an HMAC-SHA1
+  checksum) is detected and reported, not decrypted, in v0.1.
+- No app-specific database/preferences decoding (a recovered
+  `db`-category SQLite file is a normal SQLite database — open it with
+  whatever tool fits its schema).
+- Large backups are decompressed fully into memory before the tar
+  payload is read; a very large `.ab` file will need correspondingly
+  more RAM.
 
-`mobile_appcommon`, `app_chat`, `analysis_timeline`.
+## Tests
 
----
+`tests/_synth.py` builds a real `.ab` file (correct header, a genuine
+tar stream built with the standard library, optional zlib compression)
+covering app files, a database, shared preferences, a manifest entry,
+and shared-storage content. Tests cover header parsing, compressed and
+uncompressed payloads, package/category classification, encrypted
+-backup detection (and its distinct non-zero CLI exit code), a bad
+-magic file, `--extract-dir` tree reconstruction, and the CLI
+(`--package`, `--csv`/`--json`).
 
-Part of **Forensics Tools** — Python 3.11+, standard library only,
-cross-platform, read-only. See the [top-level README](../../README.md).
+```
+cd mobile/mobile_android && python -m pytest -q
+```
