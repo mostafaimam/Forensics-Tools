@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "cloud_cloudtrail"
+version = "0.1.0"
+description = "Normalise AWS CloudTrail logs (.json / .json.gz delivery files or an export directory) into one row per API call; flags IAM changes, ConsoleLogin without MFA, secrets access, public-ACL/policy changes, root-account usage, and Delete* bursts"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "cloud", "aws", "cloudtrail", "audit-log"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/cloud/cloud_cloudtrail"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+cloud_cloudtrail = "cloud_cloudtrail.cli:main"
+[tool.setuptools]
+packages = ["cloud_cloudtrail"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
