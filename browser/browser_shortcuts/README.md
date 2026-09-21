@@ -1,40 +1,78 @@
 # browser_shortcuts
 
-> **Status — planned.** This directory is a specification stub; the tool is
-> not implemented yet. The design below is the contract it will be built to and
-> may be refined during development.
+**Browsing intent that survives a "clear history" click.**
 
-**Omnibox typed-text → URL shortcuts and site-engagement data.**
+`browser_shortcuts` reads three small Chromium SQLite stores that record
+what the user *meant* to do in the address bar and new-tab page, kept
+separate from `History` itself:
 
-Reads Chromium `Shortcuts` (what the user typed in the address bar and what they
-picked), `Top Sites`, and the `Network Action Predictor` — strong evidence of
-intent even when the visit itself was cleared.
+- **`Shortcuts`** (`omni_box_shortcuts`) — every typed-text → chosen-URL
+  pair the omnibox has learned, with a hit count and last-access time.
+  This is autocomplete *training data*: it survives clearing `History`
+  because Chromium treats it as a separate, smaller cache.
+- **`Top Sites`** (`top_sites`) — the ranked tiles shown on the new-tab
+  page (site frequency), independent of the history list.
+- **`Network Action Predictor`** (`network_action_predictor`) — per
+  typed-prefix hit/miss counts the browser uses to decide whether to
+  pre-resolve or pre-connect a predicted destination; a high hit count
+  for a prefix is evidence of a frequently, deliberately typed URL.
 
-## Planned scope
+## Usage
 
-- Decode the `omni_box_shortcuts` schema: text, fill-into-edit, URL, hit count,
-  last access
-- Top Sites thumbnails + URLs; predictor hit / miss counts
-- CSV / JSON; merge into the history timeline
+```
+browser_shortcuts Shortcuts
+browser_shortcuts "~/AppData/Local/Google/Chrome/User Data" --csv hits.csv
+browser_shortcuts --gui
+```
 
-## Inputs
+The target may be one of the three store files directly, or a directory
+(a profile folder, a whole `User Data` tree, or a mounted image) —
+searched recursively, verifying each candidate file actually has the
+expected table before treating it as a match.
 
-Chromium `Shortcuts`, `Top Sites`, `Network Action Predictor` databases.
+![browser_shortcuts GUI showing typed shortcuts, top sites and predictor hits, with an IP-literal shortcut and a javascript: bookmarklet flagged](docs/screenshot.png)
 
-## Outputs
+| flag | effect |
+|------|--------|
+| `--kind {shortcuts,top_sites,predictor}` | only rows of this kind |
+| `--notable-only` | only flagged rows |
+| `--csv` / `--json` | UTF-8-with-BOM, formula-injection-safe output |
 
-- Human-readable summary on stdout
-- `--csv PATH` — UTF-8 with BOM, spreadsheet-injection-safe
-- `--json PATH` — structured records
+Flags: `bookmarklet` (`javascript:` URL), `file-url`, `ip-literal-host`,
+`punycode-host`.
 
-All timestamps UTC (ISO-8601). Exit code is non-zero when nothing is found or
-(where applicable) when a flagged item is present.
+## Why it matters
 
-## Related tools
+`History` gets cleared; these three stores are smaller, separately
+maintained caches that many "clear browsing data" flows don't zero out
+as thoroughly (and that most examiners don't think to check). A
+`Shortcuts` hit count of 40+ for a URL that appears nowhere in `History`
+is strong evidence of deliberate, repeated visits the user tried to
+erase.
 
-`browser_history`, `analysis_timeline`.
+## Limitations (v0.1)
 
----
+- Column sets have drifted slightly across Chromium releases; this tool
+  reads whichever of the expected columns are present (via
+  `PRAGMA table_info`) rather than assuming a fixed schema, but very old
+  or very new builds may be missing a field this tool expects.
+- `Network Action Predictor` hit/miss counts describe *prefix* activity
+  (partial typed text), not full URLs — treat `hit_rate` as a relative
+  signal, not a visit count.
+- Firefox has no equivalent of these three stores; its closest artifact
+  (`moz_inputhistory`, typed-URL frequency) is already read by
+  `browser_history`.
+- No history correlation is performed here — pair with `browser_history`
+  and `analysis_timeline` to place these hits on a full timeline.
 
-Part of **Forensics Tools** — Python 3.11+, standard library only,
-cross-platform, read-only. See the [top-level README](../../README.md).
+## Tests
+
+`tests/_synth.py` builds real SQLite databases matching the three
+schemas. Tests cover extraction of all three kinds, field mapping,
+predictor hit-rate computation, `ip-literal-host` / `bookmarklet`
+flagging, single-file vs. directory targets, and the CLI (`--csv`/
+`--json`, `--kind`, `--notable-only`).
+
+```
+cd browser/browser_shortcuts && python -m pytest -q
+```
