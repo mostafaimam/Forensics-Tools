@@ -1,40 +1,68 @@
 # browser_favicons
 
-> **Status — planned.** This directory is a specification stub; the tool is
-> not implemented yet. The design below is the contract it will be built to and
-> may be refined during development.
+**The icon cache doesn't know "clear browsing data" happened.**
 
-**Favicons DB — sites visited even after history was cleared.**
+`browser_favicons` reads Chromium's `Favicons` database
+(`icon_mapping` → `favicons` → `favicon_bitmaps`) and Firefox's
+`favicons.sqlite` (the modern `moz_icons` / `moz_pages_w_icons` /
+`moz_icons_to_pages` schema) — the icon-to-page-URL map browsers keep
+purely to make tabs and bookmarks render fast. Because it's a UI cache
+rather than user-visible history, many "clear browsing data" flows leave
+it alone, and a page's icon can outlive its own `History` row.
 
-Reads the Chromium `Favicons` database and Firefox `favicons.sqlite`: the
-icon-to-page-URL mapping and last-updated times frequently survive a history
-clear, revealing which sites were visited.
+## Usage
 
-## Planned scope
+```
+browser_favicons Favicons
+browser_favicons "User Data/Default" --history History --csv icons.csv
+browser_favicons Favicons --extract-dir ./icons
+browser_favicons --gui
+```
 
-- `icon_mapping` / `favicons` / `favicon_bitmaps` join; page URL recovery
-- `--extract` the icon images
-- Diff favicon page-URLs against surviving history to surface cleared visits
-- CSV / JSON
+The target may be a `Favicons` / `favicons.sqlite` file directly, or a
+directory to search recursively.
 
-## Inputs
+![browser_favicons GUI showing two cached favicon-to-page-URL mappings with icon type, dimensions and last-updated time](docs/screenshot.png)
 
-Chromium `Favicons`, Firefox `favicons.sqlite`.
+| flag | effect |
+|------|--------|
+| `--history PATH` | cross-reference page URLs against a `History` / `places.sqlite` |
+| `--cleared-only` | (with `--history`) only rows missing from it |
+| `--extract-dir DIR` | write every cached icon image to disk, named `icon_NNNN.<ext>` (format sniffed from magic bytes: PNG / ICO / GIF / JPEG / BMP / SVG) |
+| `--csv` / `--json` | UTF-8-with-BOM, formula-injection-safe output |
 
-## Outputs
+`--history` is CLI-only in v0.1 (not wired into `--gui`).
 
-- Human-readable summary on stdout
-- `--csv PATH` — UTF-8 with BOM, spreadsheet-injection-safe
-- `--json PATH` — structured records
+## Why it matters
 
-All timestamps UTC (ISO-8601). Exit code is non-zero when nothing is found or
-(where applicable) when a flagged item is present.
+A favicon entry for a page URL that no longer appears anywhere in
+`History` is direct evidence the visit happened and was later erased —
+`--history` automates exactly that comparison. Extracted icon images can
+also identify a site even when its URL was obfuscated, shortened, or
+already garbled by partial deletion.
 
-## Related tools
+## Limitations (v0.1)
 
-`browser_history`, `browser_bookmarks`.
+- **Firefox pre-55 (`moz_favicons`, no `moz_icons` table) is not
+  supported** — that schema predates the current one by close to a
+  decade; only the modern `moz_icons` layout is read.
+- The `--history` cross-check is an **exact URL string match**; a
+  trailing-slash or query-string difference between the favicon's
+  `page_url` and the history row will read as "cleared" even if the
+  page is technically still there. Treat a hit as a strong lead, not
+  proof.
+- No favicon-image content analysis (perceptual hashing, brand-logo
+  matching) — `--extract-dir` hands you the files for that.
 
----
+## Tests
 
-Part of **Forensics Tools** — Python 3.11+, standard library only,
-cross-platform, read-only. See the [top-level README](../../README.md).
+`tests/_synth.py` builds real SQLite databases matching both schemas
+(with an embedded PNG-magic image blob). Tests cover the Chromium join,
+the Firefox reader, the `--history` cross-reference (both the flagged
+and not-flagged cases, and a corrupt-history warning path), no-store
+warnings, image indexing, and the CLI (`--extract-dir`, `--csv`/`--json`,
+`--cleared-only`).
+
+```
+cd browser/browser_favicons && python -m pytest -q
+```

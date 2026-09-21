@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "browser_favicons"
+version = "0.1.0"
+description = "Read Chromium's Favicons database and Firefox's favicons.sqlite - the icon-to-page-URL map, which often survives a history clear; cross-reference against History/places.sqlite and extract cached icon images"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "browser", "chromium", "firefox", "favicons", "history"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/browser/browser_favicons"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+browser_favicons = "browser_favicons.cli:main"
+[tool.setuptools]
+packages = ["browser_favicons"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
