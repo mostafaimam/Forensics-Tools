@@ -1,41 +1,69 @@
 # cloud_gdrive
 
-> **Status — planned.** This directory is a specification stub; the tool is
-> not implemented yet. The design below is the contract it will be built to and
-> may be refined during development.
+**Generically dump Google Drive for Desktop's synced-file inventory —
+no claimed understanding of its proprietary schema, but no encryption
+blocking access either.**
 
-**Parse Google Drive / Backup & Sync metadata.**
+`metadata_sqlite_db` / `snapshot.db` (under `%LOCALAPPDATA%\Google\
+DriveFS\<account_id>\` / `~/Library/Application Support/Google/
+DriveFS/`) hold Google Drive for Desktop's local file inventory —
+Google file IDs, names, versions, parents — in a **proprietary,
+undocumented** schema, like every cloud-sync-client database this
+suite's cloud/ tools cover (unlike the audit-log tools, which read a
+vendor's own published format). Unlike Dropbox's `.dbx` files, these
+are typically **not** encrypted, so `cloud_gdrive` can usually dump
+real content: every table, in full, with only conservative
+column-name hints layered on top.
 
-Reads Drive for Desktop / Backup & Sync state — `metadata_sqlite_db`,
-`snapshot.db`, `cloud_graph` — for the synced-file inventory with Google file
-ids, versions, parents, and local mirror paths.
+## Usage
 
-## Planned scope
+```
+cloud_gdrive "%LOCALAPPDATA%\Google\DriveFS"
+cloud_gdrive metadata_sqlite_db --csv rows.csv
+cloud_gdrive --gui
+```
 
-- Decode `metadata_sqlite_db` items / stable_ids; join the content cache
-- File id → name → parent path reconstruction; shared-drive items
-- Local pinned vs. cloud-only state; trashed items
-- CSV / JSON
+The target may be the `DriveFS` folder itself (searched recursively for
+`metadata_sqlite_db`, `snapshot.db`, `sync_config.db`), or a specific
+file.
 
-## Inputs
+![cloud_gdrive GUI showing two generically-dumped rows from a synthetic metadata_sqlite_db, including a trashed item, with path/time/size hints extracted by column-name matching](docs/screenshot.png)
 
-`%LOCALAPPDATA%\Google\DriveFS\` / `~/Library/Application
-Support/Google/DriveFS/`.
+| flag | effect |
+|------|--------|
+| `--table TEXT` | substring filter on table name |
+| `--csv` / `--json` | UTF-8-with-BOM, formula-injection-safe output |
 
-## Outputs
+## Why it matters
 
-- Human-readable summary on stdout
-- `--csv PATH` — UTF-8 with BOM, spreadsheet-injection-safe
-- `--json PATH` — structured records
+A synced-file inventory recovered this way includes items marked
+trashed in Drive but not yet purged, and version/modification metadata
+independent of what's still present in the local sync folder on disk —
+useful even without decoding the full parent-path hierarchy.
 
-All timestamps UTC (ISO-8601). Exit code is non-zero when nothing is found or
-(where applicable) when a flagged item is present.
+## Limitations (v0.1)
 
-## Related tools
+- **No claimed understanding of the `items`/`stable_ids` schema.**
+  Every table/column is dumped as-is; `path_hint`/`time_hint`/
+  `size_hint` are column-name pattern guesses (including "title", a
+  historical Drive API field name), not verified field semantics.
+- **No parent-ID → full-path reconstruction.** A row's Google file ID
+  and its parent's ID are both present in the raw dump (`row_json`),
+  but walking that into a real folder path is not implemented in v0.1.
+- **No shared-drive-specific handling** — shared-drive items appear in
+  the same generic dump as personal-drive items, undifferentiated.
+- If a future client version encrypts these databases the way Dropbox
+  does, this tool would need the same "detect, don't decrypt" treatment
+  `cloud_dropbox` already has — not currently the common case.
 
-`analysis_timeline`, `windows_sqlmap`.
+## Tests
 
----
+`tests/_synth.py` builds a real, plain-SQLite `metadata_sqlite_db` with
+an `items` table (including a trashed entry). Tests cover file
+discovery, generic table dumping, path/size hint extraction (via the
+`title`-style column name), trashed-item data surviving in the row
+JSON, a no-DriveFS-found case, and the CLI (`--table`, `--csv`/`--json`).
 
-Part of **Forensics Tools** — Python 3.11+, standard library only,
-cross-platform, read-only. See the [top-level README](../../README.md).
+```
+cd cloud/cloud_gdrive && python -m pytest -q
+```
