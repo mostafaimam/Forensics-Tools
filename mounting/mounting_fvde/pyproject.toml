@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "mounting_fvde"
+version = "0.1.0"
+description = "Best-effort legacy CoreStorage FileVault2 volume unlock - standard/exact PBKDF2+RFC3394+AES-XTS crypto, reverse-engineered-only surrounding plist layout exposed as examiner-supplied parameters rather than auto-guessed. APFS FileVault out of scope"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "filevault", "corestorage", "apfs", "decryption"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/mounting/mounting_fvde"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+mounting_fvde = "mounting_fvde.cli:main"
+[tool.setuptools]
+packages = ["mounting_fvde"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
