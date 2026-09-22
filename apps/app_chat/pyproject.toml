@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "app_chat"
+version = "0.1.0"
+description = "Recover chat messages from Slack/Discord Electron-app local caches by recognising the documented public Web API message JSON shape inside a from-scratch LevelDB reader; classic Teams data carved as raw text. Signal/WhatsApp/Telegram Desktop out of scope for v0.1"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "chat", "slack", "discord", "teams", "leveldb"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/apps/app_chat"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+app_chat = "app_chat.cli:main"
+[tool.setuptools]
+packages = ["app_chat"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
