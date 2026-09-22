@@ -37,7 +37,7 @@ it will do. The full roadmap is tracked privately.
 
 ## Tools
 
-✅ built and tested · 📋 planned (every planned tool has a spec-stub README in its directory — click its name)
+✅ built and tested — every tool in the suite (142/142). A 📋 planned marker would appear here for a tool not yet built (with a spec-stub README in its directory); none remain.
 
 ### `acquisition/`
 
@@ -52,12 +52,12 @@ it will do. The full roadmap is tracked privately.
 | Tool | Status | Purpose |
 |---|---|---|
 | [**mounting_image**](mounting/mounting_image/) | ✅ v0.1 | Read-only access to raw / split / **E01** / **VHD** / **VMDK** images — container + MBR/GPT inspection, raw export, **built-in NBD server + client** (no `nbd-client`), **`mount` as a real read-only drive** (Windows drive letter, macOS volume, Linux mount); CLI + `tkinter` GUI |
-| [**mounting_vsc**](mounting/mounting_vsc/) | 📋 planned | Enumerate and mount every Volume Shadow Copy on a volume · GUI |
+| [**mounting_vsc**](mounting/mounting_vsc/) | ✅ v0.1 | Best-effort VSS discovery: identifier-GUID scan + candidate FILETIME/GUID fields nearby. No block-remapping/snapshot mounting — VSS's overlay format is RE-only and unverified here, and getting it wrong risks serving corrupted bytes as real content · GUI |
 | [**mounting_partitions**](mounting/mounting_partitions/) | ✅ v0.1 | Map the MBR / GPT partition layout of a raw / EWF / VHD / VMDK image and identify the filesystem in each slice (NTFS / FAT / ext / XFS / Btrfs / APFS / HFS+ / LVM2 / LUKS / BitLocker / swap); gaps + overlaps; no mounting |
 | [**mounting_bitlocker**](mounting/mounting_bitlocker/) | ✅ v0.1 | Unlock a BitLocker volume with a supplied 48-digit recovery password (key-stretch + AES-CCM VMK/FVEK unwrap), then decrypt sectors with AES-XTS / AES-CBC; bundled AES, nothing brute forced |
 | [**mounting_luks**](mounting/mounting_luks/) | ✅ v0.1 | Unlock a LUKS1 volume with a supplied passphrase (PBKDF2 key-slot + AES-CBC-ESSIV + anti-forensic key-material recovery, master-key digest verification), then decrypt sectors; `cbc-essiv:<hash>` cipher mode; LUKS2 detected, not unlockable |
 | [**mounting_veracrypt**](mounting/mounting_veracrypt/) | ✅ v0.1 | Unlock a VeraCrypt/TrueCrypt volume with a supplied password (PBKDF2 header-key + AES-XTS header decrypt/CRC validation, master-key extraction), then decrypt sectors; single-cipher AES-256-XTS volumes only, no PIM/keyfiles |
-| [**mounting_fvde**](mounting/mounting_fvde/) | 📋 planned | Unlock an APFS / CoreStorage FileVault volume with a password or recovery key |
+| [**mounting_fvde**](mounting/mounting_fvde/) | ✅ v0.1 | Best-effort legacy CoreStorage FileVault2 unlock — exact/standard PBKDF2 + RFC 3394 key unwrap (verified against the official test vector) + AES-XTS-128, examiner-supplied salt/iterations/wrapped-key rather than an assumed plist layout; APFS FileVault out of scope |
 
 ### `recovery/`
 
@@ -145,7 +145,7 @@ it will do. The full roadmap is tracked privately.
 | Tool | Status | Purpose |
 |---|---|---|
 | [**macos_plist**](macos/macos_plist/) | ✅ v0.1 | Binary + XML property lists → CSV / JSON; **unwraps `NSKeyedArchiver`**; Apple timestamp conversion |
-| [**macos_unifiedlog**](macos/macos_unifiedlog/) | 📋 planned | Parse the macOS unified log (.tracev3) |
+| [**macos_unifiedlog**](macos/macos_unifiedlog/) | ✅ v0.1 | Best-effort .tracev3 chunk reader: chunk inventory + self-verified LZ4 ChunkSet decompression + printable-string carving. Not a `log show` replacement — no Firehose record decode or uuidtext/dsc format-string resolution |
 | [**macos_fsevents**](macos/macos_fsevents/) | ✅ v0.1 | Parse the gzip `/.fseventsd` change log (DLS1/2/3 pages) → per-path Created / Removed / Renamed / Modified records with decoded flags + node ids; flags deletion of `TCC.db` / shell history / LaunchAgents / `/var/log` |
 | [**macos_knowledgec**](macos/macos_knowledgec/) | ✅ v0.1 | `knowledgeC.db` (CoreDuet) — `/app/usage` · `/app/inFocus` · `/app/webUsage` · `/safari/history` · `/display/isBacklit` · `/app/intents` timeline with durations, resolved app, device id, all UTC |
 | [**macos_quarantine**](macos/macos_quarantine/) | ✅ v0.1 | `com.apple.LaunchServices.QuarantineEventsV2` — download provenance: agent, data URL, origin URL, sender, timestamp; flags `.dmg`/`.pkg`/script fetches, IP-literal hosts, downloads by `Terminal` / `curl` |
@@ -205,13 +205,13 @@ it will do. The full roadmap is tracked privately.
 | [**memory_hashdump**](memory/memory_hashdump/) | ✅ v0.1 | Extract local NT/LM hashes from a SYSTEM+SAM hive pair — SYSTEM boot-key derivation, legacy RC4/RID-DES and modern AES SAM schemes; from-scratch DES verified against the FIPS 46-3 test vector. Reporting only |
 | [**memory_lsasecrets**](memory/memory_lsasecrets/) | ✅ v0.1 | Decrypt LSA secrets (service-account passwords, DPAPI machine key) from a SYSTEM+SECURITY hive pair via the SYSTEM boot key → LSA key → per-secret AES-CBC chain. Reporting only |
 | [**memory_filescan**](memory/memory_filescan/) | ✅ v0.1 | Pool-tag scan for `_FILE_OBJECT` structures — recovers open/cached file paths (including from **exited processes**) via kernel-DTB paged-pool resolution, no per-process attribution needed |
-| [**memory_dumpfiles**](memory/memory_dumpfiles/) | 📋 planned | Reconstruct file contents from the memory cache manager |
-| [**memory_consoles**](memory/memory_consoles/) | 📋 planned | Reconstruct console / conhost screen and command history buffers |
+| [**memory_dumpfiles**](memory/memory_dumpfiles/) | ✅ v0.1 | Recover cache-resident file content via a self-verifying VACB chain walk (SectionObjectPointer→SharedCacheMap→VACB) — field offsets found by scanning a plausible window, kept only if the VACB's own back-pointer confirms it |
+| [**memory_consoles**](memory/memory_consoles/) | ✅ v0.1 | Console-host process discovery (exact-name EPROCESS match) + generic command-line-shaped string carving. No CONSOLE_INFORMATION decode — undocumented, version-drifted user-mode structure with no reliable offset reference |
 | [**memory_timers**](memory/memory_timers/) | ✅ v0.1 | Enumerate Windows kernel timers (KTIMER, x64) via structural validation of the documented DISPATCHER_HEADER layout — no symbol server needed; type/size/canonical-pointer checks, not a pool tag |
-| [**memory_callbacks**](memory/memory_callbacks/) | 📋 planned | Enumerate kernel notification callbacks |
-| [**memory_ssdt**](memory/memory_ssdt/) | 📋 planned | Inspect the SSDT / IDT and driver IRP tables for hooks |
-| [**memory_linux**](memory/memory_linux/) | 📋 planned | Linux memory-image analysis (process list, modules, network, history) |
-| [**memory_macos**](memory/memory_macos/) | 📋 planned | macOS memory-image analysis (best-effort, version-gated) |
+| [**memory_callbacks**](memory/memory_callbacks/) | ✅ v0.1 | Candidate kernel-callback-array scan: small mostly-NULL clustered-pointer tables (no symbol resolution) with outlier entries flagged as possible-hook leads |
+| [**memory_ssdt**](memory/memory_ssdt/) | ✅ v0.1 | Candidate SSDT-shaped function-pointer table scan via VA clustering (no symbol, no hardcoded offset) — expect little/nothing on PatchGuard-protected modern x64 Windows; that's the correct outcome |
+| [**memory_linux**](memory/memory_linux/) | ✅ v0.1 | Process list only — a supplied kernel profile drives a genuine `tasks`-list walk (direct-map arithmetic); without one, falls back to weak heuristic comm-string carving |
+| [**memory_macos**](memory/memory_macos/) | ✅ v0.1 | Process list only — a supplied kernel profile drives a genuine `allproc` BSD-LIST walk (NULL-terminated, unlike Linux's circular list); this suite's lowest-confidence memory/ tool |
 | [**memory_yara**](memory/memory_yara/) | ✅ v0.1 | Scan a memory image with YARA-style rules — bundled from-scratch matcher (text/hex/regex strings, boolean/counting conditions), no `yara-python`; bundled starter ruleset; physical memory only |
 
 ### `utilities/`
@@ -251,21 +251,60 @@ it will do. The full roadmap is tracked privately.
 |---|---|---|
 | [**app_chat**](apps/app_chat/) | ✅ v0.1 | Recover Slack/Discord messages from their local Electron/LevelDB cache by recognising each vendor's documented public API message JSON shape; classic Teams carved as raw text. Signal/WhatsApp/Telegram out of scope |
 
-### next up
+### status: all 142 planned tools built
 
-`recovery_metadata` FAT / ext4 / APFS support ·
-`macos_unifiedlog` (`.tracev3`), `mounting_vsc`, `mounting_fvde` — all
-three genuinely undocumented, community-reverse-engineered-only formats
-(unlike BitLocker/LUKS/VeraCrypt, where the *crypto* is standardized
-even where the container is uncertain), deferred rather than guessed at ·
-the remaining `memory/` tools that need kernel symbols this project has
-no PDB-server access to resolve version-independently (`dumpfiles`,
-`consoles`, `callbacks`, `ssdt`) or are their own mini-projects
-(`linux`, `macos` memory-image analysis).
+Every category — `linux/`, `network/`, `browser/`, `utilities/`,
+`analysis/`, `cloud/`, `mobile/`, `apps/`, `mounting/`, `macos/`,
+`memory/` — is now complete for v0.1. The last nine were the hardest
+remaining ones, each held back earlier specifically because this
+project lacked a confident, verifiable technique — not because they
+were low priority. Rather than guess at exact undocumented byte
+layouts, each found a *different* way to stay honest about that
+uncertainty:
 
-The **`cloud/`**, **`mobile/`**, and **`apps/`** categories are now all
-complete for v0.1 — `cloud_cloudtrail` · `azuread` · `m365ual` · `gws`
-(audit-log normalisers, publicly documented schemas) plus
+- **`mounting_fvde`, `mounting_vsc`** — CoreStorage FileVault2 and VSS
+  are genuinely undocumented, community-reverse-engineered-only
+  formats (unlike BitLocker/LUKS/VeraCrypt, where the crypto itself is
+  standardized). `mounting_fvde` separates its exact/standard crypto
+  (PBKDF2, RFC 3394 key unwrap, AES-XTS) from the uncertain plist
+  layout by taking salt/iterations/wrapped-key as explicit parameters
+  rather than auto-parsing them. `mounting_vsc` stops at identifier
+  -scan-plus-candidate-fields rather than attempting full block
+  -remapping, since a wrong block-remap would silently serve corrupted
+  bytes as real file content.
+- **`macos_unifiedlog`** — a chunk inventory with self-verified LZ4
+  decompression (try a few candidate framings, keep only the one that
+  parses as a valid nested-chunk sequence) and string carving; not a
+  `log show` replacement.
+- **`memory_dumpfiles`** — the four kernel-internals tools
+  (`dumpfiles`, `ssdt`, `callbacks`, `consoles`) all lack the pool tag
+  this suite's other `memory_*` tools rely on. `dumpfiles` bounds that
+  with the same self-referential-pointer trick `pagemap.py` already
+  uses for directory-table-base confirmation (a VACB is only trusted
+  once its own back-pointer confirms it).
+- **`memory_ssdt`, `memory_callbacks`** — no symbol server to resolve
+  `KeServiceDescriptorTable` or the notification-callback globals, and
+  PatchGuard means genuine SSDT hooks don't really exist on modern
+  64-bit Windows anyway — both scan for the *structural shape* a
+  legitimate table has (clustered canonical pointers) and flag
+  entries that don't fit, as leads, never as confirmed findings.
+- **`memory_consoles`** — `CONSOLE_INFORMATION` is a user-mode
+  (conhost.exe), not kernel, structure with no public documentation at
+  all; reports console-host process discovery and command-shaped
+  string carving as two separate, uncorrelated signals instead.
+- **`memory_linux`, `memory_macos`** — `task_struct`/`proc` have no
+  cross-version signature of any kind. Both follow the same
+  examiner-supplies-the-missing-piece pattern `memory_hashdump`/
+  `memory_lsasecrets` use for a SYSTEM/SAM hive pair: a supplied
+  kernel profile drives a genuine linked-list walk (BSD's
+  NULL-terminated `LIST` for macOS, correctly implemented as
+  structurally different from Linux's circular list, not a renamed
+  copy); without one, both fall back to the same weak heuristic
+  string-carve, clearly labeled as such.
+
+The **`cloud/`**, **`mobile/`**, and **`apps/`** categories completed
+just before this batch — `cloud_cloudtrail` · `azuread` · `m365ual` ·
+`gws` (audit-log normalisers, publicly documented schemas) plus
 `cloud_onedrive` · `dropbox` · `gdrive` · `box` (generic sync-database
 inspection — none of these four have a published schema, so every one
 is honest about dumping tables/rows generically rather than claiming
@@ -349,7 +388,7 @@ flowchart TD
     WMI --> F["windows_lnk ✅ · windows_jumplist ✅ · windows_recycle ✅ · windows_timeline ✅ · windows_thumbcache ✅ · windows_recentfilecache ✅ · windows_spooler ✅ — opened files, activity, pictures, print jobs"]
     F --> G["windows_evtx ✅ — logon, service install, 4688 · windows_pslogging ✅ — reassembled + decoded 4104/4103/transcripts · windows_defender ✅ — MPLog + detections + quarantine + exclusions · windows_wer ✅ — crash = execution evidence · windows_webcache ✅"]
     G --> LF["windows_logfile ✅ — $LogFile redo/undo → create / delete / rename / timestomp · windows_sum ✅ — server-role access by user + client IP"]
-    LF --> H["memory/* — pslist ✅ · netscan ✅ · malfind ✅ · dlllist ✅ · cmdline ✅ · svcscan ✅ · strings ✅ · in-memory hives ⏳ · hashdump ⏳"]
+    LF --> H["memory/* — pslist ✅ · netscan ✅ · malfind ✅ · dlllist ✅ · cmdline ✅ · svcscan ✅ · strings ✅ · in-memory hives ✅ · hashdump ✅ · timers ✅ · dumpfiles ✅ · ssdt/callbacks/consoles ✅ (leads) · yara ✅"]
     H --> I["analysis_timeline ✅ — merge every output into one sorted UTC timeline"]
     I --> EN["analysis_enrich ✅ — IOC / ATT&CK / geo / known-file columns · analysis_antiforensics ✅ — evidence-destruction indicators · analysis_fuzzyhash ✅ — cluster variant families"]
     EN --> J["analysis_view ✅ (filter · tag · annotate) -> analysis_report ✅ · analysis_gallery ✅"]
@@ -457,12 +496,19 @@ flowchart TD
    (`_FILE_OBJECT` scan, incl. exited processes), `memory_handles` ✅
    (per-process open file handles), `memory_registry` ✅ (hives resident
    in RAM), `memory_timers` ✅ (KTIMER structural scan, x64, no symbol
-   server needed). Given a SYSTEM+SAM/SECURITY hive pair (extracted
-   separately, not from the raw image itself): `memory_hashdump` ✅
-   (local NT/LM hashes) and `memory_lsasecrets` ✅ (service-account
-   passwords, DPAPI machine key) — both reporting only, no cracking.
-   Against any memory image plus a rules file: `memory_yara` ✅
-   (bundled YARA-style matcher, no `yara-python`).
+   server needed), `memory_dumpfiles` ✅ (self-verifying VACB chain walk
+   for cache-resident file content), `memory_ssdt` / `memory_callbacks` ✅
+   (candidate function-pointer-table scans, no symbol resolution —
+   flagged leads, not confirmed hooks), `memory_consoles` ✅
+   (console-host process discovery + command-text carving). Given a
+   SYSTEM+SAM/SECURITY hive pair (extracted separately, not from the
+   raw image itself): `memory_hashdump` ✅ (local NT/LM hashes) and
+   `memory_lsasecrets` ✅ (service-account passwords, DPAPI machine
+   key) — both reporting only, no cracking. Against any memory image
+   plus a rules file: `memory_yara` ✅ (bundled YARA-style matcher, no
+   `yara-python`). Given a supplied kernel profile for the exact build:
+   `memory_linux` / `memory_macos` ✅ (genuine linked-list process-list
+   walk); without one, both fall back to a weaker heuristic carve.
 
    ```bash
    memory_pslist  MEMORY.DMP --terminated-only --csv procs.csv
@@ -505,7 +551,7 @@ flowchart TD
     AU --> G["linux_cron ✅ — crontabs, cron.d, run-parts, anacron, at, timers (--notable-only)"]
     G --> PK["linux_packages ✅ — dpkg/apt/dnf history · linux_containers ✅ · linux_sshkeys ✅ · linux_networkmgr ✅"]
     PK --> H["linux_bashhist ✅ — all users / all shells → attacker commands, tampering markers"]
-    H --> I["memory/* + memory_linux ⏳"]
+    H --> I["memory/* + memory_linux ✅ (needs a supplied kernel profile)"]
     I --> J["analysis_timeline ✅ — merged UTC timeline"]
 ```
 
@@ -552,8 +598,12 @@ flowchart TD
    linux_bashhist /mnt/evidence --notable-only --with-notes --csv history.csv
    ```
 
-8. **Memory** (⏳) — `memory_linux` for the task list, `lsmod`, `netstat`,
-   injected VMAs, `bash` history from RAM.
+8. **Memory** — `memory_linux` ✅ recovers the process list given a
+   supplied kernel profile for this exact build (a genuine `tasks`-list
+   walk; no profile means a much weaker heuristic carve instead —
+   `task_struct` has no cross-version signature to scan for the way
+   Windows kernel objects have a pool tag). `lsmod`/`netstat`/injected
+   -VMA recovery remain out of scope for v0.1.
 9. **Correlate.**
 
    ```bash
@@ -575,9 +625,9 @@ flowchart TD
     C --> D["macos_plist ✅ — LaunchAgents/Daemons, loginwindow, recent items, NSKeyedArchiver state"]
     D --> DS["macos_dslocal ✅ — local accounts · macos_installhistory ✅ — what was installed, by what"]
     DS --> E["macos_launchd ✅ — launchd persistence · macos_tcc ✅ — Camera/Mic/FDA grants · macos_quarantine ✅ — downloads"]
-    E --> F["macos_fsevents ✅ — file-system changes · macos_knowledgec ✅ — app/web usage · macos_powerlog ✅ — camera/mic/GPS · macos_unifiedlog ⏳"]
+    E --> F["macos_fsevents ✅ — file-system changes · macos_knowledgec ✅ — app/web usage · macos_powerlog ✅ — camera/mic/GPS · macos_unifiedlog ✅ — .tracev3 chunk inventory + string carve"]
     F --> NB["macos_netusage ✅ — per-process network bytes · macos_bt ✅ — paired devices"]
-    NB --> G["memory/* + memory_macos ⏳"]
+    NB --> G["memory/* + memory_macos ✅ (needs a supplied kernel profile)"]
     G --> H["analysis_timeline ✅ — merged UTC timeline"]
 ```
 
@@ -614,8 +664,15 @@ flowchart TD
    `macos_knowledgec` gives the app / web-usage timeline with durations;
    `macos_powerlog` adds camera / microphone activation and GPS fixes;
    `macos_netusage` attributes network bytes to a process; `macos_bt` lists
-   paired Bluetooth devices. `macos_unifiedlog` (`.tracev3`) is ⏳.
-8. **Memory** (⏳) — `memory_macos`.
+   paired Bluetooth devices. `macos_unifiedlog` reads `.tracev3` chunk
+   -by-chunk (best-effort LZ4 decompression, self-verified) and carves
+   printable strings — not a full `log show` replacement; no format
+   -string resolution against `uuidtext`/`dsc`.
+8. **Memory.** `memory_macos` recovers the process list given a
+   supplied kernel profile for this exact build (a genuine `allproc`
+   BSD-LIST walk); without one, a much weaker heuristic carve — this
+   suite's lowest-confidence memory/ tool, since `proc` has no
+   cross-version signature at all.
 9. **Correlate.**
 
    ```bash
