@@ -207,12 +207,12 @@ it will do. The full roadmap is tracked privately.
 | [**memory_filescan**](memory/memory_filescan/) | ✅ v0.1 | Pool-tag scan for `_FILE_OBJECT` structures — recovers open/cached file paths (including from **exited processes**) via kernel-DTB paged-pool resolution, no per-process attribution needed |
 | [**memory_dumpfiles**](memory/memory_dumpfiles/) | 📋 planned | Reconstruct file contents from the memory cache manager |
 | [**memory_consoles**](memory/memory_consoles/) | 📋 planned | Reconstruct console / conhost screen and command history buffers |
-| [**memory_timers**](memory/memory_timers/) | 📋 planned | Enumerate kernel timers (KTIMER) from a memory image |
+| [**memory_timers**](memory/memory_timers/) | ✅ v0.1 | Enumerate Windows kernel timers (KTIMER, x64) via structural validation of the documented DISPATCHER_HEADER layout — no symbol server needed; type/size/canonical-pointer checks, not a pool tag |
 | [**memory_callbacks**](memory/memory_callbacks/) | 📋 planned | Enumerate kernel notification callbacks |
 | [**memory_ssdt**](memory/memory_ssdt/) | 📋 planned | Inspect the SSDT / IDT and driver IRP tables for hooks |
 | [**memory_linux**](memory/memory_linux/) | 📋 planned | Linux memory-image analysis (process list, modules, network, history) |
 | [**memory_macos**](memory/memory_macos/) | 📋 planned | macOS memory-image analysis (best-effort, version-gated) |
-| [**memory_yara**](memory/memory_yara/) | 📋 planned | Scan process and kernel memory with YARA-style rules |
+| [**memory_yara**](memory/memory_yara/) | ✅ v0.1 | Scan a memory image with YARA-style rules — bundled from-scratch matcher (text/hex/regex strings, boolean/counting conditions), no `yara-python`; bundled starter ruleset; physical memory only |
 
 ### `utilities/`
 
@@ -228,28 +228,28 @@ it will do. The full roadmap is tracked privately.
 
 | Tool | Status | Purpose |
 |---|---|---|
-| [**cloud_onedrive**](cloud/cloud_onedrive/) | 📋 planned | Parse OneDrive sync metadata and ODL logs |
-| [**cloud_dropbox**](cloud/cloud_dropbox/) | 📋 planned | Parse Dropbox sync databases |
-| [**cloud_gdrive**](cloud/cloud_gdrive/) | 📋 planned | Parse Google Drive / Backup & Sync metadata |
-| [**cloud_box**](cloud/cloud_box/) | 📋 planned | Parse the Box Drive metadata database |
+| [**cloud_onedrive**](cloud/cloud_onedrive/) | ✅ v0.1 | Locate + generically inspect OneDrive sync metadata (settings/*.ini parsed directly, SyncEngineDatabase.db dumped table-by-table); proprietary undocumented format, no false-precision schema claims |
+| [**cloud_dropbox**](cloud/cloud_dropbox/) | ✅ v0.1 | Locate + generically dump Dropbox's config.dbx/filecache.dbx when unencrypted; every recent client SQLCipher-encrypts these, detected and reported rather than guessed at |
+| [**cloud_gdrive**](cloud/cloud_gdrive/) | ✅ v0.1 | Locate + generically dump Google Drive for Desktop's metadata_sqlite_db/snapshot.db (typically unencrypted, unlike Dropbox) |
+| [**cloud_box**](cloud/cloud_box/) | ✅ v0.1 | Locate + generically dump Box Drive's local database — no confident specific filename known, so searches broadly under any Box-named path and verifies by magic bytes |
 | [**cloud_m365ual**](cloud/cloud_m365ual/) | ✅ v0.1 | Normalise the Microsoft 365 Unified Audit Log (CSV/JSON, nested `AuditData`) across Exchange/SharePoint/Entra ID/Teams; flags mail-forwarding rules, app consent, role grants, mass downloads |
 | [**cloud_azuread**](cloud/cloud_azuread/) | ✅ v0.1 | Normalise Entra ID sign-in + directory-audit log JSON exports into one timeline; flags legacy auth, risky sign-ins, CA failures, new-country, sensitive audit activities |
 | [**cloud_cloudtrail**](cloud/cloud_cloudtrail/) | ✅ v0.1 | Normalise AWS CloudTrail `.json`/`.json.gz` into one row per API call; flags IAM changes, ConsoleLogin without MFA, secrets access, public-ACL changes, root usage, Delete* bursts |
-| [**cloud_gws**](cloud/cloud_gws/) | 📋 planned | Parse Google Workspace admin / login / Drive audit activity |
+| [**cloud_gws**](cloud/cloud_gws/) | ✅ v0.1 | Normalise Google Workspace audit activity (Admin SDK Reports API JSON) across login/admin/drive/token categories; flags suspicious logins, admin role changes, OAuth grants, external Drive sharing |
 
 ### `mobile/`
 
 | Tool | Status | Purpose |
 |---|---|---|
 | [**mobile_iosbackup**](mobile/mobile_iosbackup/) | ✅ v0.1 | Read a modern (iOS 10+) local iTunes/Finder backup's Manifest.db, joined against its hashed on-disk storage; `--extract-dir` reconstructs the real domain/relativePath folder tree. Unencrypted backups only |
-| [**mobile_android**](mobile/mobile_android/) | 📋 planned | Read adb backups and logical Android copies |
-| [**mobile_appcommon**](mobile/mobile_appcommon/) | 📋 planned | Shared SQLite / plist / protobuf helpers for mobile-extraction parsers |
+| [**mobile_android**](mobile/mobile_android/) | ✅ v0.1 | Read an `adb backup` (.ab) archive — header parse, zlib decompression, tar-member inventory via the standard library's `tarfile`; `--extract-dir` rebuilds the real tree. Unencrypted backups only |
+| [**mobile_appcommon**](mobile/mobile_appcommon/) | ✅ v0.1 | Generic blob inspector: binary plists (NSKeyedArchiver-aware) and schemaless Protocol Buffers (exact wire-format decode, no `.proto` needed) — reframed from a helper library into its own CLI tool |
 
 ### `apps/`
 
 | Tool | Status | Purpose |
 |---|---|---|
-| [**app_chat**](apps/app_chat/) | 📋 planned | Chat / collaboration app forensics with per-application adapters |
+| [**app_chat**](apps/app_chat/) | ✅ v0.1 | Recover Slack/Discord messages from their local Electron/LevelDB cache by recognising each vendor's documented public API message JSON shape; classic Teams carved as raw text. Signal/WhatsApp/Telegram out of scope |
 
 ### next up
 
@@ -258,10 +258,19 @@ it will do. The full roadmap is tracked privately.
 three genuinely undocumented, community-reverse-engineered-only formats
 (unlike BitLocker/LUKS/VeraCrypt, where the *crypto* is standardized
 even where the container is uncertain), deferred rather than guessed at ·
-the remaining `memory/` kernel-structure tools (dumpfiles, consoles,
-timers, callbacks, ssdt, linux, macos, yara) ·
-`cloud_onedrive` / `dropbox` / `gdrive` / `box` / `gws` ·
-`mobile_android` / `mobile_appcommon` · `app_chat`.
+the remaining `memory/` tools that need kernel symbols this project has
+no PDB-server access to resolve version-independently (`dumpfiles`,
+`consoles`, `callbacks`, `ssdt`) or are their own mini-projects
+(`linux`, `macos` memory-image analysis).
+
+The **`cloud/`**, **`mobile/`**, and **`apps/`** categories are now all
+complete for v0.1 — `cloud_cloudtrail` · `azuread` · `m365ual` · `gws`
+(audit-log normalisers, publicly documented schemas) plus
+`cloud_onedrive` · `dropbox` · `gdrive` · `box` (generic sync-database
+inspection — none of these four have a published schema, so every one
+is honest about dumping tables/rows generically rather than claiming
+understood semantics); `mobile_iosbackup` · `mobile_android` ·
+`mobile_appcommon`; `app_chat`.
 
 The **`linux/`** category is now complete for v0.1 (`linux_utmp` · `cron` ·
 `syslog` · `bashhist` · `journal` · `audit` · `units` · `packages` ·
@@ -447,10 +456,13 @@ flowchart TD
    `memory_strings` ✅ (address-tagged IOCs), `memory_filescan` ✅
    (`_FILE_OBJECT` scan, incl. exited processes), `memory_handles` ✅
    (per-process open file handles), `memory_registry` ✅ (hives resident
-   in RAM). Given a SYSTEM+SAM/SECURITY hive pair (extracted separately,
-   not from the raw image itself): `memory_hashdump` ✅ (local NT/LM
-   hashes) and `memory_lsasecrets` ✅ (service-account passwords, DPAPI
-   machine key) — both reporting only, no cracking.
+   in RAM), `memory_timers` ✅ (KTIMER structural scan, x64, no symbol
+   server needed). Given a SYSTEM+SAM/SECURITY hive pair (extracted
+   separately, not from the raw image itself): `memory_hashdump` ✅
+   (local NT/LM hashes) and `memory_lsasecrets` ✅ (service-account
+   passwords, DPAPI machine key) — both reporting only, no cracking.
+   Against any memory image plus a rules file: `memory_yara` ✅
+   (bundled YARA-style matcher, no `yara-python`).
 
    ```bash
    memory_pslist  MEMORY.DMP --terminated-only --csv procs.csv
