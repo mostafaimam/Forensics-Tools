@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "cloud_box"
+version = "0.1.0"
+description = "Locate and generically inspect Box Drive local metadata: searches any database-shaped file under a Box-named path, verifies it by magic bytes, and dumps it table by table, schema-tolerant - no confident specific filename assumed"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "cloud", "box", "box-drive", "sync-client"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/cloud/cloud_box"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+cloud_box = "cloud_box.cli:main"
+[tool.setuptools]
+packages = ["cloud_box"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
