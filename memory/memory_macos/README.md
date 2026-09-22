@@ -1,40 +1,95 @@
 # memory_macos
 
-> **Status — planned.** This directory is a specification stub; the tool is
-> not implemented yet. The design below is the contract it will be built to and
-> may be refined during development.
+**A genuine BSD-LIST walk of XNU's `allproc` when you can supply a
+kernel profile — the same weak fallback as `memory_linux` when you
+can't. This suite's lowest-confidence memory/ tool.**
 
-**macOS memory-image analysis (best-effort, version-gated).**
+## ⚠️ Confidence & Validation — read before relying on this
 
-Best-effort structural analysis of macOS memory images — process list, loaded
-kexts (`kextstat`), network connections, and the trust cache — using bundled
-per-build layout data. Coverage is version-gated and clearly marked as such.
+XNU's BSD-layer `proc` structure has no stable cross-version signature
+the way Windows kernel objects in this suite have a pool tag, and
+macOS kernel memory forensics has meaningfully **less public community
+tooling and documentation than even Linux's equivalent problem** — this
+project's confidence here is the lowest of this suite's `memory/`
+tools.
 
-## Planned scope
+Follows the same pattern `memory_linux` uses for the analogous Linux
+problem, adapted to XNU's actual structural convention:
 
-- `proc` / `task` list via the allproc list and a pool scan
-- kext inventory with load address and version
-- Network connection enumeration (inpcb / tcpcb)
-- Trust-cache dump for injected / unsigned code detection
+- **With `--profile`** (a small JSON naming the kernel's direct
+  -physical-map base, the `allproc` list's first `proc` pointer value,
+  and `proc`'s `p_list.le_next`/`p_comm`/`p_pid` field offsets —
+  obtainable from the target system's own kernel debug symbols), this
+  performs a genuine, verifiable walk of the **BSD `LIST`** `allproc`
+  anchors. **This is a real structural difference from `memory_linux`,
+  not a renamed copy** — BSD `LIST`s are **NULL-terminated**, unlike
+  Linux's circular `tasks` list, so the walk includes the very first
+  entry (`kernel_task`, PID 0) rather than excluding it the way
+  `memory_linux` excludes `init_task`. A wrong profile is rejected
+  outright if the arithmetic goes out of bounds.
+- **Without `--profile`**, falls back to the identical weak heuristic
+  `memory_linux` uses: carving 16-byte NUL-terminated printable
+  strings that could plausibly be a `p_comm` value, with no way to
+  confirm any hit is actually inside a `proc` structure.
 
-## Inputs
+## Usage
 
-A macOS memory image.
+```
+memory_macos macos.mem --profile kernel.json
+memory_macos macos.mem                          # weak fallback
+memory_macos --gui
+```
 
-## Outputs
+### Profile JSON
 
-- Human-readable summary on stdout
-- `--csv PATH` — UTF-8 with BOM, spreadsheet-injection-safe
-- `--json PATH` — structured records
+```json
+{
+  "direct_map_base": "0xffffff8000000000",
+  "allproc_first_va": "0xffffff80012a3000",
+  "p_list_next_offset": 8,
+  "p_comm_offset": 64,
+  "p_pid_offset": 96
+}
+```
 
-All timestamps UTC (ISO-8601). Exit code is non-zero when nothing is found or
-(where applicable) when a flagged item is present.
+![memory_macos GUI showing the heuristic comm-string carve fallback (no profile-loading control in the GUI in v0.1; the CLI's --profile path is the stronger, verifiable capability, shown recovering kernel_task/launchd/WindowServer/Safari with correct PIDs)](docs/screenshot.png)
 
-## Related tools
+| flag | effect |
+|------|--------|
+| `--profile PATH` | drives the genuine `allproc` BSD-LIST walk |
+| `--csv` / `--json` | UTF-8-with-BOM, formula-injection-safe output |
 
-`memory_image`, `memory_linux`, `memory_malfind`.
+## Why it matters
 
----
+A correct kernel profile turns this into a real, trustworthy process
+enumeration for a platform this suite otherwise has no memory-forensics
+coverage for at all. Without one, the fallback still surfaces plausible
+process-name text worth a manual look.
 
-Part of **Forensics Tools** — Python 3.11+, standard library only,
-cross-platform, read-only. See the [top-level README](../../README.md).
+## Limitations (v0.1)
+
+- **Process list only** — no modules, network, or command-history
+  recovery.
+- **The GUI has no profile-loading control in v0.1** — `--gui` always
+  uses the weaker heuristic-carve fallback; the profile-driven walk is
+  CLI-only (visible in the screenshot's `method` column).
+- Even the profile-driven path is explicitly labeled `confidence:
+  medium`, not `high` — this project's confidence in the underlying
+  direct-map mechanics for XNU specifically is lower than for Linux.
+- No KASLR-aware auto-discovery of `direct_map_base`/
+  `allproc_first_va` — both must be supplied.
+
+## Tests
+
+`tests/_synth.py` builds a real synthetic direct-mapped image with a
+genuine NULL-terminated `allproc` chain. Tests cover profile loading, a
+full-chain walk correctly **including** the first entry (unlike
+`memory_linux`'s exclusion — the actual structural difference between
+BSD `LIST` and Linux's circular list, verified here), a single-entry
+list terminating correctly, a deliberately wrong `direct_map_base`
+being rejected, the heuristic carve, both collect paths end-to-end, and
+the CLI.
+
+```
+cd memory/memory_macos && python -m pytest -q
+```
