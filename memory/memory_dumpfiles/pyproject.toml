@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "memory_dumpfiles"
+version = "0.1.0"
+description = "Reconstruct cache-resident file content from a Windows memory image via the Cache Manager's VACB chain. Field offsets found by a self-verifying window scan (back-pointer consistency), not a hardcoded per-build table. Gaps reported as gaps"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "memory", "windows", "cache-manager", "vacb"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/memory/memory_dumpfiles"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+memory_dumpfiles = "memory_dumpfiles.cli:main"
+[tool.setuptools]
+packages = ["memory_dumpfiles"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
