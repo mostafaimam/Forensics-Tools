@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "cloud_dropbox"
+version = "0.1.0"
+description = "Locate and generically inspect Dropbox client databases (config.dbx / filecache.dbx / deleted.dbx): a schema-tolerant table dump for unencrypted files; SQLCipher-encrypted files (the common modern case) are detected and reported, not decrypted"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "cloud", "dropbox", "sync-client"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/cloud/cloud_dropbox"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+cloud_dropbox = "cloud_dropbox.cli:main"
+[tool.setuptools]
+packages = ["cloud_dropbox"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]

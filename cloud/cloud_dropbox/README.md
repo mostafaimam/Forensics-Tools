@@ -1,41 +1,73 @@
 # cloud_dropbox
 
-> **Status — planned.** This directory is a specification stub; the tool is
-> not implemented yet. The design below is the contract it will be built to and
-> may be refined during development.
+**Read a Dropbox sync database generically — and say plainly when it's
+encrypted instead of guessing at a key.**
 
-**Parse Dropbox sync databases.**
+Dropbox's `config.dbx` / `filecache.dbx` / `deleted.dbx` are a
+**proprietary, undocumented** SQLite variant, and every Dropbox client
+released in roughly the last decade SQLCipher-encrypts them with
+OS-specific key material (historically DPAPI on Windows, the OS
+keychain on macOS, a derived key on Linux) that has changed more than
+once and that this project has no verified way to reproduce.
+`cloud_dropbox` locates candidate `.dbx`/`.db` files and, for any that
+turn out to still be plain SQLite (an older client, or one where
+encryption wasn't yet applied), dumps every table generically — full
+row fidelity, no claimed schema understanding beyond conservative
+column-name hints. An encrypted file is reported as such, not decrypted.
 
-Reads the Dropbox client databases — `filecache.dbx` / `config.dbx` (SQLite,
-historically obfuscated) and `deleted.dbx` — for the synced-file inventory, the
-linked account / host id, and locally recorded deletions.
+## Usage
 
-## Planned scope
+```
+cloud_dropbox "%LOCALAPPDATA%\Dropbox"
+cloud_dropbox filecache.dbx --csv rows.csv
+cloud_dropbox --gui
+```
 
-- Handle the historical obfuscation (supplied key / known scheme) and modern
-  plaintext schema
-- File inventory: server path, local path, size, mtime, sync state
-- Account / host metadata from `config.dbx`
-- CSV / JSON
+The target may be the Dropbox folder itself (searched recursively for
+`config.dbx`, `filecache.dbx`, `deleted.dbx`, and their legacy `.db`
+names), or a specific file.
 
-## Inputs
+![cloud_dropbox GUI showing three generically-dumped rows from a synthetic config.dbx and filecache.dbx, with a path/time/size hint pulled from the file_journal row](docs/screenshot.png)
 
-`%LOCALAPPDATA%\Dropbox\instance*\` / `~/.dropbox/`.
+| flag | effect |
+|------|--------|
+| `--table TEXT` | substring filter on table name |
+| `--csv` / `--json` | UTF-8-with-BOM, formula-injection-safe output |
 
-## Outputs
+## Why it matters
 
-- Human-readable summary on stdout
-- `--csv PATH` — UTF-8 with BOM, spreadsheet-injection-safe
-- `--json PATH` — structured records
+`config.dbx` holds the linked account email and host ID even from a
+handful of readable rows; `filecache.dbx`'s file journal records synced
+paths, sizes and modification times — evidence of files that may no
+longer exist locally. Where the database is still plain SQLite (which
+does happen — not every Dropbox install on every OS/version has
+encryption engaged), this recovers it without needing anything
+Dropbox-specific beyond knowing where to look.
 
-All timestamps UTC (ISO-8601). Exit code is non-zero when nothing is found or
-(where applicable) when a flagged item is present.
+## Limitations (v0.1)
 
-## Related tools
+- **Encrypted `.dbx` files are detected, not decrypted** — this is the
+  common case for any recent Dropbox client. There is no reliable,
+  version-independent way to derive the SQLCipher key without deeper
+  OS-specific research this project doesn't have high confidence in;
+  guessing would risk silently producing garbage rather than an honest
+  "encrypted" result.
+- **No claimed understanding of the schema.** Every table/column is
+  dumped as-is; `path_hint`/`time_hint`/`size_hint` are column-name
+  pattern guesses, not verified field semantics.
+- No cross-referencing of `file_journal` entries against what's
+  actually still present on disk (pair with `recovery_fs` /
+  `windows_mft` for that).
 
-`analysis_timeline`, `windows_sqlmap`.
+## Tests
 
----
+`tests/_synth.py` builds real, plain-SQLite `config.dbx` and
+`filecache.dbx` files plus a `deleted.dbx` standing in for an encrypted
+one (random bytes, no SQLite magic). Tests cover file discovery,
+SQLite-vs-encrypted detection, generic table dumping, path/size hint
+extraction, the encrypted-file warning path, a no-Dropbox-found case,
+and the CLI (`--table`, `--csv`/`--json`).
 
-Part of **Forensics Tools** — Python 3.11+, standard library only,
-cross-platform, read-only. See the [top-level README](../../README.md).
+```
+cd cloud/cloud_dropbox && python -m pytest -q
+```
