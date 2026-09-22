@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "memory_ssdt"
+version = "0.1.0"
+description = "Best-effort scan for SSDT-shaped function-pointer arrays in a Windows memory image via VA clustering (no symbol needed, no hardcoded offset) - flags outlier entries as possible-hook leads. Expect little/nothing on PatchGuard-protected modern x64 Windows; that is correct"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mostafa Imam" }]
+keywords = ["dfir", "forensics", "memory", "windows", "ssdt", "rootkit"]
+classifiers = ["Environment :: Console", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/mostafaimam/Forensics-Tools/tree/main/memory/memory_ssdt"
+Issues = "https://github.com/mostafaimam/Forensics-Tools/issues"
+[project.scripts]
+memory_ssdt = "memory_ssdt.cli:main"
+[tool.setuptools]
+packages = ["memory_ssdt"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
