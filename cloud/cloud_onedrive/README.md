@@ -1,41 +1,79 @@
 # cloud_onedrive
 
-> **Status — planned.** This directory is a specification stub; the tool is
-> not implemented yet. The design below is the contract it will be built to and
-> may be refined during development.
+**Turn an opaque OneDrive sync database into something reviewable —
+without pretending to know its undocumented schema.**
 
-**Parse OneDrive sync metadata and ODL logs.**
+OneDrive's local sync-client metadata (`%LOCALAPPDATA%\Microsoft\
+OneDrive\settings\<Personal|BusinessN>\`) is a **proprietary,
+undocumented** format that has changed shape across client versions —
+unlike this suite's cloud audit-log tools (CloudTrail, Entra ID, M365
+UAL, Workspace), which all read a vendor's own *published* schema.
+`cloud_onedrive` locates the settings directory, parses the plain
+`*.ini`-shaped settings files there directly (a real, unambiguous
+format), and generically dumps `SyncEngineDatabase.db` table by table
+when it's SQLite — full row fidelity, with only conservative
+column-name hints layered on top, honest about not claiming to
+understand the vendor's internal schema beyond that.
 
-Reconstructs OneDrive sync state and activity from `<UserCid>.dat` /
-`SyncEngineDatabase`, `SyncDiagnostics`, `settings/*.ini`, and the obfuscated
-ODL logs (`*.odl` / `*.odlgz` / `*.aold`) — synced files and folders, the linked
-account, and file add / modify / delete events.
+## Usage
 
-## Planned scope
+```
+cloud_onedrive "%LOCALAPPDATA%\Microsoft\OneDrive"
+cloud_onedrive SyncEngineDatabase.db --csv rows.csv
+cloud_onedrive --gui
+```
 
-- `SyncEngineDatabase` (ESE / SQLite by version) file-inventory decode
-- ODL log de-obfuscation using the bundled string map + `*.odlgz` decompression
-- Account id → email; per-file cloud vs. local state
-- Activity timeline; CSV / JSON
+The target may be the OneDrive folder itself (searched recursively for
+`settings/*.ini`/`.dat` files and `SyncEngineDatabase.db`), or a
+specific file.
 
-## Inputs
+![cloud_onedrive GUI showing three parsed settings key-value pairs and two generically-dumped SyncEngineDatabase rows, with path/time/size hints extracted by column-name matching](docs/screenshot.png)
 
-`%LOCALAPPDATA%\Microsoft\OneDrive\{settings,logs}` on a Windows image.
+| flag | effect |
+|------|--------|
+| `--kind {setting,db_row}` | only rows of this kind |
+| `--csv` / `--json` | UTF-8-with-BOM, formula-injection-safe output |
 
-## Outputs
+Each database row carries `row_json` (the full row, every column,
+verbatim) plus three best-effort hints pulled out by matching column
+*names* against a short list of common words (`path`/`time`/`size` and
+close variants) — not by understanding what the column actually means.
 
-- Human-readable summary on stdout
-- `--csv PATH` — UTF-8 with BOM, spreadsheet-injection-safe
-- `--json PATH` — structured records
+## Why it matters
 
-All timestamps UTC (ISO-8601). Exit code is non-zero when nothing is found or
-(where applicable) when a flagged item is present.
+Settings files reveal the linked account (email, client ID) even
+without touching the sync database; the sync database itself — even
+read generically — surfaces file paths, timestamps and sizes for
+content that may no longer exist on disk, since OneDrive's local index
+tracks cloud-only ("Files On-Demand") entries too.
 
-## Related tools
+## Limitations (v0.1)
 
-`windows_esedb`, `analysis_timeline`.
+- **No claimed understanding of `SyncEngineDatabase.db`'s actual
+  schema.** Every table and column is dumped as-is; the `path_hint` /
+  `time_hint` / `size_hint` columns are name-pattern guesses, not
+  verified field semantics — treat them as a starting point for manual
+  review, not as ground truth.
+- **ESE/JET-format databases (older OneDrive clients) are detected,
+  not read** — v0.1 handles SQLite only; an ESE-format
+  `SyncEngineDatabase.db` is reported with a pointer to this project's
+  own `windows_esedb`, which can open it directly.
+- **No ODL activity-log de-obfuscation.** OneDrive's `*.odl`/`*.odlgz`
+  diagnostic logs use an obfuscated, undocumented encoding this project
+  has no confident way to reverse — out of scope for v0.1.
+- Settings-file key names are captured exactly as found rather than
+  normalized, since the real key set is undocumented and has drifted
+  across client versions.
 
----
+## Tests
 
-Part of **Forensics Tools** — Python 3.11+, standard library only,
-cross-platform, read-only. See the [top-level README](../../README.md).
+`tests/_synth.py` builds a real settings `.ini` file and a real SQLite
+`SyncEngineDatabase.db`, plus a byte-stub standing in for an ESE-format
+database (magic bytes only, not a full ESE file). Tests cover settings
+parsing, SQLite-vs-ESE detection, generic table dumping, path/time/size
+hint extraction, the ESE-database warning path, no-files warnings, and
+the CLI (`--kind`, `--csv`/`--json`).
+
+```
+cd cloud/cloud_onedrive && python -m pytest -q
+```
