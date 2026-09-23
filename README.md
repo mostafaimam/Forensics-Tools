@@ -28,16 +28,17 @@ documentation. Tools are organised into categories.
 | [`cloud/`](cloud/) | cloud & SaaS logs — OneDrive, Dropbox, M365 / Entra, CloudTrail, Workspace |
 | [`mobile/`](mobile/) | logical mobile extractions — iOS backups, Android `adb` backups |
 | [`apps/`](apps/) | chat & collaboration apps — Teams, Slack, Signal, Discord, Telegram |
+| [`suite/`](suite/) | `suite_console` — one desktop shell for every tool above |
 
-The tables below list every tool, built (✅) and planned (📋). Each planned
-tool already has a spec-stub `README.md` in its own directory describing what
-it will do. The full roadmap is tracked privately.
+The tables below list every tool — all 143 of them are built and tested
+(✅). A tool not yet built would show as 📋 planned, with a spec-stub
+`README.md` in its own directory describing what it will do; none remain.
 
 ---
 
 ## Tools
 
-✅ built and tested — every tool in the suite (142/142). A 📋 planned marker would appear here for a tool not yet built (with a spec-stub README in its directory); none remain.
+✅ built and tested — every tool in the suite (143/143). A 📋 planned marker would appear here for a tool not yet built (with a spec-stub README in its directory); none remain.
 
 ### `acquisition/`
 
@@ -251,7 +252,13 @@ it will do. The full roadmap is tracked privately.
 |---|---|---|
 | [**app_chat**](apps/app_chat/) | ✅ v0.1 | Recover Slack/Discord messages from their local Electron/LevelDB cache by recognising each vendor's documented public API message JSON shape; classic Teams carved as raw text. Signal/WhatsApp/Telegram out of scope |
 
-### status: all 142 planned tools built
+### `suite/`
+
+| Tool | Status | Purpose |
+|---|---|---|
+| [**suite_console**](suite/suite_console/) | ✅ v0.1 | A single desktop shell for all 143 tools, with zero per-tool integration code — discovers every tool by its shared `pyproject.toml`+`cli.py` shape, introspects each one's own `argparse` spec (including subcommands) into a form, runs it as an isolated subprocess, and can open any tool's own native GUI alongside it |
+
+### status: all 143 tools built
 
 Every category — `linux/`, `network/`, `browser/`, `utilities/`,
 `analysis/`, `cloud/`, `mobile/`, `apps/`, `mounting/`, `macos/`,
@@ -301,6 +308,16 @@ uncertainty:
   structurally different from Linux's circular list, not a renamed
   copy); without one, both fall back to the same weak heuristic
   string-carve, clearly labeled as such.
+
+With every parser tool built, **`suite_console`** ties the whole thing
+together: one desktop shell for all 143 tools, discovered and driven
+purely off the `pyproject.toml`+`cli.py` shape every tool already has —
+no per-tool integration code, so tool #144 will need none either. It
+introspects each tool's own `argparse` spec (subcommands included) into
+a form, runs it as an isolated subprocess so one tool's crash can never
+take the console down, and can open any of the 128 tools that ship
+their own bespoke GUI directly, as its own window, alongside the
+generic form.
 
 The **`cloud/`**, **`mobile/`**, and **`apps/`** categories completed
 just before this batch — `cloud_cloudtrail` · `azuread` · `m365ual` ·
@@ -729,6 +746,9 @@ windows_prefetch --help
 
 # or run in place without installing
 python -m windows_prefetch --help
+
+# or open every tool at once in one desktop shell
+python -m suite_console
 ```
 
 See each tool's own `README.md` for full usage and internals.
