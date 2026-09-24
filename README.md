@@ -258,6 +258,8 @@ The tables below list every tool — all 143 of them are built and tested
 |---|---|---|
 | [**suite_console**](suite/suite_console/) | ✅ v0.1 | A single desktop shell for all 143 tools, with zero per-tool integration code — discovers every tool by its shared `pyproject.toml`+`cli.py` shape, introspects each one's own `argparse` spec (including subcommands) into a form, runs it as an isolated subprocess, and can open any tool's own native GUI alongside it |
 
+![suite_console showing utilities_hash selected in the sidebar (142 tools across 15 categories), its auto-generated form filled in, and a completed run's Results tab with real hash output and case-metadata columns](suite/suite_console/docs/screenshot.png)
+
 ### status: all 143 tools built
 
 Every category — `linux/`, `network/`, `browser/`, `utilities/`,
